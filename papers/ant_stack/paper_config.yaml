@@ -1,0 +1,54 @@
+# Configuration for Ant Stack Paper
+# Following .cursorrules specifications for scientific publication standards
+
+paper:
+  name: "ant_stack"
+  title: "The Ant Stack"
+  subtitle: "Hierarchical Architecture for Embodied Cognitive Systems"
+  author: "Daniel Ari Friedman"
+  email: "daniel@activeinference.institute"
+  orcid: "0000-0001-6232-9096"
+  output_filename: "1_ant_stack.pdf"
+
+# Markdown files in build order
+content:
+  files:
+    - "Abstract.md"
+    - "README.md" 
+    - "Background.md"
+    - "AntBody.md"
+    - "AntBrain.md"
+    - "AntMind.md"
+    - "Applications.md"
+    - "Discussion.md"
+    - "Resources.md"
+    - "Appendices.md"
+    - "Glossary.md"
+
+# Asset management
+assets:
+  figures_dir: "assets/figures"
+  mermaid_dir: "assets/mermaid"
+  tmp_dir: "assets/tmp_images"
+  
+# Build configuration
+build:
+  has_generated_content: false
+  has_computational_analysis: false
+  mermaid_preprocessing: true
+  cross_reference_validation: true
+  
+# LaTeX/Pandoc settings
+latex:
+  document_class: "article"
+  geometry: "margin=2.5cm"
+  mainfont: "Latin Modern Roman"
+  mathfont: "Latin Modern Math"
+  bibliography: null  # No bibliography for this paper
+  
+# Quality assurance
+validation:
+  check_cross_references: true
+  check_figure_captions: true
+  check_unicode_symbols: true
+  require_descriptive_links: true

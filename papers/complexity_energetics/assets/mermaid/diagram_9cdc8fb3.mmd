@@ -1,0 +1,33 @@
+graph TD
+ subgraph "Complexity Dimensions"
+ T["Time Complexity<br/>Operations/second"]
+ S["Space Complexity<br/>Memory requirements"]
+ E["Energy Complexity<br/>Power consumption"]
+end
+subgraph "System Constraints"
+ RT["Real-time<br/>10ms @ 100Hz"]
+ HW["Hardware Limits<br/>Memory, power"]
+ ACC["Accuracy Requirements<br/>Task performance"]
+end
+subgraph "Design Choices"
+ SP["Sparsity<br/>\\rho \\leq 0.02"]
+ ALG["Algorithm Selection<br/>PGS vs LCP"]
+ BOUND["Bounded Rationality<br/>H_p \\leq 15"]
+end
+T --> RT
+ S --> HW
+ E --> HW
+ SP --> T
+ SP --> S
+ SP --> E
+ ALG --> T
+ ALG --> ACC
+ BOUND --> T
+ BOUND --> ACC
+
+ style T fill:#e3f2fd,stroke:#1976d2
+ style S fill:#f3e5f5,stroke:#7b1fa2
+ style E fill:#fff3e0,stroke:#f57c00
+ style RT fill:#e8f5e8,stroke:#388e3c
+ style HW fill:#fce4ec,stroke:#c2185b
+ style ACC fill:#e0f2f1,stroke:#00695c

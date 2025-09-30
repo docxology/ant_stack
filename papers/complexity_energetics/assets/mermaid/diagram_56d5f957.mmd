@@ -1,0 +1,59 @@
+graph TD
+ subgraph Physical["🌍 Physical Layer"]
+ T["Terrain<br/>\mu_k, roughness<br/>Contact complexity"]
+ S["🔍 Sensors (S=256)<br/>IMU + Vision + Chemo<br/>P_sens = 1.28\,\mathrm{W}"]
+ A["🤖 AntBody Mechanics<br/>18 DOF hexapod<br/>Joint torques + contacts"]
+end
+subgraph Control["🎮 Control Layer (100\,\mathrm{Hz})"]
+ C["Controller<br/>Real-time scheduling<br/>10ms decisions"]
+ B["🧠 AntBrain Compute<br/>Sparse neural networks<br/>Event-driven spikes"]
+ M["💭 AntMind Inference<br/>Policy evaluation<br/>Bounded rationality"]
+end
+subgraph Energy["⚡ Energy Flow Analysis"]
+ E1["Actuation Energy<br/>E_{\text{body}},act = 360 mJ<br/>Mechanical work dominant<br/>\eta_motor \approx 45%"]
+ E2["Compute Energy<br/>E_{\text{brain}} = 0.5 mJ<br/>FLOPs: 1pJ each<br/>SRAM: 0.1pJ/byte<br/>Spikes: 1aJ each"]
+ E3["Sensing Energy<br/>E_sensing = 12.8 mJ<br/>Continuous sampling<br/>Duty-cycled sensors"]
+ E4["Baseline Energy<br/>E_baseline = 0.5 mJ<br/>Controller idle<br/>Housekeeping tasks"]
+end
+subgraph Limits["🔬 Theoretical Limits"]
+ L1["Landauer Limit<br/>kT ln(2) per bit<br/>\approx 2.8\times10^{-21} J"]
+ L2["Thermodynamic<br/>Mechanical efficiency<br/>Carnot bound"]
+ L3["Information Theory<br/>Shannon limit<br/>Sensing bandwidth"]
+end
+T --> A
+ S --> A
+ A --> C
+ C --> B
+ C --> M
+ B --> C
+ M --> C
+ 
+ A --> E1
+ B --> E2
+ S --> E3
+ C --> E4
+ 
+ E1 --> ED["E_{ ext{decision}} = 373.8 mJ<br/>Total per 10ms<br/>Power = 37.4\,\mathrm{W}<br/>CoT = 0.255"]
+ E2 --> ED
+ E3 --> ED
+ E4 --> ED
+ 
+ E1 -.-> L2
+ E2 -.-> L1
+ E3 -.-> L3
+ 
+ subgraph Scaling["📈 Scaling Laws"]
+ SC1["Body: E \propto J^0.0001<br/>Contact-dominated<br/>Baseline power limit"]
+ SC2["Brain: E \propto K^0.00001<br/>Sparsity-enabled<br/>Sub-linear growth"]
+ SC3["Mind: E \propto H_p^11.1<br/>Exponential explosion<br/>Bounded rationality"]
+end
+E1 --> SC1
+ E2 --> SC2
+ M --> SC3
+ 
+ style Physical fill:#e3f2fd,stroke:#0277bd,stroke-width:2px
+ style Control fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+ style Energy fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+ style Limits fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+ style Scaling fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+ style ED fill:#ffebee,stroke:#d32f2f,stroke-width:3px

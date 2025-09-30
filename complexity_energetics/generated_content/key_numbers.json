@@ -1,0 +1,27 @@
+{
+  "per_decision_energy": {
+    "body_mj": 5.0001406584,
+    "brain_mj": 5.0028725248001,
+    "mind_mj": 5.00358648,
+    "total_mj": 15.0065996632001
+  },
+  "computational_load": {
+    "body_flops": 89543,
+    "brain_flops": 1005236.0,
+    "mind_flops": 2950000.0,
+    "body_memory_kb": 9.8359375,
+    "brain_memory_kb": 591.09375,
+    "mind_memory_kb": 152.34375
+  },
+  "scaling_exponents": {
+    "body_energy": 1.7447973280747562e-05,
+    "body_r_squared": 0.8063642167483813,
+    "body_regime": "unknown"
+  },
+  "system_parameters": {
+    "control_frequency_hz": 100,
+    "decision_period_ms": 10,
+    "baseline_power_mw": 500.0,
+    "total_power_w": 1.5006599663200102
+  }
+}

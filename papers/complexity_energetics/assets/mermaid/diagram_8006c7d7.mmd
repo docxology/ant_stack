@@ -1,0 +1,44 @@
+graph TD
+ subgraph Body["🤖 AntBody: Contact Dynamics & Sensing"]
+ J["Joints (J=18)<br/>Forward Dynamics<br/>O(J) = 450 FLOPs"]
+ C["Contacts (C=12)<br/>PGS Solver<br/>O(C^1.5) = 2.1k FLOPs"]
+ S["Sensors (S=256)<br/>Fusion & Packing<br/>O(S) = 1.3k FLOPs"]
+end
+subgraph Brain["🧠 AntBrain: Sparse Neural Networks"]
+ K["AL Inputs (K=128)<br/>Glomerular Map<br/>O(K) = 1.9k FLOPs"]
+ NKC["MB Cells (N_{ ext{KC}}=50k)<br/>Biological Sparsity<br/>O(\rhoN_KC) = 1k active"]
+ H["CX Headings (H=64)<br/>Ring Attractor<br/>O(H^2) = 4.1k FLOPs"]
+end
+subgraph Mind["💭 AntMind: Bounded Rational AI"]
+ BH["Policy Tree (B=4, H_p=15)<br/>Bounded Sampling<br/>O(B^H_p) \to 1k policies"]
+ AI["Active Inference<br/>Variational Updates<br/>O(state_dim^2) FLOPs"]
+ EFE["Expected Free Energy<br/>Risk + Ambiguity<br/>O(D) diagnostics"]
+end
+subgraph Processing["⚡ Processing Pipeline"]
+ B1["Physics Integration<br/>J*25 + C^1.5*50 FLOPs<br/>Contact solver critical"]
+ B2["Sensor Processing<br/>S*5 + fusion overhead<br/>SRAM: S*16 bytes"]
+ BR1["AL Processing<br/>K*15 FLOPs<br/>Sparse transforms"]
+ BR2["MB Sparse Coding<br/>\rhoN_KC*20 FLOPs<br/>Event-driven spikes"]
+ BR3["CX Ring Dynamics<br/>H*12 + H^2*0.5 FLOPs<br/>Lateral inhibition"]
+ M1["Policy Evaluation<br/>Belief updates + EFE<br/>Exponential growth"]
+ M2["Bounded Rationality<br/>Policy sampling<br/>Tractability limit"]
+end
+J --> B1
+ C --> B1
+ S --> B2\,\mathrm{K} --> BR1
+ NKC --> BR2
+ H --> BR3
+ BH --> M1\,\mathrm{A}I --> M1
+ EFE --> M2
+ 
+ B1 --> BR1
+ B2 --> BR1
+ BR1 --> BR2
+ BR2 --> BR3
+ BR3 --> M1
+ M1 --> M2
+ 
+ style Body fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+ style Brain fill:#f3e5f5,stroke:#4a148c,stroke-width:3px
+ style Mind fill:#e8f5e8,stroke:#1b5e20,stroke-width:3px
+ style Processing fill:#fff3e0,stroke:#e65100,stroke-width:2px

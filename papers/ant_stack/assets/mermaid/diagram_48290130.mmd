@@ -1,0 +1,28 @@
+graph TD
+ subgraph "Ant Stack"
+ A["AntBody<br/>Physical Simulation"]
+ B["AntBrain<br/>Neural Architecture"]
+ C["AntMind<br/>Cognitive & Collective<br/>Intelligence"]
+end
+subgraph "Foundational Research"
+ H["Drosophila Connectome"]
+ I["Apis Mellifera Brain Models"]
+ J["FlyBody Physics Simulator"]
+end
+subgraph "Inputs & Outputs"
+ D["Physical World<br/>(Simulation/Hardware)"]
+ E["Sensorimotor Interface"]
+ F["Colony-Level Phenomena"]
+ G["Applications<br/>(Robotics, Security)"]
+end
+J -- "Fork & Adapt" --> A
+ A -- "Sensorimotor Loop" --> B
+ B -- "Sensorimotor Loop" --> A
+ A <--> D
+ E <--> B
+ B -- "Cognitive Substrate" --> C
+ C -- "Behavioral Policies" --> B
+ C -- "Emergent Intelligence" --> F
+ C -- "Transferable Models" --> G
+ H -- "Template" --> B
+ I -- "Template" --> B

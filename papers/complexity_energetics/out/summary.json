@@ -1,0 +1,3014 @@
+{
+  "seed": 123,
+  "coefficients": {
+    "flops_pj": 1.0,
+    "sram_pj_per_byte": 0.1,
+    "dram_pj_per_byte": 20.0,
+    "spike_aj": 1.0,
+    "body_per_joint_w": 2.0,
+    "body_sensor_w_per_channel": 0.005,
+    "baseline_w": 0.5
+  },
+  "rows": [
+    {
+      "workload": "body",
+      "repeat": 0,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 1,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 2,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 3,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 4,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 5,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 6,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 7,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 8,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 9,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 10,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 11,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 12,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 13,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 14,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 15,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 16,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 17,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 18,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 19,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 20,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 21,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 22,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 23,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 24,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 25,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 26,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 27,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 28,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 29,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 30,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 31,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 32,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 33,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 34,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 35,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 36,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 37,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 38,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 39,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 40,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 41,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 42,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 43,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 44,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 45,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 46,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 47,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 48,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 49,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 50,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 51,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 52,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 53,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 54,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 55,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 56,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 57,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 58,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 59,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 60,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 61,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 62,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 63,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 64,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 65,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 66,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 67,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 68,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 69,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 70,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 71,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 72,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 73,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 74,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 75,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 76,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 77,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 78,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 79,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 80,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 81,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 82,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 83,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 84,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 85,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 86,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 87,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 88,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 89,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 90,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 91,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 92,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 93,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 94,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 95,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 96,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 97,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 98,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "body",
+      "repeat": 99,
+      "duration_s": 0.5,
+      "flops": 1316000,
+      "sram_bytes": 312320.0,
+      "dram_bytes": 78080.0,
+      "spikes": 0.0,
+      "energy_est_j": 0.250002908832
+    },
+    {
+      "workload": "brain",
+      "repeat": 0,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 1,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 2,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 3,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 4,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 5,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 6,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 7,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 8,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 9,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 10,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 11,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 12,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 13,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 14,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 15,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 16,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 17,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 18,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 19,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 20,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 21,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 22,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 23,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 24,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 25,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 26,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 27,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 28,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 29,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 30,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 31,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 32,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 33,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 34,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 35,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 36,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 37,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 38,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 39,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 40,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 41,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 42,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 43,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 44,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 45,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 46,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 47,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 48,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 49,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 50,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 51,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 52,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 53,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 54,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 55,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 56,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 57,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 58,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 59,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 60,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 61,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 62,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 63,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 64,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 65,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 66,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 67,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 68,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 69,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 70,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 71,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 72,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 73,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 74,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 75,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 76,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 77,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 78,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 79,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 80,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 81,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 82,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 83,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 84,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 85,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 86,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 87,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 88,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 89,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 90,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 91,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 92,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 93,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 94,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 95,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 96,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 97,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 98,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "brain",
+      "repeat": 99,
+      "duration_s": 0.5,
+      "flops": 50640000,
+      "sram_bytes": 28474560.0,
+      "dram_bytes": 3163840.0,
+      "spikes": 5000.0,
+      "energy_est_j": 0.250116764256005
+    },
+    {
+      "workload": "mind",
+      "repeat": 0,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 1,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 2,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 3,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 4,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 5,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 6,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 7,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 8,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 9,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 10,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 11,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 12,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 13,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 14,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 15,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 16,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 17,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 18,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 19,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 20,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 21,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 22,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 23,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 24,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 25,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 26,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 27,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 28,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 29,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 30,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 31,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 32,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 33,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 34,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 35,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 36,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 37,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 38,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 39,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 40,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 41,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 42,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 43,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 44,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 45,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 46,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 47,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 48,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 49,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 50,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 51,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 52,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 53,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 54,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 55,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 56,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 57,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 58,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 59,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 60,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 61,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 62,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 63,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 64,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 65,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 66,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 67,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 68,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 69,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 70,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 71,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 72,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 73,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 74,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 75,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 76,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 77,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 78,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 79,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 80,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 81,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 82,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 83,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 84,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 85,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 86,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 87,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 88,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 89,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 90,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 91,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 92,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 93,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 94,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 95,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 96,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 97,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 98,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    },
+    {
+      "workload": "mind",
+      "repeat": 99,
+      "duration_s": 0.5,
+      "flops": 2922872288000,
+      "sram_bytes": 132583974319.99998,
+      "dram_bytes": 56821703280.0,
+      "spikes": 0.0,
+      "energy_est_j": 4.322564751032
+    }
+  ]
+}

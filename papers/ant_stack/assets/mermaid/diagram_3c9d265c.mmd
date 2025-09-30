@@ -1,0 +1,45 @@
+graph TD
+ %% Individual Cognition Layer
+ subgraph "Individual Agent (Cognition)"
+ A["AntBrain<br/>(Neural Substrate)"] --> B(Cognitive Layer)
+ B --> C{"Active Inference<br/>(Free Energy Principle)"}
+ C --> D["Perception<br/>(Bayesian Belief Updating)"]
+ C --> E["Action<br/>(Policy Selection)"]
+ D -- "Update" --> C
+ E -- "Execute" --> C
+ B1["Internal Model<br/>(Generative Model)"]
+ B2["Prediction Error<br/>(Surprise)"]
+ C -- "Minimizes" --> B2
+ D -- "Updates" --> B1
+ E -- "Samples" --> B1
+end
+%% Collective Cognition Layer
+ subgraph "Collective (Superorganism)"
+ F(Individual Minds) -- "Interact" --> G{"Emergent Group Cognition"}
+ G --> H["Federated Active Inference"]
+ G --> I["Swarm Behavior<br/>(Foraging, Nest Defense, Trail Laying)"]
+ I --> J(Symbolic Abstraction)
+ G -- "Stigmergic Communication" --> S["Pheromone Trails<br/>(Environmental Memory)"]
+ S -- "Modifies" --> I
+end
+%% Modeling Framework Layer
+ subgraph "Modeling Framework"
+ K["'Triple Equivalence'<br/>(Model, System, Theory)"]
+ J -- "Grounds" --> K
+ H -- "Implements" --> K
+ G -- "Exhibits" --> L["Cognitive Valence<br/>(Task Allocation, Risk)"]
+ L -- "Informs" --> K
+end
+%% Visual classes for clarity
+ classDef indiv fill:#e3f2fd,stroke:#1565c0
+
+ classDef coll fill:#f3e5f5,stroke:#6a1b9a
+
+ classDef model fill:#e8f5e9,stroke:#2e7d32
+
+ class A,B,C,D,E,B1,B2 indiv
+
+ class F,G,H,I,J,S coll
+
+ class K,L model
+

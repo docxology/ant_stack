@@ -1,0 +1,24 @@
+graph TD
+ subgraph "Foundational Models"
+ A["Drosophila Connectome<br/>(e.g., Hemibrain)"]
+ B["Apis Mellifera Brain Models"]
+end
+subgraph "AntBrain Architecture"
+ C(Functional Abstraction)
+ A -- "Template" --> C
+ B -- "Template" --> C
+ 
+ C --> D{Key Modules}
+ D --> E["Antennal Lobes<br/>(Olfactory Processing)"]
+ D --> F["Mushroom Bodies<br/>(Learning/Memory)"]
+ D --> G["Central Complex<br/>(Navigation/Motor Control)"]
+
+ C --> H{Core Principles}
+ H --> I["Neural Sparsity<br/>(~250k Neurons)"]
+ H --> J["Low-Energy Computation"]
+ H --> K["Stochastic Spiking Dynamics"]
+end
+subgraph "Integration"
+ C -- "Sensorimotor<br/>Inference Loops" --> L(AntBody Interface)
+ C -- "Behavioral<br/>Modules" --> M(AntMind Layer)
+ end

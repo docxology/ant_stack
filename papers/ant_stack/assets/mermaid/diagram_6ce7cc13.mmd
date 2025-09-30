@@ -1,0 +1,57 @@
+graph TD
+ subgraph "Environment"
+ A["Physics Engine<br/>(e.g., MuJoCo, PyBullet)"]
+ B["Terrain, Obstacles, Resources"]
+ C["Chemical & Light Fields<br/>(Pheromones, Sunlight)"]
+end
+subgraph "AntBody Model"
+ D(Morphology)
+ E(Actuation)
+ F(Sensory Apparatus)
+ D1["Segmented Body<br/>(Head, Thorax, Gaster)"]
+ D2["Articulated Legs<br/>(6, multi-DOF)"]
+ D3["Mandibles & Antennae"]
+ D4["Exoskeleton Properties"]
+ E1["Joint Actuators"]
+ E2["Low-Level Reflexes"]
+ F1["Chemosensors<br/>(Antennae)"]
+ F2["Mechanoreceptors<br/>(Legs, Body, Antennae)"]
+ F3["Ocelli & Compound Eyes"]
+end
+subgraph "Interfaces"
+ G(AntBrain)
+ H(AntMind)
+end
+A -- "Simulates" --> D
+ D -- "Interacts with" --> B
+ F -- "Detects" --> C
+
+ D -- "Contains" --> E
+ D -- "Contains" --> F
+ D -- "Has" --> D1
+ D -- "Has" --> D2
+ D -- "Has" --> D3
+ D -- "Has" --> D4
+ E -- "Includes" --> E1
+ E -- "Includes" --> E2
+ F -- "Includes" --> F1
+ F -- "Includes" --> F2
+ F -- "Includes" --> F3
+ 
+ F -- "Sensory Data" --> G
+ G -- "Motor Commands" --> E
+ 
+ G -- "Cognitive Substrate" --> H
+
+ classDef env fill:#e0f7fa,stroke:#006064
+
+ classDef body fill:#fff3e0,stroke:#e65100
+
+ classDef iface fill:#e8f5e9,stroke:#1b5e20
+
+ class A,B,C env
+
+ class D,E,F,D1,D2,D3,D4,E1,E2,F1,F2,F3 body
+
+ class G,H iface
+

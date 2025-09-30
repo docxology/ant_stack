@@ -1,0 +1,203 @@
+# Ant Stack Complexity & Energetics Analysis Configuration
+# This manifest defines experimental parameters for comprehensive complexity and energy analysis
+# across the three primary modules: AntBody, AntBrain, and AntMind
+
+# Reproducibility seed for all random number generation
+# Critical for bootstrap confidence intervals and stochastic simulations
+seed: 123
+
+# Statistical analysis configuration
+statistics:
+  bootstrap_samples: 1000 
+  confidence_level: 0.95
+  min_data_points: 10  # Minimum for statistical power
+
+# Device-specific energy coefficients (SINGLE SOURCE OF TRUTH from Appendices.md)
+# These values are calibrated against published benchmarks and validated experimentally
+# ANY CHANGES MUST BE REFLECTED IN Appendices.md Table A and paper_config.yaml
+coefficients:
+  e_flop_pj: 1.0              # Energy per floating-point operation (pJ/FLOP)
+                              # Matches Appendices.md: FLOP energy = 1.0 pJ/FLOP
+  e_sram_pj_per_byte: 0.10    # Energy per SRAM byte access (pJ/byte)
+                              # Matches Appendices.md: SRAM access = 0.10 pJ/byte
+  e_dram_pj_per_byte: 20.0    # Energy per DRAM byte access (pJ/byte)
+                              # Matches Appendices.md: DRAM access = 20.0 pJ/byte
+  e_spike_aj: 1.0             # Energy per spike in neuromorphic circuits (aJ/spike)
+                              # Matches Appendices.md: Spike generation = 1.0 aJ/spike
+  baseline_w: 0.50            # Baseline/idle power consumption (W)
+                              # Matches Appendices.md: Baseline power = 0.50 W
+  body_per_joint_w: 2.0       # Power per joint for actuation (watts)
+  body_sensor_w_per_channel: 0.005  # Power per sensor channel (watts)
+# References for coefficient calibration:
+# - Energy/FLOP scaling: https://ieeexplore.ieee.org/document/8845760
+# - DRAM energy: https://www.micron.com/
+# - Neuromorphic spikes: Advanced nanoscale implementations
+# Workload definitions for each major system component
+# Each workload represents a specific computational module with realistic parameters
+workloads:
+  # AntBody: Physical dynamics and sensing workload
+  body:
+    name: body
+    duration_s: 0.5           # Simulation duration for statistical sampling
+    repeats: 100              # Increased for statistical power (was 5)
+    mode: closed_form         # Use analytical models for fast, deterministic CI builds
+    params:
+      J: 18                   # Joint count - hexapod configuration (18 DOF typical)
+                              # 6 legs × 3 joints per leg (coxa, femur, tibia)
+      C: 12                   # Active contacts per decision tick
+                              # 4 stance legs × 3 potential contact points
+                              # Range: 6-20 depending on terrain and gait phase
+      S: 256                  # Total sensor channels across all modalities
+                              # IMU (6-9), vision (64-128), chemosensors (32-64), tactile (remaining)
+      hz: 100                 # Control loop frequency (100 Hz industry standard)
+                              # Corresponds to 10ms decision cycles
+      contact_solver: "pgs"   # Contact solver algorithm selection
+                              # "pgs": Projected Gauss-Seidel O(C^1.5) - real-time friendly
+                              # "lcp": Linear Complementarity O(C^3) - high accuracy
+                              # "mlcp": Mixed LCP O(C^2.5) - balanced performance
+  # AntBrain: Sparse neural network computation workload
+  brain:
+    name: brain
+    duration_s: 0.5           # Statistical sampling duration
+    repeats: 100              # Independent runs for confidence intervals (was 5)
+    mode: closed_form         # Analytical neural network models
+    params:
+      K: 128                  # Antennal Lobe input channels
+                              # Represents combined olfactory and visual sensory inputs
+                              # Range: 64-512 depending on sensory modality emphasis
+      N_KC: 50000             # Kenyon cells in Mushroom Body
+                              # Follows biological scaling: 10^4 to 10^5 range
+                              # Sparse coding population for pattern separation
+      rho: 0.02               # Active fraction in Mushroom Body (biological sparsity)
+                              # Critical parameter: 0.01-0.05 range, 0.02 is biologically realistic
+                              # Lower values improve energy efficiency but may reduce capacity
+      H: 64                   # Central Complex heading bins (compass discretization)
+                              # Trade-off between angular resolution and computation
+                              # Range: 32-128, with 64 providing good balance
+      hz: 100                 # Neural update frequency (matches control loop)
+      connectivity_pattern: "biological"  # Neural connectivity topology
+                              # Options: "random", "small_world", "scale_free", "biological"
+                              # "biological" provides best computational efficiency
+  # AntMind: Active inference and policy evaluation workload
+  # NOTE: Mind energy is set to 0 J by convention (symbolic processing)
+  # Mind modulates Brain workloads but has no direct energy cost in accounting
+  mind:
+    name: mind
+    duration_s: 0.5           # Statistical sampling duration
+    repeats: 100              # Independent runs for confidence intervals (was 5)
+    mode: closed_form         # Analytical active inference models
+    params:
+      B: 4                    # Branching factor per decision step
+                              # Number of action choices per planning step
+                              # Range: 2-6, with 4 representing typical action repertoire
+      H_p: 15                 # Policy horizon in decision steps (CRITICAL PARAMETER)
+                              # Reduced from 20 to avoid computational explosion
+                              # Range: 5-20, with exponential complexity growth beyond 15
+                              # Each increment significantly increases computation time
+      hz: 100                 # Policy update frequency (matches control loop)
+      state_dim: 16           # State space dimensionality
+                              # Compact representation for computational tractability
+                              # Includes position, velocity, heading, key sensory features
+      action_dim: 6           # Action space dimensionality
+                              # Forward/back, left/right turn, up/down (if applicable)
+                              # Plus discrete behavioral modes
+      hierarchical: false     # Hierarchical processing mode
+                              # false: Standard bounded rational active inference
+                              # true: Multi-level abstraction (increases complexity by 1.5x)
+
+# Scaling analysis configuration
+# Defines systematic parameter sweeps for empirical scaling law derivation
+# Supports comprehensive scaling analysis across all modules as claimed in text
+scaling:
+  # Multiple scaling analyses to match theoretical claims in Scaling.md
+  analyses:
+    # AntBody joint scaling analysis (matches Scaling.md claims)
+    - workload: body
+      param: J                    # Joint count scaling
+      values: [6, 12, 18, 24, 30] # Range claimed in text (6-24 joints)
+      description: "AntBody joint scaling - energy should remain constant due to baseline dominance"
+
+    # AntBrain sensory scaling analysis (matches Scaling.md claims)
+    - workload: brain
+      param: K                    # AL input channels scaling
+      values: [64, 128, 256, 512, 1024] # Range claimed in text (64 to 1024)
+      description: "AntBrain sensory scaling - sub-linear due to sparsity"
+
+    # AntMind planning horizon scaling (matches Scaling.md claims)
+    - workload: mind
+      param: H_p                  # Policy planning horizon
+      values: [5, 10, 15, 20, 25] # Range claimed in text (5-25 steps)
+      description: "AntMind planning horizon - exponential complexity growth"
+
+  # Legacy single scaling config (maintained for backward compatibility)
+  workload: brain
+  param: K
+  values: [64, 128, 256, 512]
+
+  # Mind policy variants that modulate Brain workload characteristics
+  # Each policy represents a different behavioral strategy affecting neural processing
+  mind_policies:
+    # Conservative: Reduced exploration, lower neural activity
+    - { name: conservative, rho_multiplier: 0.8, K_gate: 0.8 }
+      # rho_multiplier: Scales MB sparsity (lower = fewer active neurons)
+      # K_gate: Scales effective AL input channels (attentional gating)
+
+    # Neutral: Baseline biological parameters
+    - { name: neutral,      rho_multiplier: 1.0, K_gate: 1.0 }
+      # Default configuration matching biological observations
+
+    # Exploratory: Increased exploration, higher neural activity
+    - { name: exploratory,  rho_multiplier: 1.2, K_gate: 1.1 }
+      # Higher activity levels for exploration vs exploitation trade-offs
+
+  # Empirical validation configurations
+  validation:
+    # Cross-validation against established benchmarks
+    benchmarks:
+      - name: "jaramillo_morales_2020"
+        reference: "Jaramillo-Morales et al., 2020"
+        energy_range_w: [5, 50]  # Expected range for mobile robots
+        validate_body_energy: true
+
+      - name: "sudhakar_2020_ceimp"
+        reference: "Sudhakar et al., 2020"
+        energy_range_j_per_decision: [0.001, 0.1]
+        validate_compute_actuation_tradeoff: true
+
+      - name: "koomey_2011_energy_scaling"
+        reference: "Koomey et al., 2011"
+        flop_energy_pj: [0.5, 2.0]
+        validate_energy_coefficients: true
+
+    # Biological validation parameters
+    biological_baselines:
+      ant_mass_kg: 0.000001  # Real ant mass (1mg) - was incorrectly 0.02kg
+      ant_metabolic_rate_w_per_kg: [50, 500]  # Real ant metabolic scaling
+      ant_cost_of_transport: [0.1, 0.3]  # Real ant CoT range
+
+  # Alternative parameter sweep configurations (commented examples):
+  # Sensory scaling analysis:
+  # param: H
+  # values: [32, 64, 128]
+
+  # Action space complexity:
+  # param: B
+  # values: [2, 4, 6]
+
+  # Planning horizon analysis (WARNING: exponential complexity):
+  # param: H_p
+  # values: [10, 15, 20]  # Use with caution - values >20 may be intractable
+
+meter:
+  type: null  # or rapl; for rapl you can set energy_uj_path if needed
+  # energy_uj_path: /sys/class/powercap/intel-rapl:0/energy_uj
+  # type: nvml
+  # index: 0
+
+provenance:
+  include_git: true
+  include_versions: true
+
+# Optional physical context used for derived metrics (e.g., CoT)
+mass_kg: 0.02      # nominal platform mass
+distance_m: 1.0    # nominal traverse distance for CoT
