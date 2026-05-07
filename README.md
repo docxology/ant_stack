@@ -364,6 +364,8 @@ python scripts/deploy_docs.py
 
 - **[Benchmarking](docs/benchmarking.md)**: Performance analysis
 
+- **[External Ant Data Integration](docs/external_ant_data_integration.md)**: Schema and workflow for empirical trajectory/contact benchmarks
+
 - **[Reproducibility](docs/reproducibility.md)**: Ensuring scientific validity
 
 ### Developer Resources
