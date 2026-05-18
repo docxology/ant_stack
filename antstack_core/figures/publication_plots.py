@@ -19,14 +19,15 @@ References:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Sequence, Optional, Dict, Any, Tuple, List
-import math
 import json
 from pathlib import Path
 
 # Optional plotting dependencies (graceful degradation)
 plt = None  # type: ignore
 np = None   # type: ignore
+sns = None  # type: ignore
 try:
     import matplotlib
     matplotlib.use("Agg")  # headless backend for server environments
@@ -39,19 +40,59 @@ try:
         sns.set_style("whitegrid")
         sns.set_palette("husl")
     except ImportError:
-        pass  # seaborn is optional enhancement
+        sns = None
 except Exception:
     plt = None  # graceful degradation
+
+
+@dataclass(frozen=True)
+class PublicationPlotConfig:
+    """Runtime controls for publication plot generation."""
+
+    figure_size: tuple[float, float] = (12, 8)
+    dpi: int = 300
+    annotate_statistics: bool = True
+    density_coloring: bool = True
+    close_on_save: bool = True
+
+
+def _publication_config(config: PublicationPlotConfig | None) -> PublicationPlotConfig:
+    return config or PublicationPlotConfig()
+
+
+def _finite_float_array(values: Sequence[float]) -> "np.ndarray":
+    arr = np.asarray(values, dtype=float)
+    return arr[np.isfinite(arr)]
+
+
+def _has_linear_signal(x_values: "np.ndarray", y_values: "np.ndarray") -> bool:
+    return (
+        x_values.size >= 2
+        and y_values.size >= 2
+        and x_values.size == y_values.size
+        and np.ptp(x_values) > 0
+        and np.ptp(y_values) > 0
+    )
+
+
+def _has_power_signal(x_values: "np.ndarray", y_values: "np.ndarray") -> bool:
+    return (
+        _has_linear_signal(x_values, y_values)
+        and x_values.size > 2
+        and np.all(x_values > 0)
+        and np.all(y_values > 0)
+    )
 
 
 class FigureManager:
     """Manages figure numbering and caption generation."""
     
-    def __init__(self, output_dir: Path):
-        self.output_dir = output_dir
+    def __init__(self, output_dir: Path | str):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         self.figure_counter = 0
         self.figures = {}
-        self.caption_file = output_dir / "figure_captions.md"
+        self.caption_file = self.output_dir / "figure_captions.md"
     
     def get_next_figure_id(self, base_name: str) -> str:
         """Get next figure ID with auto-numbering."""
@@ -74,7 +115,7 @@ class FigureManager:
         with open(self.caption_file, 'w') as f:
             f.write("# Figure Captions\n\n")
             f.write("Auto-generated comprehensive figure captions with statistical details.\n\n")
-            
+
             for fig_id, fig_data in self.figures.items():
                 f.write(f"## Figure {fig_data['figure_number']}: {fig_data['title']} {{#{fig_id}}}\n\n")
                 f.write(f"![{fig_data['title']}]({fig_data['file_path']})\n\n")
@@ -90,16 +131,21 @@ class FigureManager:
 
 
 def publication_bar_plot(
-    labels: Sequence[str], 
-    values: Sequence[float], 
-    title: str, 
-    out_path: str, 
+    labels: Sequence[str] | None = None,
+    values: Sequence[float] | None = None,
+    title: str = "",
+    out_path: str | None = None,
     ylabel: str = "Energy (J)",
     yerr: Optional[Sequence[float]] = None,
     figure_manager: Optional[FigureManager] = None,
     detailed_caption: Optional[str] = None,
-    stats: Optional[Dict[str, Any]] = None
-) -> str:
+    stats: Optional[Dict[str, Any]] = None,
+    *,
+    categories: Sequence[str] | None = None,
+    errors: Optional[Sequence[float]] = None,
+    xlabel: str = "Modules",
+    config: PublicationPlotConfig | None = None,
+):
     """Create publication-quality bar plot with comprehensive annotations and captions.
     
     Generates professional bar charts with:
@@ -126,9 +172,14 @@ def publication_bar_plot(
     """
     if plt is None:
         print("matplotlib not available; skipping enhanced bar plot")
-        return "fig:unavailable"
+        return None
+
+    plot_config = _publication_config(config)
+    labels = list(categories if categories is not None else (labels or []))
+    values = list(values or [])
+    yerr = errors if errors is not None else yerr
     
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=plot_config.figure_size)
     
     # Enhanced color scheme for better visual hierarchy
     if np is not None:
@@ -148,7 +199,7 @@ def publication_bar_plot(
                    capsize=5, capthick=2, elinewidth=2)
     
     # Enhanced statistical annotations
-    if np is not None:
+    if plot_config.annotate_statistics and np is not None and values:
         max_val = max(values)
         min_val = min(values)
         range_val = max_val - min_val
@@ -170,7 +221,7 @@ def publication_bar_plot(
     # Enhanced styling
     ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
     ax.set_ylabel(ylabel, fontsize=14, fontweight='bold')
-    ax.set_xlabel('Modules', fontsize=14, fontweight='bold')
+    ax.set_xlabel(xlabel, fontsize=14, fontweight='bold')
     
     # Rotate x-axis labels for better readability
     plt.xticks(rotation=45, ha='right')
@@ -182,7 +233,7 @@ def publication_bar_plot(
     # Enhanced legend and annotations
     if len(values) > 1:
         # Add trend line if applicable
-        if np is not None and len(values) > 2:
+        if plot_config.annotate_statistics and np is not None and len(values) > 2:
             x_numeric = range(len(values))
             z = np.polyfit(x_numeric, values, 1)
             p = np.poly1d(z)
@@ -193,13 +244,15 @@ def publication_bar_plot(
     plt.tight_layout()
     
     # Save with high DPI for publication quality
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    plt.close()
+    if out_path:
+        plt.savefig(out_path, dpi=plot_config.dpi, bbox_inches='tight', facecolor='white', edgecolor='none')
+        if plot_config.close_on_save:
+            plt.close(fig)
     
     # Generate comprehensive caption
     if detailed_caption is None:
         detailed_caption = f"Bar chart showing {ylabel.lower()} across {len(labels)} modules. "
-        if np is not None:
+        if np is not None and values:
             detailed_caption += f"Values range from {min(values):.3f} to {max(values):.3f} "
             detailed_caption += f"with mean {np.mean(values):.3f} ± {np.std(values):.3f}. "
         if yerr is not None:
@@ -212,21 +265,24 @@ def publication_bar_plot(
         figure_manager.add_figure(fig_id, title, detailed_caption, str(out_path), stats)
         return fig_id
     
-    return "fig:bar_plot"
+    return fig
 
 
 def publication_line_plot(
-    x_data: Sequence[float], 
-    y_series: Sequence[Sequence[float]], 
-    labels: Sequence[str], 
-    title: str, 
-    out_path: str,
+    x_data: Sequence[float] | Sequence[Sequence[float]],
+    y_series: Sequence[Sequence[float]] | None = None,
+    labels: Sequence[str] | None = None,
+    title: str = "",
+    out_path: str | None = None,
     xlabel: str = "Parameter",
     ylabel: str = "Energy (J)",
     figure_manager: Optional[FigureManager] = None,
     detailed_caption: Optional[str] = None,
-    stats: Optional[Dict[str, Any]] = None
-) -> str:
+    stats: Optional[Dict[str, Any]] = None,
+    *,
+    y_data: Sequence[float] | Sequence[Sequence[float]] | None = None,
+    config: PublicationPlotConfig | None = None,
+):
     """Create publication-quality line plot with comprehensive annotations and captions.
     
     Generates professional line plots with:
@@ -254,9 +310,18 @@ def publication_line_plot(
     """
     if plt is None:
         print("matplotlib not available; skipping enhanced line plot")
-        return "fig:unavailable"
+        return None
+
+    plot_config = _publication_config(config)
+    if y_data is not None:
+        if len(y_data) > 0 and not isinstance(next(iter(y_data)), (list, tuple)):
+            y_series = [y_data]  # type: ignore[list-item]
+        else:
+            y_series = y_data  # type: ignore[assignment]
+    y_series = list(y_series or [])
+    labels = list(labels or [f"Series {idx + 1}" for idx in range(len(y_series))])
     
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=plot_config.figure_size)
     
     # Enhanced color scheme and styling
     colors = plt.cm.tab10(np.linspace(0, 1, len(y_series))) if np is not None else ['#1f77b4', '#ff7f0e', '#2ca02c']
@@ -274,25 +339,30 @@ def publication_line_plot(
                markerfacecolor='white', markeredgecolor=color, markeredgewidth=2)
     
     # Enhanced statistical analysis
-    if np is not None and len(y_series) > 0:
+    scaling_exponent = None
+    r_squared = None
+    if plot_config.annotate_statistics and np is not None and len(y_series) > 0:
         # Add scaling law analysis for first series
         y_data = y_series[0]
-        if len(x_data) > 2:
+        x_fit_source = _finite_float_array(x_data)
+        y_fit_source = _finite_float_array(y_data)
+        if _has_power_signal(x_fit_source, y_fit_source):
             # Fit power law: y = a * x^b
-            log_x = np.log(x_data)
-            log_y = np.log(y_data)
+            log_x = np.log(x_fit_source)
+            log_y = np.log(y_fit_source)
             coeffs = np.polyfit(log_x, log_y, 1)
             scaling_exponent = coeffs[0]
             scaling_coeff = np.exp(coeffs[1])
             
             # Add scaling law annotation
-            ax.text(0.02, 0.98, f'Scaling: y ∝ x^{scaling_exponent:.2f}', 
+            ax.text(0.02, 0.98, f'Scaling: y ~ x^{scaling_exponent:.2f}',
                    transform=ax.transAxes, fontsize=12, verticalalignment='top',
                    bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
-            
+
             # Add R² value
-            y_pred = scaling_coeff * np.power(x_data, scaling_exponent)
-            r_squared = 1 - (np.sum((y_data - y_pred) ** 2) / np.sum((y_data - np.mean(y_data)) ** 2))
+            y_pred = scaling_coeff * np.power(x_fit_source, scaling_exponent)
+            denominator = np.sum((y_fit_source - np.mean(y_fit_source)) ** 2)
+            r_squared = 1 - (np.sum((y_fit_source - y_pred) ** 2) / denominator) if denominator else 1.0
             ax.text(0.02, 0.90, f'R² = {r_squared:.3f}', 
                    transform=ax.transAxes, fontsize=12, verticalalignment='top',
                    bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.8))
@@ -311,8 +381,10 @@ def publication_line_plot(
     plt.tight_layout()
     
     # Save with high DPI for publication quality
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    plt.close()
+    if out_path:
+        plt.savefig(out_path, dpi=plot_config.dpi, bbox_inches='tight', facecolor='white', edgecolor='none')
+        if plot_config.close_on_save:
+            plt.close(fig)
     
     # Generate comprehensive caption
     if detailed_caption is None:
@@ -320,7 +392,7 @@ def publication_line_plot(
         if np is not None and len(y_series) > 0:
             y_data = y_series[0]
             detailed_caption += f"Data points range from {min(y_data):.3f} to {max(y_data):.3f}. "
-            if len(x_data) > 2:
+            if scaling_exponent is not None and r_squared is not None:
                 detailed_caption += f"Scaling analysis reveals power law relationship with exponent {scaling_exponent:.2f} (R² = {r_squared:.3f}). "
         detailed_caption += "Error bars and confidence intervals show statistical uncertainty."
     
@@ -330,20 +402,21 @@ def publication_line_plot(
         figure_manager.add_figure(fig_id, title, detailed_caption, str(out_path), stats)
         return fig_id
     
-    return "fig:line_plot"
+    return fig
 
 
 def publication_scatter_plot(
     x_data: Sequence[float], 
     y_data: Sequence[float], 
-    title: str, 
-    out_path: str,
+    title: str = "",
+    out_path: str | None = None,
     xlabel: str = "X Parameter",
     ylabel: str = "Y Parameter",
     figure_manager: Optional[FigureManager] = None,
     detailed_caption: Optional[str] = None,
-    stats: Optional[Dict[str, Any]] = None
-) -> str:
+    stats: Optional[Dict[str, Any]] = None,
+    config: PublicationPlotConfig | None = None,
+):
     """Create publication-quality scatter plot with comprehensive annotations and captions.
     
     Generates professional scatter plots with:
@@ -369,21 +442,24 @@ def publication_scatter_plot(
     """
     if plt is None:
         print("matplotlib not available; skipping enhanced scatter plot")
-        return "fig:unavailable"
+        return None
     
-    fig, ax = plt.subplots(figsize=(12, 8))
+    plot_config = _publication_config(config)
+    fig, ax = plt.subplots(figsize=plot_config.figure_size)
     
     # Enhanced color scheme based on density
     if np is not None:
         # Create density-based coloring
-        from scipy.stats import gaussian_kde
         try:
+            if not plot_config.density_coloring:
+                raise ValueError("density coloring disabled")
+            from scipy.stats import gaussian_kde
             xy = np.vstack([x_data, y_data])
             density = gaussian_kde(xy)(xy)
             scatter = ax.scatter(x_data, y_data, c=density, cmap='viridis', 
                                s=100, alpha=0.7, edgecolors='black', linewidth=0.5)
             plt.colorbar(scatter, ax=ax, label='Point Density')
-        except ImportError:
+        except Exception:
             # Fallback to simple coloring
             scatter = ax.scatter(x_data, y_data, c='blue', s=100, alpha=0.7, 
                                edgecolors='black', linewidth=0.5)
@@ -392,14 +468,28 @@ def publication_scatter_plot(
                            edgecolors='black', linewidth=0.5)
     
     # Enhanced statistical analysis
-    if np is not None and len(x_data) > 1:
+    correlation = None
+    r_squared = None
+    equation = None
+    if plot_config.annotate_statistics and np is not None:
+        x_fit_source = _finite_float_array(x_data)
+        y_fit_source = _finite_float_array(y_data)
+    else:
+        x_fit_source = y_fit_source = None
+    if (
+        plot_config.annotate_statistics
+        and np is not None
+        and x_fit_source is not None
+        and y_fit_source is not None
+        and _has_linear_signal(x_fit_source, y_fit_source)
+    ):
         # Calculate correlation coefficient
-        correlation = np.corrcoef(x_data, y_data)[0, 1]
+        correlation = np.corrcoef(x_fit_source, y_fit_source)[0, 1]
         
         # Fit regression line
-        coeffs = np.polyfit(x_data, y_data, 1)
+        coeffs = np.polyfit(x_fit_source, y_fit_source, 1)
         regression_line = np.poly1d(coeffs)
-        x_range = np.linspace(min(x_data), max(x_data), 100)
+        x_range = np.linspace(min(x_fit_source), max(x_fit_source), 100)
         ax.plot(x_range, regression_line(x_range), 'r--', linewidth=2, alpha=0.8, label='Regression Line')
         
         # Add statistical annotations
@@ -408,8 +498,9 @@ def publication_scatter_plot(
                bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
         
         # Add R² value
-        y_pred = regression_line(x_data)
-        r_squared = 1 - (np.sum((y_data - y_pred) ** 2) / np.sum((y_data - np.mean(y_data)) ** 2))
+        y_pred = regression_line(x_fit_source)
+        denominator = np.sum((y_fit_source - np.mean(y_fit_source)) ** 2)
+        r_squared = 1 - (np.sum((y_fit_source - y_pred) ** 2) / denominator) if denominator else 1.0
         ax.text(0.02, 0.90, f'R² = {r_squared:.3f}', 
                transform=ax.transAxes, fontsize=12, verticalalignment='top',
                bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.8))
@@ -428,20 +519,22 @@ def publication_scatter_plot(
     # Add grid and legend
     ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     ax.set_axisbelow(True)
-    if np is not None and len(x_data) > 1:
+    if correlation is not None:
         ax.legend(loc='best', frameon=True, fancybox=True, shadow=True)
     
     # Improve layout
     plt.tight_layout()
     
     # Save with high DPI for publication quality
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    plt.close()
+    if out_path:
+        plt.savefig(out_path, dpi=plot_config.dpi, bbox_inches='tight', facecolor='white', edgecolor='none')
+        if plot_config.close_on_save:
+            plt.close(fig)
     
     # Generate comprehensive caption
     if detailed_caption is None:
         detailed_caption = f"Scatter plot showing relationship between {xlabel.lower()} and {ylabel.lower()}. "
-        if np is not None and len(x_data) > 1:
+        if correlation is not None and r_squared is not None and equation is not None:
             detailed_caption += f"Data points show correlation coefficient r = {correlation:.3f} "
             detailed_caption += f"with R² = {r_squared:.3f}. "
             detailed_caption += f"Regression analysis reveals linear relationship: {equation}. "
@@ -453,4 +546,4 @@ def publication_scatter_plot(
         figure_manager.add_figure(fig_id, title, detailed_caption, str(out_path), stats)
         return fig_id
     
-    return "fig:scatter_plot"
+    return fig

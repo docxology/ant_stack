@@ -19,6 +19,7 @@ References:
 
 from __future__ import annotations
 import os
+import re
 import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
@@ -260,7 +261,14 @@ class AssetManager:
         return removed_count
 
 
-def organize_figure_assets(base_dir: Union[str, Path], patterns: Optional[List[str]] = None) -> Dict[str, str]:
+def organize_figure_assets(
+    base_dir: Union[str, Path] | None = None,
+    patterns: Optional[List[str]] = None,
+    *,
+    markdown_content: str | None = None,
+    source_dir: Union[str, Path] | None = None,
+    output_dir: Union[str, Path] | None = None,
+) -> Dict[str, str] | bool:
     """Organize figure assets in a directory.
     
     Args:
@@ -270,6 +278,25 @@ def organize_figure_assets(base_dir: Union[str, Path], patterns: Optional[List[s
     Returns:
         Dictionary mapping source to destination paths
     """
+    if markdown_content is not None or source_dir is not None or output_dir is not None:
+        if source_dir is None or output_dir is None:
+            return False
+        src = Path(source_dir)
+        dest = Path(output_dir)
+        if not src.exists():
+            return False
+        dest.mkdir(parents=True, exist_ok=True)
+        image_refs = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", markdown_content or "")
+        for image_ref in image_refs:
+            source_path = src / image_ref
+            dest_path = dest / source_path.name
+            if source_path.exists() and source_path.is_file() and source_path.resolve() != dest_path.resolve():
+                shutil.copy2(source_path, dest_path)
+        return True
+
+    if base_dir is None:
+        return False
+
     manager = AssetManager(base_dir)
     manager.setup_directory_structure()
     
@@ -280,7 +307,13 @@ def organize_figure_assets(base_dir: Union[str, Path], patterns: Optional[List[s
         return {asset: asset for asset in organized}
 
 
-def copy_figure_files(source_files: List[str], dest_dir: Union[str, Path]) -> Dict[str, str]:
+def copy_figure_files(
+    source_files: List[str] | None = None,
+    dest_dir: Union[str, Path] | None = None,
+    *,
+    file_list: List[str] | None = None,
+    source_dir: Union[str, Path] | None = None,
+) -> Dict[str, str] | bool:
     """Copy figure files to managed asset directory.
     
     Args:
@@ -290,6 +323,23 @@ def copy_figure_files(source_files: List[str], dest_dir: Union[str, Path]) -> Di
     Returns:
         Dictionary mapping source to destination paths
     """
+    if file_list is not None:
+        if source_dir is None or dest_dir is None:
+            return False
+        src = Path(source_dir)
+        dest = Path(dest_dir)
+        if not src.exists():
+            return False
+        dest.mkdir(parents=True, exist_ok=True)
+        for filename in file_list:
+            source_path = src / filename
+            if source_path.exists() and source_path.is_file():
+                shutil.copy2(source_path, dest / filename)
+        return True
+
+    if source_files is None or dest_dir is None:
+        return {}
+
     manager = AssetManager(dest_dir)
     manager.setup_directory_structure()
     

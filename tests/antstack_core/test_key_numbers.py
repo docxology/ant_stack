@@ -663,6 +663,33 @@ class TestKeyNumbersIntegration(unittest.TestCase):
 class TestKeyNumbersRobustness(unittest.TestCase):
     """Test robustness of key numbers functionality."""
 
+    def setUp(self):
+        """Set up shared robustness fixtures."""
+        self.sample_data = {
+            "per_decision_energy": {
+                "body": 3.0,
+                "brain": 0.2,
+                "mind": 0.1,
+                "total": 3.3
+            },
+            "computational_load": {
+                "flops": 10000000,
+                "memory_mb": 4096,
+                "spikes": 100000
+            },
+            "scaling_exponents": {
+                "body": 0.7,
+                "brain": 0.9,
+                "mind": 1.1,
+                "combined": 0.8
+            },
+            "system_parameters": {
+                "temperature_k": 295.0,
+                "time_step_ms": 25,
+                "decision_horizon": 15
+            }
+        }
+
     def test_file_handling_edge_cases(self):
         """Test file handling with edge cases."""
         # Test with very large JSON file

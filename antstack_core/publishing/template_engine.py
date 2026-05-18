@@ -423,7 +423,7 @@ class TemplateEngine:
 {{{{ appendices }}}}
 
 ---
-*Generated with AntStack Core v{{{ antstack_version }}}*
+*Generated with AntStack Core v{{{{ antstack_version }}}}*
 """
 
     def _create_complexity_template(self, config: Dict[str, Any]) -> str:
@@ -492,7 +492,7 @@ class TemplateEngine:
 {{{{ appendices }}}}
 
 ---
-*Generated with AntStack Core v{{{ antstack_version }}}*
+*Generated with AntStack Core v{{{{ antstack_version }}}}*
 """
 
     def _create_generic_template(self, config: Dict[str, Any]) -> str:
@@ -514,7 +514,7 @@ class TemplateEngine:
 {{{{ references }}}}
 
 ---
-*Generated with AntStack Core v{{{ antstack_version }}}*
+*Generated with AntStack Core v{{{{ antstack_version }}}}*
 """
 
     def list_available_templates(self) -> List[str]:

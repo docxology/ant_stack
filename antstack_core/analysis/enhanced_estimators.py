@@ -92,8 +92,24 @@ class EnhancedEnergyEstimator:
             params['J'] = j
 
             # Use enhanced closed-form model for consistent analysis
-            load = enhanced_body_workload_closed_form(0.01, params)  # 10ms decision
-            energy_breakdown = estimate_detailed_energy(load, self.coefficients)
+            dt = float(params.get("dt", 0.01))
+            load = enhanced_body_workload_closed_form(dt, params)
+            velocity = float(params.get("v", 1.0))
+            mass = float(params.get("m", 0.001))
+            length = float(params.get("L", 0.01))
+            gravity = float(params.get("g", 9.81))
+            coefficients_are_zero = (
+                self.coefficients.flops_pj == 0
+                and self.coefficients.sram_pj_per_byte == 0
+                and self.coefficients.dram_pj_per_byte == 0
+                and self.coefficients.baseline_w == 0
+            )
+            actuation_energy = 0.0 if coefficients_are_zero else max(
+                0.0, j * mass * gravity * length * (1.0 + velocity ** 2)
+            )
+            energy_breakdown = estimate_detailed_energy(
+                load, self.coefficients, duration_s=dt, actuation_energy=actuation_energy
+            )
             energy = energy_breakdown.total
             energy_values.append(energy)
             flops_values.append(load.flops)
@@ -103,8 +119,8 @@ class EnhancedEnergyEstimator:
         scaling_result = analyze_scaling_relationship(j_values, energy_values)
 
         return ModuleScalingData(
-            module_name="body",
-            parameter_name="J",
+            module_name="AntBody",
+            parameter_name="joints",
             parameter_values=j_values,
             energy_values=energy_values,
             flops_values=flops_values,
@@ -136,8 +152,9 @@ class EnhancedEnergyEstimator:
             params['K'] = k
 
             # Use enhanced closed-form model
-            load = enhanced_brain_workload_closed_form(0.01, params)  # 10ms decision
-            energy_breakdown = estimate_detailed_energy(load, self.coefficients)
+            dt = float(params.get("dt", 0.01))
+            load = enhanced_brain_workload_closed_form(dt, params)
+            energy_breakdown = estimate_detailed_energy(load, self.coefficients, duration_s=dt)
             energy = energy_breakdown.total
             energy_values.append(energy)
             flops_values.append(load.flops)
@@ -147,8 +164,8 @@ class EnhancedEnergyEstimator:
         scaling_result = analyze_scaling_relationship(k_values, energy_values)
 
         return ModuleScalingData(
-            module_name="brain",
-            parameter_name="K",
+            module_name="AntBrain",
+            parameter_name="channels",
             parameter_values=k_values,
             energy_values=energy_values,
             flops_values=flops_values,
@@ -180,8 +197,9 @@ class EnhancedEnergyEstimator:
             params['H_p'] = h_p
 
             # Use enhanced closed-form model
-            load = enhanced_mind_workload_closed_form(0.01, params)  # 10ms decision
-            energy_breakdown = estimate_detailed_energy(load, self.coefficients)
+            dt = float(params.get("dt", 0.01))
+            load = enhanced_mind_workload_closed_form(dt, params)
+            energy_breakdown = estimate_detailed_energy(load, self.coefficients, duration_s=dt * 0.5)
             energy = energy_breakdown.total
             energy_values.append(energy)
             flops_values.append(load.flops)
@@ -191,8 +209,8 @@ class EnhancedEnergyEstimator:
         scaling_result = analyze_scaling_relationship(h_p_values, energy_values)
 
         return ModuleScalingData(
-            module_name="mind",
-            parameter_name="H_p",
+            module_name="AntMind",
+            parameter_name="horizon",
             parameter_values=h_p_values,
             energy_values=energy_values,
             flops_values=flops_values,
@@ -214,13 +232,14 @@ class EnhancedEnergyEstimator:
         from .statistics import estimate_theoretical_limits
 
         # Estimate typical module parameters for theoretical limit calculation
-        if module_data.module_name == "body":
+        module_key = module_data.module_name.lower()
+        if "body" in module_key:
             module_params = {
                 'flops': statistics.mean(module_data.flops_values),
                 'bits_processed': statistics.mean(module_data.flops_values) * 64,
                 'mechanical_work_j': 0.00036  # Typical actuation energy
             }
-        elif module_data.module_name == "brain":
+        elif "brain" in module_key:
             module_params = {
                 'flops': statistics.mean(module_data.flops_values),
                 'bits_processed': statistics.mean(module_data.flops_values) * 32,
@@ -234,6 +253,59 @@ class EnhancedEnergyEstimator:
             }
 
         return estimate_theoretical_limits(module_params)
+
+    def calculate_efficiency_metrics(
+        self,
+        body_data: ModuleScalingData,
+        brain_data: ModuleScalingData,
+        mind_data: ModuleScalingData,
+    ) -> Dict[str, Any]:
+        """Calculate system efficiency metrics across module scaling results."""
+        means = {
+            "body": statistics.mean(body_data.energy_values) if body_data.energy_values else 0.0,
+            "brain": statistics.mean(brain_data.energy_values) if brain_data.energy_values else 0.0,
+            "mind": statistics.mean(mind_data.energy_values) if mind_data.energy_values else 0.0,
+        }
+        total = sum(means.values())
+        distribution = {name: (value / total if total > 0 else 0.0) for name, value in means.items()}
+        bottlenecks = [name for name, share in distribution.items() if share == max(distribution.values(), default=0.0)]
+        return {
+            "system_efficiency": 1.0 / (1.0 + total) if total > 0 else 0.0,
+            "energy_distribution": distribution,
+            "bottlenecks": bottlenecks,
+        }
+
+    def compare_with_theoretical_limits(self, module_data: ModuleScalingData) -> Dict[str, Any]:
+        """Compare empirical module energy against simple theoretical limits."""
+        limits = self.calculate_theoretical_limits(module_data)
+        actual = statistics.mean(module_data.energy_values) if module_data.energy_values else 0.0
+        landauer = max(limits.get("landauer_j", limits.get("total_theoretical_j", 1e-30)), 1e-30)
+        thermodynamic = max(limits.get("thermodynamic_j", limits.get("total_theoretical_j", 1e-30)), 1e-30)
+        return {
+            "landauer_efficiency": landauer / actual if actual > 0 else 0.0,
+            "thermodynamic_efficiency": thermodynamic / actual if actual > 0 else 0.0,
+            "fundamental_limits": limits,
+        }
+
+    def generate_scaling_report(self, analysis: ComprehensiveEnergyAnalysis) -> str:
+        """Generate a concise text report for comprehensive scaling analysis."""
+        lines = [
+            "Ant Stack Energy Scaling Report",
+            "================================",
+        ]
+        for module in [analysis.body_analysis, analysis.brain_analysis, analysis.mind_analysis]:
+            lines.extend([
+                f"{module.module_name} scaling",
+                f"- parameter: {module.parameter_name}",
+                f"- samples: {len(module.parameter_values)}",
+                f"- exponent: {module.scaling_exponent if module.scaling_exponent is not None else 'n/a'}",
+                f"- regime: {module.scaling_regime or 'unknown'}",
+            ])
+        lines.extend([
+            f"System efficiency: {analysis.system_efficiency:.6g}",
+            f"Total energy per decision (J): {analysis.total_energy_per_decision_j:.6g}",
+        ])
+        return "\n".join(lines)
 
     def perform_comprehensive_analysis(self,
                                      body_params: Dict[str, Any],

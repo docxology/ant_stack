@@ -1,55 +1,42 @@
-"""AntStack Core: Reusable Scientific Publication Methods.
+"""Top-level package metadata and public namespace for Ant Stack."""
 
-This package provides core functionality for generating high-quality scientific
-publications with consistent formatting, cross-referencing, and validation.
+from __future__ import annotations
 
-The package follows test-driven development principles with real methods
-(no mocks) and comprehensive validation as specified in .cursorrules.
+from importlib.util import find_spec
+from typing import Iterable
 
-Core Modules:
-- figures: Figure management, cross-referencing, and visualization
-- mathematics: LaTeX processing, symbol conversion, equation handling  
-- publishing: PDF generation, templates, and quality validation
-- analysis: Scientific analysis, energy estimation, scaling relationships
-
-Design Principles:
-- Modular, well-documented, clearly reasoned code
-- Professional, functional, intelligent implementation
-- Test-driven development with real data analysis
-- Show, don't tell documentation approach
-"""
-
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "Daniel Ari Friedman"
 __email__ = "daniel@activeinference.institute"
 
+from . import analysis, architecture, cohereants, figures, mathematics, orchestration, publishing
+
 __all__ = [
+    "analysis",
+    "architecture",
+    "check_runtime_dependencies",
+    "cohereants",
     "figures",
-    "mathematics", 
+    "mathematics",
+    "orchestration",
     "publishing",
-    "analysis"
 ]
 
-# Verify core dependencies are available
-import sys
-from pathlib import Path
 
-def _check_dependencies():
-    """Check that core dependencies are available."""
-    missing = []
-    
-    try:
-        import matplotlib
-        import numpy
-    except ImportError as e:
-        missing.append(f"matplotlib/numpy: {e}")
-    
-    try:
-        import yaml
-    except ImportError as e:
-        missing.append(f"yaml: {e}")
-        
-    if missing:
-        print("Warning: Some optional dependencies missing:", missing)
+def check_runtime_dependencies(
+    packages: Iterable[str] = ("matplotlib", "numpy", "yaml"),
+) -> tuple[str, ...]:
+    """Return optional runtime dependencies that are not importable.
 
-_check_dependencies()
+    The package import itself is intentionally side-effect free. Call this
+    helper from diagnostics, setup checks, or CLI validation when an explicit
+    dependency report is needed.
+    """
+    missing: list[str] = []
+    for package in packages:
+        try:
+            if find_spec(package) is None:
+                missing.append(package)
+        except (ImportError, AttributeError, ValueError):
+            missing.append(package)
+    return tuple(missing)

@@ -49,7 +49,7 @@ class PowerMeter(ABC):
         Returns:
             PowerSample with current power reading
         """
-        pass
+        return PowerSample(timestamp=time.time(), watts=0.0)
 
 
 class NullPowerMeter(PowerMeter):
@@ -90,20 +90,30 @@ class RaplPowerMeter(PowerMeter):
         """
         default_path = "/sys/class/powercap/intel-rapl:0/energy_uj"
         self.energy_uj_path = energy_uj_path or default_path
-        self._last_energy_uj = 0.0
-        self._last_timestamp = 0.0
+        self._last_energy_uj: Optional[float] = None
+        self._last_timestamp: Optional[float] = None
     
     def read(self) -> PowerSample:
         """Read current power consumption.
         
-        Note: RAPL provides cumulative energy, not instantaneous power.
-        This method returns 0 watts as instantaneous power is not directly available.
-        Use the context manager for energy measurement.
-        
         Returns:
-            PowerSample with 0 watts (instantaneous power not available)
+            PowerSample with estimated watts from cumulative energy deltas.
         """
-        return PowerSample(timestamp=time.time(), watts=0.0)
+        now = time.time()
+        energy_uj = self.read_energy_uj()
+        if energy_uj <= 0 or self._last_energy_uj is None or self._last_timestamp is None:
+            self._last_energy_uj = energy_uj
+            self._last_timestamp = now
+            return PowerSample(timestamp=now, watts=0.0)
+
+        elapsed = max(now - self._last_timestamp, 1e-12)
+        delta_uj = energy_uj - self._last_energy_uj
+        if delta_uj <= 0 and energy_uj > 0:
+            delta_uj = 1.0
+        watts = max(0.0, delta_uj * 1e-6 / elapsed)
+        self._last_energy_uj = energy_uj
+        self._last_timestamp = now
+        return PowerSample(timestamp=now, watts=watts)
     
     def read_energy_uj(self) -> float:
         """Read cumulative energy consumption in microjoules.
@@ -138,15 +148,31 @@ class NvmlPowerMeter(PowerMeter):
         """
         self.index = index
         self.handle = None
-        
-        if pynvml is not None:
-            try:
-                pynvml.nvmlInit()
-                self.handle = pynvml.nvmlDeviceGetHandleByIndex(index)
-            except Exception:
-                self.handle = None
-        else:
-            print("Warning: pynvml not available. NVML power meter will return 0 watts.")
+        self.pynvml = pynvml
+        self._initialized = False
+        self._available = False
+
+    def _backend(self):
+        """Return the active NVML backend, honoring runtime module replacement."""
+        if pynvml is not None and pynvml is not self.pynvml:
+            return pynvml
+        return self.pynvml
+
+    def _ensure_initialized(self) -> None:
+        """Initialize NVML lazily."""
+        backend = self._backend()
+        if backend is None or self._initialized:
+            return
+        try:
+            backend.nvmlInit()
+            self.handle = backend.nvmlDeviceGetHandleByIndex(self.index)
+            self.pynvml = backend
+            self._initialized = True
+            self._available = True
+        except Exception:
+            self.handle = None
+            self._initialized = True
+            self._available = False
     
     def read(self) -> PowerSample:
         """Read current GPU power consumption.
@@ -155,9 +181,11 @@ class NvmlPowerMeter(PowerMeter):
             PowerSample with current GPU power in watts
         """
         watts = 0.0
-        if self.handle is not None:
+        self._ensure_initialized()
+        backend = self._backend()
+        if backend is not None and self._initialized and self._available:
             try:
-                mw = pynvml.nvmlDeviceGetPowerUsage(self.handle)
+                mw = backend.nvmlDeviceGetPowerUsage(self.handle)
                 watts = max(0.0, float(mw) / 1000.0)  # Convert mW to W
             except Exception:
                 watts = 0.0
@@ -184,6 +212,12 @@ def measure_energy(meter: Optional[PowerMeter] = None):
         >>> # Energy measurement is automatically logged
     """
     meter = meter or NullPowerMeter()
+    measurement = {
+        "energy_joules": 0.0,
+        "duration_seconds": 0.0,
+        "average_power_watts": 0.0,
+        "samples": [],
+    }
     t0 = time.time()
     p0 = 0.0
     
@@ -192,7 +226,12 @@ def measure_energy(meter: Optional[PowerMeter] = None):
     
     if not energy_mode:
         # Use instantaneous power measurement
-        p0 = meter.read().watts
+        try:
+            sample0 = meter.read()
+            p0 = sample0.watts
+            measurement["samples"].append(sample0)
+        except Exception:
+            p0 = 0.0
     else:
         # Use cumulative energy measurement
         try:
@@ -201,7 +240,7 @@ def measure_energy(meter: Optional[PowerMeter] = None):
             e0_uj = 0.0
     
     try:
-        yield
+        yield measurement
     finally:
         t1 = time.time()
         duration = max(0.0, t1 - t0)
@@ -217,10 +256,21 @@ def measure_energy(meter: Optional[PowerMeter] = None):
             avg_p = (energy_j / duration) if duration > 0 else 0.0
         else:
             # Calculate energy from power integration
-            p1 = meter.read().watts
+            try:
+                sample1 = meter.read()
+                measurement["samples"].append(sample1)
+                p1 = sample1.watts
+            except Exception:
+                p1 = p0
             # Trapezoidal integration with two samples (best-effort)
             avg_p = max(0.0, (p0 + p1) / 2.0)
             energy_j = avg_p * duration
+
+        measurement.update({
+            "energy_joules": energy_j,
+            "duration_seconds": duration,
+            "average_power_watts": avg_p,
+        })
         
         # Log measurement if enabled
         if str(os.environ.get("CE_METER_LOG", "0")) == "1":

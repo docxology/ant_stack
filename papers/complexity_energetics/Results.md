@@ -2,7 +2,7 @@
 
 ## Overview of Empirical Findings
 
-Our comprehensive analysis reveals distinct computational and energetic regimes across the Ant Stack modules, establishing fundamental scaling laws and efficiency bounds for embodied AI systems. The results demonstrate how biological design principles enable efficient scaling while identifying fundamental computational limits.
+The manifest-driven analysis identifies distinct computational and energetic regimes across the Ant Stack modules. These results estimate scaling laws and efficiency bounds for the modeled embodied AI system; they should not be read as direct empirical claims about biological ants without the external-data workflow described in the repository documentation.
 
 **Analysis Framework**: We employ a multi-dimensional analysis framework combining analytical modeling, empirical measurement, and statistical validation. All analyses use manifest-driven configurations with deterministic seeding (seed=123) to ensure complete reproducibility across different experimental conditions and hardware platforms.
 
@@ -14,7 +14,7 @@ Our comprehensive analysis reveals distinct computational and energetic regimes 
 
 ### AntBody: Mechanical Efficiency Regime
 
-The AntBody module demonstrates flat energy scaling dominated by baseline power consumption, establishing that morphological complexity comes at essentially zero energy cost within practical ranges.
+The AntBody module shows approximately flat modeled energy scaling dominated by baseline power consumption, suggesting that joint-count changes have low incremental compute-energy cost within the tested parameter range.
 
 **Joint Count Scaling Analysis**:
 
@@ -26,7 +26,7 @@ The AntBody module demonstrates flat energy scaling dominated by baseline power 
 
 - **Physical Mechanism**: Baseline power consumption (sensors + controllers) dominates over joint-dependent computation
 
-- **Design Implication**: Adding morphological degrees of freedom has negligible energy penalty
+- **Design Implication**: Adding morphological degrees of freedom has low modeled compute-energy penalty in this configuration
 
 **Computational Complexity Results**:
 
@@ -36,11 +36,11 @@ The AntBody module demonstrates flat energy scaling dominated by baseline power 
 
 - **Real-Time Feasibility**: Contact solver selection (PGS vs LCP) becomes critical for $C > 20$ active contacts
 
-**Key Finding**: Energy consumption remains constant despite morphological scaling, making sensor optimization and contact resolution the primary efficiency targets rather than joint count minimization.
+**Key Finding**: Modeled energy consumption remains nearly constant across the sampled morphological range, making sensor optimization and contact resolution the primary efficiency targets in this configuration.
 
 ### AntBrain: Sparsity-Enabled Scaling
 
-The AntBrain module demonstrates remarkable energy efficiency through biological sparsity patterns, enabling sub-linear scaling that prevents computational explosion as sensory dimensionality increases.
+The AntBrain module shows sub-linear modeled energy scaling under biological sparsity assumptions, which reduces computational growth as sensory dimensionality increases.
 
 **Energy Scaling Results**:
 
@@ -64,11 +64,11 @@ The AntBrain module demonstrates remarkable energy efficiency through biological
 
 - **Scaling Advantage**: 16$\times$ sensory expansion (64 to 1024 channels) with <1% energy increase
 
-**Key Finding**: Biological sparsity enables 16$\times$ sensory scaling (64 to 1024 channels) with constant energy consumption, establishing fundamental efficiency advantages over dense neural architectures.
+**Key Finding**: Under the configured sparsity assumption, the model supports 16$\times$ sensory scaling (64 to 1024 channels) with minimal energy increase, suggesting an efficiency advantage relative to dense neural architectures.
 
 ### AntMind: Exponential Complexity Frontier
 
-The AntMind module demonstrates super-linear scaling with fundamental computational limits, establishing practical boundaries for active inference in real-time embodied systems.
+The AntMind module shows super-linear scaling in the sampled configuration, indicating practical boundaries for real-time active inference implementations.
 
 **Planning Horizon Scaling Analysis**:
 
@@ -92,11 +92,11 @@ The AntMind module demonstrates super-linear scaling with fundamental computatio
 
 - **Critical Threshold**: $H_p = 15$ represents fundamental complexity barrier
 
-**Key Finding**: Exponential complexity growth establishes fundamental limits for exact active inference, requiring bounded rationality approximations and hierarchical decomposition for practical cognitive processing.
+**Key Finding**: Exponential policy-tree growth makes exact active inference expensive in the tested regime, motivating bounded-rational approximations and hierarchical decomposition for practical cognitive processing.
 
 ## Theoretical Efficiency Analysis
 
-Our analysis establishes efficiency baselines by comparing measured energy consumption against fundamental physical limits, revealing substantial optimization opportunities across different computational domains.
+The analysis establishes model-based efficiency baselines by comparing estimated energy consumption against physical lower-bound references, revealing potential optimization opportunities across different computational domains.
 
 ### Efficiency Gap Analysis
 
@@ -142,7 +142,7 @@ Our analysis establishes efficiency baselines by comparing measured energy consu
 
 ### Key Theoretical Insights
 
-**Mechanical vs Computational Efficiency Regimes**: AntBody demonstrates that physical actuation can achieve efficiency exceeding information processing limits, while computational modules (Brain, Mind) reveal substantial optimization opportunities through hardware-software co-design.
+**Mechanical vs Computational Efficiency Regimes**: AntBody is dominated by physical actuation in the model, while computational modules (Brain, Mind) show larger modeled optimization gaps through hardware-software co-design.
 
 **Scaling Law Implications**: The efficiency gaps correlate directly with scaling regimes---mechanical systems show optimal efficiency, sparse neural systems offer maximum improvement potential, and cognitive systems face fundamental complexity barriers.
 
@@ -152,11 +152,11 @@ Our analysis establishes efficiency baselines by comparing measured energy consu
 
 ### Real Ant Energetics Benchmarking
 
-To validate our theoretical models against biological reality, we compare our computational predictions with empirical data from real ant colonies. This validation provides crucial insights into the biological plausibility of our energy models and identifies areas where biomimetic design principles can be improved.
+To contextualize the theoretical models against biological reality, we compare computational predictions with reported ant energetics. This comparison is a plausibility check, not a replacement for a dataset-specific empirical validation workflow.
 
 **Metabolic Rate Comparison**: Real ants (Formica rufa) exhibit metabolic rates of approximately 0.1-0.5 W/kg during active foraging, with resting rates around 0.01-0.05 W/kg (Lighton & Feener, 2005). Our AntBody model predicts 37.4 W total power for a biologically realistic 0.001 kg platform (1 mg ant mass), corresponding to 37,400 W/kg—within expected ranges for robotic platforms given electromechanical actuator inefficiencies.
 
-**Energy Efficiency Ratios**: Biological ants achieve cost-of-transport (CoT) values of 0.1-0.3 (Alexander, 2005), while our model predicts CoT $\approx$ 1.93 for an 18-DOF hexapod. This 6-19$\times$ difference quantitatively demonstrates the fundamental efficiency advantages of biological muscle (22% efficiency, 450 W/kg power density) over electromechanical actuators (45% efficiency, 250 W/kg power density), and biological carbohydrate energy storage (17 MJ/kg) over Li-ion batteries (0.87 MJ/kg)—a 19$\times$ energy density disadvantage.
+**Energy Efficiency Ratios**: Biological ants are reported with cost-of-transport (CoT) values of 0.1-0.3 (Alexander, 2005), while the model predicts CoT $\approx$ 1.93 for an 18-DOF hexapod. This 6-19$\times$ difference is used here as an engineering target for comparing biological muscle, electromechanical actuators, carbohydrate energy storage, and Li-ion batteries; the exact ratio depends on platform assumptions and dataset-specific calibration.
 
 **Neural Processing Efficiency**: Real ant mushroom bodies consume approximately 0.1-0.5 mW during active processing (Strausfeld et al., 2009), while our AntBrain model predicts 0.5 mJ per decision (50 mW at 100 Hz). This discrepancy reflects both the sparse biological processing we model and the potential for neuromorphic hardware optimization to bridge this gap.
 
@@ -170,7 +170,7 @@ To validate our theoretical models against biological reality, we compare our co
 
 ### Scaling Law Validation
 
-Our computational scaling laws are validated against biological scaling relationships:
+The computational scaling laws are compared with biological scaling relationships:
 
 **Body Mass Scaling**: Biological ants follow $E \propto m^{0.75}$ scaling (Kleiber's law), while our robotic model shows flat energy consumption independent of morphological complexity. This difference reflects the dominance of fixed baseline power (sensors, controllers) in robotic systems versus metabolic scaling in biological systems.
 

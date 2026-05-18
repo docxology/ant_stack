@@ -57,7 +57,16 @@ from .build_orchestrator import (
     validate_build_environment
 )
 
-__version__ = "1.0.0"
+from .provenance import (
+    DEFAULT_DEPENDENCIES,
+    ProvenanceRecord,
+    build_run_provenance,
+    collect_dependency_versions,
+    detect_git_state,
+    write_provenance
+)
+
+__version__ = "2.0.0"
 __author__ = "Daniel Ari Friedman"
 __email__ = "daniel@activeinference.institute"
 
@@ -98,5 +107,13 @@ __all__ = [
     "BuildTarget",
     "create_paper_build_target",
     "build_paper",
-    "validate_build_environment"
+    "validate_build_environment",
+
+    # Provenance
+    "DEFAULT_DEPENDENCIES",
+    "ProvenanceRecord",
+    "build_run_provenance",
+    "collect_dependency_versions",
+    "detect_git_state",
+    "write_provenance",
 ]

@@ -1,0 +1,27 @@
+2026-05-18 14:10:51,757 INFO antstack_core.orchestration.run_all Starting run-all Ant Stack workflow: run_id=test-run
+2026-05-18 14:10:51,757 INFO antstack_core.orchestration.run_all Enabled tasks: data, statistics, visualizations, animations, reports, papers, validation
+2026-05-18 14:10:51,758 INFO antstack_core.orchestration.run_all Running complexity energetics manifest into /Users/4d/Documents/GitHub/ant_stack/outputs/test-run/papers/complexity_energetics/out
+2026-05-18 14:10:51,759 INFO antstack_ce_runner Starting analysis with manifest: /Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/manifest.example.yaml
+2026-05-18 14:10:51,759 INFO antstack_ce_runner Output directory: /Users/4d/Documents/GitHub/ant_stack/outputs/test-run/papers/complexity_energetics/out
+2026-05-18 14:10:51,764 INFO antstack_ce_runner Loaded manifest with seed: 123
+2026-05-18 14:10:51,764 INFO antstack_ce_runner Initialized energy coefficients from manifest
+2026-05-18 14:10:51,764 INFO antstack_ce_runner   FLOP energy: 1.00 pJ/FLOP
+2026-05-18 14:10:51,764 INFO antstack_ce_runner   SRAM energy: 0.10 pJ/byte
+2026-05-18 14:10:51,764 INFO antstack_ce_runner   DRAM energy: 20.00 pJ/byte
+2026-05-18 14:10:51,764 INFO antstack_ce_runner   Spike energy: 1.00 aJ/spike
+2026-05-18 14:10:51,764 INFO antstack_ce_runner   Baseline power: 0.500 W
+2026-05-18 14:10:51,764 INFO antstack_ce_runner Using null power meter (simulation mode)
+2026-05-18 14:10:51,764 INFO antstack_ce_runner Starting workload analysis
+2026-05-18 14:10:51,764 INFO antstack_ce_runner Processing workload: body
+2026-05-18 14:10:51,764 INFO antstack_ce_runner Processing workload: brain
+2026-05-18 14:10:51,765 INFO antstack_ce_runner Processing workload: mind
+2026-05-18 14:10:51,765 INFO antstack_ce_runner Completed workload analysis with 300 measurements
+2026-05-18 14:10:52,086 INFO antstack_ce_runner Running scaling analysis: AntBody joint scaling - energy should remain constant due to baseline dominance
+2026-05-18 14:10:52,458 INFO antstack_ce_runner Scaling analysis (body, J): exponent=0.999, R²=0.975
+2026-05-18 14:10:52,602 INFO antstack_ce_runner Running scaling analysis: AntBrain sensory scaling - sub-linear due to sparsity
+2026-05-18 14:10:53,102 INFO antstack_ce_runner Scaling analysis (brain, K): exponent=0.086, R²=0.890
+2026-05-18 14:10:53,102 INFO antstack_ce_runner Running scaling analysis: AntMind planning horizon - exponential complexity growth
+2026-05-18 14:10:53,464 INFO antstack_ce_runner Scaling analysis (mind, H_p): exponent=13.297, R²=0.947
+2026-05-18 14:10:53,902 INFO matplotlib.animation Animation.save using <class 'matplotlib.animation.PillowWriter'>
+2026-05-18 14:10:54,624 INFO matplotlib.animation Animation.save using <class 'matplotlib.animation.PillowWriter'>
+2026-05-18 14:10:56,046 INFO antstack_core.orchestration.run_all Completed run-all Ant Stack workflow with 66 artifacts

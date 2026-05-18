@@ -1,0 +1,42 @@
+# Canonical Ant Stack output generation config.
+# Run with:
+#   uv run run-all-antstack --config configs/run_all_antstack.example.yaml
+
+run:
+  run_id: example-run
+  seed: 123
+  output_root: outputs
+  clean_run_dir: true
+  log_level: INFO
+
+tasks:
+  data: true
+  statistics: true
+  visualizations: true
+  animations: true
+  reports: true
+  papers: true
+  validation: true
+
+complexity_energetics:
+  manifest: papers/complexity_energetics/manifest.example.yaml
+  paper_projection: true
+  paper_root: papers/complexity_energetics
+  build_pdf: false
+  pdf_sources:
+    - 2_complexity_energetics.pdf
+
+visualization:
+  output_formats: [png]
+  dpi: 160
+  figure_size: [8.0, 5.0]
+  statistical_annotations: true
+  animation_fps: 8
+  animation_duration_s: 3.0
+  animation_formats: [gif, html]
+
+validation:
+  required_artifact_types: [csv, json, markdown, image, animation, log, provenance]
+  fail_on_missing: true
+  fail_on_empty: true
+  deterministic_checksum_checks: true

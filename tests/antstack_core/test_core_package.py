@@ -1,21 +1,10 @@
 #!/usr/bin/env python3
-"""Tests for antstack_core package initialization and core functionality.
-
-Tests package imports, dependency checking, version information, and basic
-package structure validation.
-
-Following .cursorrules principles:
-- Comprehensive validation of package initialization
-- Dependency checking and error handling
-- Professional, well-documented test cases
-- Real functionality testing (no mocks)
-"""
+"""Tests for antstack_core package initialization and core functionality."""
 
 import unittest
 import sys
-import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Add project root to path for testing
 project_root = Path(__file__).parent.parent.parent
@@ -54,31 +43,40 @@ class TestCorePackage(unittest.TestCase):
     def test_package_exports(self):
         """Test package __all__ exports."""
         import antstack_core
-        expected_modules = ['figures', 'mathematics', 'publishing', 'analysis']
+        expected_modules = [
+            'figures',
+            'mathematics',
+            'publishing',
+            'analysis',
+            'architecture',
+            'cohereants',
+            'orchestration',
+        ]
         for module in expected_modules:
             self.assertIn(module, antstack_core.__all__)
+        self.assertIn('check_runtime_dependencies', antstack_core.__all__)
 
     def test_dependency_checking(self):
-        """Test that dependency checking works correctly."""
-        # Test with available dependencies
-        with patch('antstack_core.matplotlib', create=True):
-            with patch('antstack_core.numpy', create=True):
-                # Reload module to trigger dependency check
-                import importlib
-                import antstack_core
-                importlib.reload(antstack_core)
+        """Test that explicit dependency checking reports importable packages."""
+        import antstack_core
+        missing = antstack_core.check_runtime_dependencies(("sys",))
+        self.assertEqual(missing, ())
 
-    def test_dependency_warning_handling(self):
-        """Test that missing dependencies are handled gracefully."""
-        with patch.dict('sys.modules', {'matplotlib': None, 'numpy': None}):
-            with patch('builtins.print') as mock_print:
-                # Reload module to trigger dependency check
-                import importlib
-                import antstack_core
-                importlib.reload(antstack_core)
+    def test_dependency_checking_missing_packages(self):
+        """Test that missing dependencies are returned without import-time output."""
+        import antstack_core
+        with patch('antstack_core.find_spec', return_value=None):
+            missing = antstack_core.check_runtime_dependencies(("matplotlib", "numpy"))
 
-                # Should have printed warnings about missing dependencies
-                mock_print.assert_called()
+        self.assertEqual(missing, ("matplotlib", "numpy"))
+
+    def test_package_import_has_no_stdout_side_effect(self):
+        """Importing the package should not print dependency warnings."""
+        import importlib
+        import antstack_core
+        with patch('builtins.print') as mock_print:
+            importlib.reload(antstack_core)
+        mock_print.assert_not_called()
 
     def test_core_module_imports(self):
         """Test that all core modules can be imported."""

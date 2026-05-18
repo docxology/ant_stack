@@ -1,10 +1,17 @@
 {
-  "name": "ant",
-  "version": "1.0.0",
-  "description": "",
+  "name": "ant-stack",
+  "version": "2.0.0",
+  "description": "Mermaid and workflow helpers for the Ant Stack scientific publication system.",
   "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "sync": "uv sync --extra dev",
+    "test": "uv run pytest -q",
+    "test:collect": "uv run pytest --collect-only -q",
+    "lint": "uv run ruff check .",
+    "run:all": "uv run run-all-antstack --config configs/run_all_antstack.example.yaml",
+    "ce": "uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out",
+    "validate": "uv run antstack-build --validate-only"
   },
   "repository": {
     "type": "git",
@@ -12,7 +19,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/docxology/ant_stack/issues"
   },

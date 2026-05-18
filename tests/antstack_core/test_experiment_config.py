@@ -369,6 +369,18 @@ class TestMeterConfig(unittest.TestCase):
         self.assertEqual(config.measurement_duration_s, 20.0)
         self.assertEqual(config.channels, ['temperature', 'voltage'])
 
+    def test_meter_config_from_dict_accepts_manifest_type_alias(self):
+        """Manifest-style meter.type should normalize to meter_type."""
+        config = MeterConfig.from_dict({"type": "null"})
+
+        self.assertEqual(config.meter_type, "null")
+
+    def test_meter_config_from_dict_defaults_null_when_type_is_none(self):
+        """Explicit YAML null meter types should still select the null meter."""
+        config = MeterConfig.from_dict({"meter_type": None})
+
+        self.assertEqual(config.meter_type, "null")
+
 
 class TestExperimentManifest(unittest.TestCase):
     """Test ExperimentManifest class functionality."""

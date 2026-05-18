@@ -110,6 +110,20 @@ class EnergyCoefficientsConfig:
             Dictionary representation of energy coefficients
         """
         return asdict(self)
+
+    def to_energy_coefficients(self):
+        """Convert configuration values to the runtime EnergyCoefficients type."""
+        from .energy import EnergyCoefficients
+
+        return EnergyCoefficients(
+            flops_pj=self.flops_pj,
+            sram_pj_per_byte=self.sram_pj_per_byte,
+            dram_pj_per_byte=self.dram_pj_per_byte,
+            spike_aj=self.spike_aj,
+            body_per_joint_w=self.body_per_joint_w,
+            body_sensor_w_per_channel=self.body_sensor_w_per_channel,
+            baseline_w=self.baseline_w,
+        )
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'EnergyCoefficientsConfig':
@@ -162,28 +176,36 @@ class ScalingConfig:
             self.analysis_methods = ["power_law", "exponential", "polynomial"]
 
     def __init__(self, parameter_ranges=None, analysis_methods=None, confidence_level=0.95,
-                 bootstrap_samples=1000, parameter_range=None, n_points=20, scaling_type="power_law"):
+                 bootstrap_samples=1000, parameter_range=None, n_points=10, scaling_type="power_law"):
         """Initialize ScalingConfig with backward compatibility."""
         # Handle backward compatibility for parameter_range
         if parameter_range is not None and parameter_ranges is None:
             parameter_ranges = {"default": parameter_range}
 
         self.parameter_ranges = parameter_ranges or {}
+        self.parameter_range = tuple(self.parameter_ranges.get("default", parameter_range or (1, 10)))
         self.analysis_methods = analysis_methods or ["power_law", "exponential", "polynomial"]
         self.confidence_level = confidence_level
         self.bootstrap_samples = bootstrap_samples
         self.n_points = n_points
         self.scaling_type = scaling_type
 
-    def to_energy_coefficients(self) -> 'EnergyCoefficientsConfig':
-        """Convert to EnergyCoefficientsConfig for backward compatibility.
+    def generate_parameter_values(self) -> List[float]:
+        """Generate parameter values for the configured range and spacing."""
+        start, stop = self.parameter_range
+        if self.n_points <= 1:
+            return [float(start)]
+        if self.scaling_type == "logarithmic":
+            if start <= 0 or stop <= 0:
+                raise ValueError("Logarithmic scaling requires positive range bounds")
+            import math
 
-        Returns:
-            EnergyCoefficientsConfig instance
-        """
-        # This is a placeholder implementation for backward compatibility
-        # In a real implementation, this would extract energy coefficients from scaling config
-        return EnergyCoefficientsConfig()
+            log_start = math.log10(start)
+            log_stop = math.log10(stop)
+            step = (log_stop - log_start) / (self.n_points - 1)
+            return [10 ** (log_start + i * step) for i in range(self.n_points)]
+        step = (stop - start) / (self.n_points - 1)
+        return [start + i * step for i in range(self.n_points)]
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization.
@@ -191,7 +213,15 @@ class ScalingConfig:
         Returns:
             Dictionary representation of scaling configuration
         """
-        return asdict(self)
+        return {
+            "parameter_range": list(self.parameter_range),
+            "parameter_ranges": {k: list(v) for k, v in self.parameter_ranges.items()},
+            "analysis_methods": self.analysis_methods,
+            "confidence_level": self.confidence_level,
+            "bootstrap_samples": self.bootstrap_samples,
+            "n_points": self.n_points,
+            "scaling_type": self.scaling_type,
+        }
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ScalingConfig':
@@ -204,10 +234,13 @@ class ScalingConfig:
             ScalingConfig instance
         """
         return cls(
-            parameter_ranges=data.get("parameter_ranges", {}),
+            parameter_ranges=data.get("parameter_ranges"),
+            parameter_range=data.get("parameter_range"),
             analysis_methods=data.get("analysis_methods", ["power_law", "exponential", "polynomial"]),
             confidence_level=float(data.get("confidence_level", 0.95)),
-            bootstrap_samples=int(data.get("bootstrap_samples", 1000))
+            bootstrap_samples=int(data.get("bootstrap_samples", 1000)),
+            n_points=int(data.get("n_points", 10)),
+            scaling_type=data.get("scaling_type", "power_law"),
         )
 
 
@@ -232,7 +265,7 @@ class MeterConfig:
     meter_type: str = "null"
     device_index: int = 0
     sampling_rate_hz: float = 1000.0
-    measurement_duration_s: float = 10.0
+    measurement_duration_s: float = 5.0
     channels: List[str] = None
     calibration_file: Optional[str] = None
     baseline_measurement: bool = False
@@ -251,6 +284,15 @@ class MeterConfig:
             Dictionary representation of meter configuration
         """
         return asdict(self)
+
+    def calculate_buffer_size(self) -> int:
+        """Return the number of samples required for one measurement window."""
+        return int(self.sampling_rate_hz * self.measurement_duration_s)
+
+    def validate_channels(self, allowed_channels: List[str]) -> bool:
+        """Validate configured channels against an allowed channel list."""
+        allowed = set(allowed_channels)
+        return all(channel in allowed for channel in self.channels)
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'MeterConfig':
@@ -263,10 +305,10 @@ class MeterConfig:
             MeterConfig instance
         """
         return cls(
-            meter_type=data.get("meter_type", "null"),
+            meter_type=data.get("meter_type") or data.get("type") or "null",
             device_index=int(data.get("device_index", 0)),
             sampling_rate_hz=float(data.get("sampling_rate_hz", 1000.0)),
-            measurement_duration_s=float(data.get("measurement_duration_s", 10.0)),
+            measurement_duration_s=float(data.get("measurement_duration_s", 5.0)),
             channels=data.get("channels", ["cpu", "memory", "disk"]),
             calibration_file=data.get("calibration_file"),
             baseline_measurement=bool(data.get("baseline_measurement", False)),
@@ -303,6 +345,54 @@ class ExperimentManifest:
     provenance: Dict[str, Any] = None
     mass_kg: Optional[float] = None
     distance_m: Optional[float] = None
+
+    def __init__(
+        self,
+        experiment_name: str = "",
+        seed: int = 0,
+        workloads: Optional[Dict[str, WorkloadConfig]] = None,
+        coefficients: Optional[EnergyCoefficientsConfig] = None,
+        scaling: Optional[ScalingConfig] = None,
+        meter: Optional[MeterConfig] = None,
+        provenance: Optional[Dict[str, Any]] = None,
+        mass_kg: Optional[float] = None,
+        distance_m: Optional[float] = None,
+        description: str = "",
+        workload_configs: Optional[List[Union[WorkloadConfig, Dict[str, Any]]]] = None,
+        energy_coefficients: Optional[EnergyCoefficientsConfig] = None,
+        scaling_config: Optional[ScalingConfig] = None,
+        meter_config: Optional[MeterConfig] = None,
+        output_directory: str = "./output",
+        random_seed: Optional[int] = None,
+    ) -> None:
+        """Initialize canonical and legacy manifest fields together."""
+        self.experiment_name = experiment_name
+        self.description = description
+        self.seed = int(seed if random_seed is None else random_seed)
+        self.random_seed = self.seed
+        self.coefficients = coefficients or energy_coefficients or EnergyCoefficientsConfig()
+        self.energy_coefficients = self.coefficients
+        self.scaling = scaling or scaling_config or ScalingConfig()
+        self.scaling_config = self.scaling
+        self.meter = meter or meter_config or MeterConfig()
+        self.meter_config = self.meter
+        self.provenance = provenance or {}
+        self.mass_kg = mass_kg
+        self.distance_m = distance_m
+        self.output_directory = output_directory
+
+        if workload_configs is not None:
+            normalized_configs = [
+                item if isinstance(item, WorkloadConfig) else WorkloadConfig.from_dict(item)
+                for item in workload_configs
+            ]
+            self.workload_configs = normalized_configs
+            self.workloads = {cfg.name or f"workload_{i}": cfg for i, cfg in enumerate(normalized_configs)}
+        else:
+            self.workloads = workloads or {}
+            self.workload_configs = list(self.workloads.values())
+
+        self.__post_init__()
     
     def __post_init__(self):
         """Initialize default values after dataclass creation."""
@@ -316,6 +406,11 @@ class ExperimentManifest:
             self.meter = MeterConfig()
         if self.provenance is None:
             self.provenance = {}
+        self.workload_configs = list(self.workloads.values())
+        self.energy_coefficients = self.coefficients
+        self.scaling_config = self.scaling
+        self.meter_config = self.meter
+        self.random_seed = self.seed
     
     @staticmethod
     def load(path: Union[str, Path]) -> 'ExperimentManifest':
@@ -360,12 +455,14 @@ class ExperimentManifest:
         
         return ExperimentManifest(
             experiment_name=data.get("experiment_name", ""),
+            description=data.get("description", ""),
             seed=int(data.get("seed", 0)),
             workloads=workloads,
             coefficients=coefficients,
             scaling=scaling,
             meter=meter,
             provenance=data.get("provenance", {}) or {},
+            output_directory=data.get("output_directory", "./output"),
             mass_kg=float(data.get("mass_kg")) if data.get("mass_kg") is not None else None,
             distance_m=float(data.get("distance_m")) if data.get("distance_m") is not None else None,
         )
@@ -384,12 +481,19 @@ class ExperimentManifest:
         
         data = {
             "experiment_name": self.experiment_name,
+            "description": self.description,
             "seed": self.seed,
+            "random_seed": self.random_seed,
             "workloads": {k: v.to_dict() for k, v in self.workloads.items()},
+            "workload_configs": [v.to_dict() for v in self.workload_configs],
             "coefficients": self.coefficients.to_dict(),
+            "energy_coefficients": self.energy_coefficients.to_dict(),
             "scaling": self.scaling.to_dict(),
+            "scaling_config": self.scaling_config.to_dict(),
             "meter": self.meter.to_dict(),
+            "meter_config": self.meter_config.to_dict(),
             "provenance": self.provenance,
+            "output_directory": self.output_directory,
         }
         
         if self.mass_kg is not None:
@@ -408,23 +512,60 @@ class ExperimentManifest:
         """
         return {
             "experiment_name": self.experiment_name,
+            "description": self.description,
             "seed": self.seed,
+            "random_seed": self.random_seed,
             "workloads": {k: v.to_dict() for k, v in self.workloads.items()},
+            "workload_configs": [v.to_dict() for v in self.workload_configs],
             "coefficients": self.coefficients.to_dict(),
+            "energy_coefficients": self.energy_coefficients.to_dict(),
             "scaling": self.scaling.to_dict(),
+            "scaling_config": self.scaling_config.to_dict(),
             "meter": self.meter.to_dict(),
+            "meter_config": self.meter_config.to_dict(),
             "provenance": self.provenance,
+            "output_directory": self.output_directory,
             "mass_kg": self.mass_kg,
             "distance_m": self.distance_m,
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ExperimentManifest':
+        """Create ExperimentManifest from canonical or legacy dictionaries."""
+        workload_configs = data.get("workload_configs")
+        workloads = None
+        if workload_configs is None:
+            workloads = {
+                name: WorkloadConfig.from_dict(value)
+                for name, value in (data.get("workloads", {}) or {}).items()
+            }
+        return cls(
+            experiment_name=data.get("experiment_name", ""),
+            description=data.get("description", ""),
+            workload_configs=[WorkloadConfig.from_dict(v) for v in workload_configs] if workload_configs is not None else None,
+            workloads=workloads,
+            energy_coefficients=EnergyCoefficientsConfig.from_dict(data.get("energy_coefficients", data.get("coefficients", {})) or {}),
+            scaling_config=ScalingConfig.from_dict(data.get("scaling_config", data.get("scaling", {})) or {}),
+            meter_config=MeterConfig.from_dict(data.get("meter_config", data.get("meter", {})) or {}),
+            output_directory=data.get("output_directory", "./output"),
+            random_seed=int(data.get("random_seed", data.get("seed", 0))),
+            provenance=data.get("provenance", {}) or {},
+            mass_kg=data.get("mass_kg"),
+            distance_m=data.get("distance_m"),
+        )
     
-    def validate(self) -> List[str]:
+    def validate(self) -> tuple[bool, List[str]]:
         """Validate experiment manifest configuration.
         
         Returns:
-            List of validation errors (empty if valid)
+            Tuple of validity and validation errors.
         """
         errors = []
+
+        if not self.experiment_name:
+            errors.append("Experiment name is required")
+        if not self.workload_configs:
+            errors.append("At least one workload is required")
         
         # Validate seed
         if self.seed < 0:
@@ -457,7 +598,36 @@ class ExperimentManifest:
         if self.distance_m is not None and self.distance_m <= 0:
             errors.append("Distance must be positive")
         
-        return errors
+        return len(errors) == 0, errors
+
+    def save_to_yaml(self, path: Union[str, Path]) -> None:
+        """Backward-compatible YAML save alias."""
+        self.save(path)
+
+    @classmethod
+    def load_from_yaml(cls, path: Union[str, Path]) -> 'ExperimentManifest':
+        """Backward-compatible YAML load alias."""
+        return cls.load(path)
+
+    @classmethod
+    def create_from_workloads(
+        cls,
+        experiment_name: str,
+        workloads: List[Union[WorkloadConfig, Dict[str, Any]]],
+        description: str = "",
+        **kwargs: Any,
+    ) -> 'ExperimentManifest':
+        """Create a manifest from a workload list."""
+        workload_configs = [
+            item if isinstance(item, WorkloadConfig) else WorkloadConfig.from_dict(item)
+            for item in workloads
+        ]
+        return cls(
+            experiment_name=experiment_name,
+            description=description,
+            workload_configs=workload_configs,
+            **kwargs,
+        )
 
 
 # Convenience aliases for backward compatibility

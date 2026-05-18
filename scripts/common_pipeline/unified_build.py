@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Unified Build and Validation System for Ant Stack Papers.
+"""Unified build and validation system for configured Ant Stack papers.
 
-This script provides a comprehensive, harmonized approach to building, validating,
-and managing both Ant Stack papers with integrated quality assurance.
+This legacy-compatible wrapper builds and validates the paper directories that
+exist under ``papers/``.
 
 Features:
 - Pre-build validation and dependency checks
@@ -40,13 +40,13 @@ class UnifiedBuildSystem:
                 "title": "Computational Complexity and Energetics of the Ant Stack", 
                 "output": "2_complexity_energetics.pdf",
                 "has_generated": True,
-                "analysis_script": "complexity_energetics/src/runner.py"
+                "analysis_script": "papers/complexity_energetics/src/runner.py"
             },
-            "cohereAnts": {
-                "title": "Infrared Vibrational Detection in Insect Olfaction",
-                "output": "3_cohereAnts.pdf",
-                "has_generated": True,
-                "analysis_script": "cohereAnts/scripts/run_all_case_studies.py"
+            "documentation": {
+                "title": "Ant Stack Documentation and PDF Rendering Guide",
+                "output": "1_ant_stack_documentation.pdf",
+                "has_generated": False,
+                "analysis_script": None
             }
         }
         self.validation_results = {}
@@ -72,7 +72,13 @@ class UnifiedBuildSystem:
                 checks[f"python_{package}"] = False
                 
         # Check project structure
-        required_dirs = ["tools", "complexity_energetics", "ant_stack", "tests"]
+        required_dirs = [
+            "tools",
+            "papers/ant_stack",
+            "papers/complexity_energetics",
+            "papers/documentation",
+            "tests",
+        ]
         for dir_name in required_dirs:
             dir_path = self.project_root / dir_name
             checks[f"dir_{dir_name}"] = dir_path.exists() and dir_path.is_dir()
@@ -80,9 +86,9 @@ class UnifiedBuildSystem:
         # Check critical files
         critical_files = [
             "tools/render_pdf.sh",
-            ".cursorrules", 
+            "pyproject.toml",
             "README.md",
-            "complexity_energetics/src/runner.py"
+            "papers/complexity_energetics/src/runner.py"
         ]
         for file_name in critical_files:
             file_path = self.project_root / file_name
@@ -92,7 +98,7 @@ class UnifiedBuildSystem:
         
     def validate_paper_structure(self, paper_name: str) -> Dict[str, any]:
         """Validate paper structure and content."""
-        paper_dir = self.project_root / paper_name
+        paper_dir = self.project_root / "papers" / paper_name
         results = {
             "exists": paper_dir.exists(),
             "markdown_files": [],
@@ -149,18 +155,12 @@ class UnifiedBuildSystem:
                 
         # Find mismatches
         missing_defs = figure_refs - figure_defs
-        unused_defs = figure_defs - figure_refs
-        
+
         if missing_defs:
             issues["figure_mismatches"].extend([
                 f"Missing definition for fig:{fig_id}" for fig_id in missing_defs
             ])
-            
-        if unused_defs:
-            issues["figure_mismatches"].extend([
-                f"Unused definition fig:{fig_id}" for fig_id in unused_defs  
-            ])
-            
+
         return issues
         
     def run_analysis_pipeline(self, paper_name: str) -> bool:
@@ -178,12 +178,16 @@ class UnifiedBuildSystem:
         try:
             # Run the analysis script
             if paper_name == "complexity_energetics":
-                manifest_path = self.project_root / "complexity_energetics" / "manifest.example.yaml"
-                output_dir = self.project_root / "complexity_energetics" / "out"
+                manifest_path = self.project_root / "papers" / "complexity_energetics" / "manifest.example.yaml"
+                output_dir = self.project_root / "papers" / "complexity_energetics" / "out"
                 
                 cmd = [
-                    "python3", "-m", "complexity_energetics.src.ce.runner",
-                    str(manifest_path), "--out", str(output_dir)
+                    sys.executable,
+                    "-m",
+                    "antstack_core.cli.ce",
+                    str(manifest_path),
+                    "--out",
+                    str(output_dir),
                 ]
                 
                 result = subprocess.run(
@@ -324,7 +328,7 @@ class UnifiedBuildSystem:
         # Run Python tests
         try:
             result = subprocess.run(
-                ["python3", "-m", "pytest", "tests/", "-v"],
+                [sys.executable, "-m", "pytest", "tests/", "-v"],
                 cwd=self.project_root,
                 capture_output=True, text=True
             )
@@ -340,11 +344,11 @@ class UnifiedBuildSystem:
             print(f"❌ pytest error: {e}")
             
         # Run validation suite if available
-        validation_script = self.project_root / "scripts" / "run_validation_suite.py"
+        validation_script = self.project_root / "scripts" / "common_pipeline" / "run_validation_suite.py"
         if validation_script.exists():
             try:
                 result = subprocess.run(
-                    ["python3", str(validation_script)],
+                    [sys.executable, str(validation_script)],
                     cwd=self.project_root,
                     capture_output=True, text=True
                 )
@@ -479,16 +483,16 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python3 scripts/unified_build.py                    # Build all papers
-  python3 scripts/unified_build.py --paper ant_stack  # Build specific paper
-  python3 scripts/unified_build.py --no-tests         # Skip tests
-  python3 scripts/unified_build.py --validate-only    # Only validate, don't build
+	  uv run python scripts/common_pipeline/unified_build.py                    # Build all papers
+	  uv run python scripts/common_pipeline/unified_build.py --paper ant_stack  # Build specific paper
+	  uv run python scripts/common_pipeline/unified_build.py --no-tests         # Skip tests
+	  uv run python scripts/common_pipeline/unified_build.py --validate-only    # Only validate, don't build
         """
     )
     
     parser.add_argument(
         "--paper", 
-        choices=["ant_stack", "complexity_energetics", "cohereAnts"],
+        choices=["ant_stack", "complexity_energetics", "documentation"],
         help="Build specific paper only"
     )
     

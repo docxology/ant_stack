@@ -148,10 +148,10 @@ sudo apt-get update
 sudo apt-get install -y pandoc texlive-xetex texlive-fonts-recommended fonts-dejavu nodejs npm
 
 # Enhanced diagram rendering
-sudo npm install -g mermaid-filter
+bun install
 
 # Python dependencies
-pip3 install matplotlib numpy pandas pyyaml pytest scipy
+uv sync --extra dev
 ```
 
 #### macOS
@@ -161,10 +161,10 @@ brew install pandoc node python3
 brew install --cask mactex-no-gui
 
 # Enhanced diagram rendering
-npm install -g mermaid-filter
+bun install
 
 # Python dependencies
-pip3 install matplotlib numpy pandas pyyaml pytest scipy
+uv sync --extra dev
 ```
 
 #### Development Setup
@@ -174,13 +174,13 @@ git clone https://github.com/your-repo/ant.git
 cd ant
 
 # Install in development mode
-pip install -e .
+uv sync --extra dev
 
 # Run tests
-python -m pytest
+uv run pytest
 
 # Build documentation
-python scripts/build_docs.py
+uv run antstack-build --paper documentation --validate-only
 ```
 
 ### Build Papers
@@ -188,19 +188,19 @@ python scripts/build_docs.py
 #### Single Paper
 ```bash
 # Ant Stack framework paper
-python3 scripts/common_pipeline/build_core.py --paper ant_stack
+uv run antstack-build --paper ant_stack
 
 # Complexity analysis paper
-python3 scripts/common_pipeline/build_core.py --paper complexity_energetics
+uv run antstack-build --paper complexity_energetics
 ```
 
 #### All Papers
 ```bash
 # Build all papers
-python3 scripts/common_pipeline/build_core.py
+uv run antstack-build
 
 # With validation only
-python3 scripts/common_pipeline/build_core.py --validate-only
+uv run antstack-build --validate-only
 ```
 
 ### Basic Usage
@@ -234,16 +234,16 @@ mean, ci_lower, ci_upper = bootstrap_mean_ci(data, n_bootstrap=1000)
 **Running Tests:**
 ```bash
 # All tests
-python -m pytest
+uv run pytest
 
 # With coverage report
-python -m pytest --cov=antstack_core --cov-report=html
+uv run pytest --cov=antstack_core --cov-report=html
 
 # Specific module
-python -m pytest tests/antstack_core/test_energy.py -v
+uv run pytest tests/antstack_core/test_analysis_energy.py -v
 
 # Performance benchmarks
-python -m pytest tests/ --benchmark-only
+uv run pytest tests/core_rendering/ tests/antstack_core/test_visualization.py -q
 ```
 
 ### Code Quality Standards
@@ -319,7 +319,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 2. **Create** a feature branch: `git checkout -b feature/your-feature`
 3. **Write tests** for new functionality
 4. **Implement** your changes
-5. **Run tests**: `python -m pytest`
+5. **Run tests**: `uv run pytest`
 6. **Update documentation** if needed
 7. **Submit** a pull request
 
@@ -654,16 +654,16 @@ papers/paper_name/
 
 ```bash
 # Build all papers
-python3 scripts/common_pipeline/build_core.py
+uv run antstack-build
 
 # Build specific paper
-python3 scripts/common_pipeline/build_core.py --paper paper_name
+uv run antstack-build --paper paper_name
 
 # Validate only (no PDF generation)
-python3 scripts/common_pipeline/build_core.py --validate-only
+uv run antstack-build --validate-only
 
 # Skip tests
-python3 scripts/common_pipeline/build_core.py --no-tests
+uv run antstack-build --no-tests
 ```
 
 ### Legacy System
@@ -717,13 +717,13 @@ Build reports are generated in `build_report.md` with:
 
 ```bash
 # All tests
-python3 -m pytest tests/
+uv run pytest tests/
 
 # Specific component
-python3 -m pytest tests/core_rendering/
+uv run pytest tests/core_rendering/
 
 # With coverage
-python3 -m pytest --cov=antstack_core tests/
+uv run pytest --cov=antstack_core tests/
 ```
 
 ## Common Issues and Solutions

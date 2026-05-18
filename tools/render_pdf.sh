@@ -28,6 +28,13 @@ MERMAID_STRATEGY="${MERMAID_STRATEGY:-auto}"   # auto|filter|docker|kroki|none
 STRICT_MERMAID="${STRICT_MERMAID:-0}"         # 1 = fail build if any mermaid block fails to render
 KROKI_URL="${KROKI_URL:-https://kroki.io}"    # Override to self-hosted Kroki if desired
 MERMAID_IMG_FORMAT="${MERMAID_IMG_FORMAT:-png}" # png|svg (png is more reliable for XeLaTeX)
+if [ -z "$MAIN_FONT" ]; then
+    if command -v fc-match >/dev/null 2>&1 && fc-match "Arial Unicode MS" | grep -qi "Arial Unicode"; then
+        MAIN_FONT="Arial Unicode MS"
+    else
+        MAIN_FONT="Helvetica"
+    fi
+fi
 # Auto-detect virtual environment if available
 if [ -z "$PYTHON_BIN" ]; then
     if [ -f ".venv/bin/python" ]; then
@@ -123,27 +130,6 @@ select_markdown_files() {
                 "$base_path/Acknowledgements.md"
                 "$base_path/Resources.md"
                 "$base_path/Appendices.md"
-            )
-            ;;
-        cohereAnts)
-            MARKDOWN_FILES=(
-                "$base_path/manuscript/Abstract.md"
-                "$base_path/manuscript/Introduction.md"
-                "$base_path/manuscript/Methodology.md"
-                "$base_path/manuscript/Experimental_Results.md"
-                "$base_path/manuscript/Discussion.md"
-                "$base_path/manuscript/Conclusion.md"
-                "$base_path/manuscript/Mathematical_Appendix.md"
-                "$base_path/manuscript/Empirical_Studies.md"
-                "$base_path/manuscript/Ant_Stack_Implementation.md"
-                "$base_path/manuscript/Symbols_Glossary.md"
-                "$base_path/manuscript/Appendix_Active_Inference.md"
-                "$base_path/manuscript/Appendix_Detection_Limits.md"
-                "$base_path/manuscript/Appendix_Environmental_Channel.md"
-                "$base_path/manuscript/Appendix_Neural_Encoding.md"
-                "$base_path/manuscript/Appendix_Plasmonic_Geometry.md"
-                "$base_path/manuscript/Appendix_Sensilla_Array_Directionality.md"
-                "$base_path/manuscript/Appendix_Spectral_Unmixing.md"
             )
             ;;
         *)
@@ -284,8 +270,6 @@ cat > "$TEMP_HEADER_FILE" <<'LATEX'
 \newunicodechar{🧠}{[Brain]}
 \newunicodechar{💭}{[Thought]}
 \newunicodechar{⚡}{[Lightning]}
-\newunicodechar{⋅}{\ensuremath{\cdot}}
-\newunicodechar{∘}{\ensuremath{\circ}}
 \newunicodechar{↑}{\ensuremath{\uparrow}}
 \newunicodechar{↓}{\ensuremath{\downarrow}}
 \newunicodechar{∝}{\ensuremath{\propto}}
@@ -306,9 +290,7 @@ cat > "$TEMP_HEADER_FILE" <<'LATEX'
 % Map stray Unicode math symbols to LaTeX macros as a final safety net
 % Use unicode-math symbols where available, fallback to newunicodechar
 \newunicodechar{∼}{\ensuremath{\sim}}
-\newunicodechar{⋅}{\ensuremath{\cdot}}
 \newunicodechar{∝}{\ensuremath{\propto}}
-\newunicodechar{∘}{\ensuremath{\circ}}
 \newunicodechar{𝛥}{\ensuremath{\Delta}}
 \newunicodechar{𝜇}{\ensuremath{\mu}}
 \newunicodechar{𝜂}{\ensuremath{\eta}}
@@ -330,8 +312,6 @@ cat > "$TEMP_HEADER_FILE" <<'LATEX'
     % Fallback if unicode-math symbols are not available
   \fi
 }
-\setmainfont{Helvetica}
-
 % Ensure proper Unicode handling with XeLaTeX
 \makeatletter
 \let\oldtableofcontents\tableofcontents
@@ -370,11 +350,11 @@ PANDOC_ARGS=(
     --pdf-engine=xelatex
     --toc
     --number-sections
-    --highlight-style=tango
+    --syntax-highlighting=tango
     -V geometry:"margin=2.5cm"
     -V title="$pdf_title"
     -V author="$(extract_author_info "$paper_dir")"
-    -V mainfont="Helvetica"
+    -V mainfont="$MAIN_FONT"
     -H "$TEMP_HEADER_FILE"
     # Bibliography support - use papers/ structure  
     --bibliography="papers/complexity_energetics/references.bib"
@@ -979,7 +959,7 @@ fi
 }
 
 # Entry point: build one or all papers
-PAPERS_TO_BUILD=("ant_stack" "complexity_energetics" "cohereAnts")
+PAPERS_TO_BUILD=("ant_stack" "complexity_energetics" "documentation")
 if [ "$#" -gt 0 ]; then
     PAPERS_TO_BUILD=("$@")
 fi
@@ -994,9 +974,6 @@ for paper in "${PAPERS_TO_BUILD[@]}"; do
             ;;
         complexity_energetics)
             render_one_paper "complexity_energetics" "2_complexity_energetics.pdf" "Computational Complexity and Energetics of the Ant Stack"
-            ;;
-        cohereAnts)
-            render_one_paper "cohereAnts" "3_cohereAnts.pdf" "Infrared Vibrational Detection in Insect Olfaction"
             ;;
         *)
             echo "Unknown paper: $paper" >&2

@@ -21,6 +21,7 @@ Following .cursorrules principles:
 import unittest
 import tempfile
 import os
+import warnings
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -31,7 +32,8 @@ sys.path.insert(0, str(project_root))
 # Import visualization modules
 from antstack_core.figures import (
     bar_plot, line_plot, scatter_plot,
-    FigureManager, publication_bar_plot, publication_line_plot, publication_scatter_plot,
+    FigureManager, PublicationPlotConfig,
+    publication_bar_plot, publication_line_plot, publication_scatter_plot,
     preprocess_mermaid_diagrams, validate_mermaid_syntax,
     validate_cross_references, fix_figure_ids,
     organize_figure_assets, copy_figure_files
@@ -212,15 +214,31 @@ class TestPublicationPlots(unittest.TestCase):
 
     def test_publication_line_plot(self):
         """Test publication-quality line plot."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            fig = publication_line_plot(
+                x_data=self.sample_data['x'],
+                y_data=self.sample_data['y'],
+                title="Publication Line Plot",
+                xlabel="Time",
+                ylabel="Signal"
+            )
+
+        self.assertIsNotNone(fig)
+
+    def test_publication_line_plot_configurable_without_statistics(self):
+        """Test publication line plots can disable statistical overlays."""
         fig = publication_line_plot(
-            x_data=self.sample_data['x'],
-            y_data=self.sample_data['y'],
-            title="Publication Line Plot",
+            x_data=[0, 1, 2, 3],
+            y_data=[0, 1, 4, 9],
+            title="Configured Publication Line Plot",
             xlabel="Time",
-            ylabel="Signal"
+            ylabel="Signal",
+            config=PublicationPlotConfig(annotate_statistics=False, figure_size=(5, 4)),
         )
 
         self.assertIsNotNone(fig)
+        self.assertEqual(tuple(fig.get_size_inches()), (5.0, 4.0))
 
     def test_publication_scatter_plot(self):
         """Test publication-quality scatter plot."""
@@ -549,19 +567,10 @@ class TestVisualizationRobustness(unittest.TestCase):
     """Test robustness of visualization functionality."""
 
     def test_visualization_without_matplotlib(self):
-        """Test visualization behavior without matplotlib."""
-        # This tests fallback behavior when matplotlib is not available
-        if HAS_MATPLOTLIB:
-            self.skipTest("Matplotlib is available")
-
-        # These should handle missing matplotlib gracefully
-        try:
+        """Test plotting fallback behavior with matplotlib deliberately disabled."""
+        with patch("antstack_core.figures.plots.plt", None):
             result = bar_plot(['A', 'B'], [1, 2], title="Test")
-            # Should either return None or raise informative error
-            self.assertTrue(result is None or isinstance(result, Exception))
-        except ImportError:
-            # Expected when matplotlib is not available
-            pass
+        self.assertIsNone(result)
 
     def test_visualization_with_extreme_data(self):
         """Test visualization with extreme data values."""

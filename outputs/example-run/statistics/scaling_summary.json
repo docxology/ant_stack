@@ -1,0 +1,81 @@
+{
+  "curves": [
+    {
+      "energy_est_j": [
+        0.1250005812,
+        0.125000941056,
+        0.125001454416,
+        0.12500212128,
+        0.125002941648
+      ],
+      "name": "AntBody joint scaling - energy should remain constant due to baseline dominance",
+      "parameter": "J",
+      "r_squared": 0.8614639479649853,
+      "scaling_exponent": 1.1029799498701608e-05,
+      "workload": "body",
+      "x": [
+        6.0,
+        12.0,
+        18.0,
+        24.0,
+        30.0
+      ]
+    },
+    {
+      "energy_est_j": [
+        0.1250573660640025,
+        0.1250583821280025,
+        0.1250604142560025,
+        0.1250644785120025,
+        0.1250726070240025
+      ],
+      "name": "AntBrain sensory scaling - sub-linear due to sparsity",
+      "parameter": "K",
+      "r_squared": 0.8709777661795206,
+      "scaling_exponent": 4.21953333225156e-05,
+      "workload": "brain",
+      "x": [
+        64.0,
+        128.0,
+        256.0,
+        512.0,
+        1024.0
+      ]
+    },
+    {
+      "energy_est_j": [
+        0.125034769948,
+        0.13338004702,
+        2.161282375516,
+        494.941548200044,
+        120240.54614356035
+      ],
+      "name": "AntMind planning horizon - exponential complexity growth",
+      "parameter": "H_p",
+      "r_squared": 0.7285765529816062,
+      "scaling_exponent": 7.996613127165748,
+      "workload": "mind",
+      "x": [
+        5.0,
+        10.0,
+        15.0,
+        20.0,
+        25.0
+      ]
+    }
+  ],
+  "runner_scaling_exponents": {
+    "body_J": {
+      "exponent": 0.9993287408877656,
+      "r_squared": 0.974926670908037
+    },
+    "brain_K": {
+      "exponent": 0.08550750664257312,
+      "r_squared": 0.8902039983864838
+    },
+    "mind_H_p": {
+      "exponent": 13.296954674260752,
+      "r_squared": 0.9471976185508071
+    }
+  }
+}

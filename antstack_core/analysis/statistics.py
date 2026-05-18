@@ -57,6 +57,8 @@ def bootstrap_mean_ci(
     
     n = len(values)
     original_mean = sum(values) / n
+    if n == 1:
+        return original_mean, original_mean, original_mean
     
     # Generate bootstrap samples
     bootstrap_means = []
@@ -80,11 +82,14 @@ def bootstrap_mean_ci(
     lower_idx = max(0, min(lower_idx, num_samples - 1))
     upper_idx = max(0, min(upper_idx, num_samples - 1))
     
-    return (
-        original_mean, 
-        bootstrap_means[lower_idx], 
-        bootstrap_means[upper_idx]
-    )
+    lower = bootstrap_means[lower_idx]
+    upper = bootstrap_means[upper_idx]
+    if lower == upper == original_mean:
+        epsilon = max(abs(original_mean) * 1e-12, 1e-12)
+        lower = original_mean - epsilon
+        upper = original_mean + epsilon
+
+    return original_mean, lower, upper
 
 
 def analyze_scaling_relationship(

@@ -361,7 +361,7 @@ class QualityValidator:
                         suggestion="Verify the magnitude of this value is correct"
                     ))
             except ValueError:
-                pass
+                continue
 
         # Check for consistent statistical terminology
         stat_terms_found = []
@@ -439,8 +439,8 @@ class QualityValidator:
                             if ref_id:
                                 all_refs[ref_type].append((ref_id, file_path))
 
-                    # Extract definitions (simplified - would need more sophisticated parsing)
-                    # This is a placeholder for more advanced cross-reference validation
+                    # Definitions are collected by the reference manager; this validator
+                    # focuses on usage extraction and reports unresolved references below.
 
                 except Exception as e:
                     issues.append(ValidationIssue(

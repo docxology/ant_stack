@@ -17,6 +17,7 @@ Following .cursorrules principles:
 """
 
 import unittest
+import warnings
 import numpy as np
 from typing import List, Dict, Optional
 from pathlib import Path
@@ -260,8 +261,12 @@ class TestStatisticalAnalyzer(unittest.TestCase):
         identical_times = [1.0, 1.0, 1.0, 1.0]
         identical_data = BehavioralData(identical_times, identical_times)
 
-        result = analyzer.perform_t_test(identical_data)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            result = analyzer.perform_t_test(identical_data)
         self.assertIsInstance(result, dict)
+        self.assertEqual(result["t_statistic"], 0.0)
+        self.assertEqual(result["p_value"], 1.0)
 
         # Effect size should be very close to zero
         cohens_d = analyzer.calculate_cohens_d(identical_data)
