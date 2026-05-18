@@ -1,0 +1,129 @@
+{
+  "dpi": 160,
+  "figure_size": [
+    8.0,
+    5.0
+  ],
+  "formats": [
+    "png"
+  ],
+  "static_visualizations": [
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_body_split.png",
+      "artifact_type": "image",
+      "bytes": 106846,
+      "checksum": "6e5892eecab8d352b871313ba5d83b7d7084e5fa49ab6780f52c5e9a27e7e277",
+      "path": "visualizations/static/complexity_energetics_body_split.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_energy.png",
+      "artifact_type": "image",
+      "bytes": 80147,
+      "checksum": "d331b8efadd5f808d5b1581264fda9fb20e99c215ed38a0d8b21a007122614d8",
+      "path": "visualizations/static/complexity_energetics_energy.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_pareto_body_J.png",
+      "artifact_type": "image",
+      "bytes": 219956,
+      "checksum": "61299bc929338c58c8dd7cac7d8ea7f0018992745607e6c568594b235d703e2e",
+      "path": "visualizations/static/complexity_energetics_pareto_body_J.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_pareto_brain_K.png",
+      "artifact_type": "image",
+      "bytes": 181617,
+      "checksum": "bc2b8c6f7d59e9b70121df35b5939af515e1eb69bd192460621770d3045eda72",
+      "path": "visualizations/static/complexity_energetics_pareto_brain_K.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_pareto_mind_H_p.png",
+      "artifact_type": "image",
+      "bytes": 182146,
+      "checksum": "839a2300dd36a62ff5b9812007b53605debf9f4610473d66d6fbbcbb54346cc3",
+      "path": "visualizations/static/complexity_energetics_pareto_mind_H_p.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_per_decision_breakdown.png",
+      "artifact_type": "image",
+      "bytes": 130439,
+      "checksum": "f3e55001379902a56ced26df7b6866ed011733d935d18161fbff60b3fee51e89",
+      "path": "visualizations/static/complexity_energetics_per_decision_breakdown.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_scale_body_J.png",
+      "artifact_type": "image",
+      "bytes": 221748,
+      "checksum": "574206e1772459d1e0073bfed6b3c7f32809e82982c1ae734200804e3aa81da9",
+      "path": "visualizations/static/complexity_energetics_scale_body_J.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_scale_body_J_scatter.png",
+      "artifact_type": "image",
+      "bytes": 195715,
+      "checksum": "c6a65aa6a7aa026f630f39465a584b7deea0423039683d4add5c9d4e87c9ea87",
+      "path": "visualizations/static/complexity_energetics_scale_body_J_scatter.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_scale_brain_K.png",
+      "artifact_type": "image",
+      "bytes": 191956,
+      "checksum": "686316597dde15a5cb61e7df57278ed178cc189ca8d70be39a968ea09a46071f",
+      "path": "visualizations/static/complexity_energetics_scale_brain_K.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_scale_brain_K_scatter.png",
+      "artifact_type": "image",
+      "bytes": 203997,
+      "checksum": "30730198849c8391c5983ab0bc17c818fc3293bd9185c194370d9070009d28df",
+      "path": "visualizations/static/complexity_energetics_scale_brain_K_scatter.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_scale_mind_H_p.png",
+      "artifact_type": "image",
+      "bytes": 193814,
+      "checksum": "5304b43f7c1540bba2eb72590b4a4224fa35f260e5d426cee243ec964343e6ef",
+      "path": "visualizations/static/complexity_energetics_scale_mind_H_p.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/complexity_energetics_scale_mind_H_p_scatter.png",
+      "artifact_type": "image",
+      "bytes": 243511,
+      "checksum": "11e0c800571f7bc4a4177dc723614cbdfdabf2bbfaae4289031a72405bc1b184",
+      "path": "visualizations/static/complexity_energetics_scale_mind_H_p_scatter.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/test-run/visualizations/static/workload_energy_summary.png",
+      "artifact_type": "image",
+      "bytes": 26545,
+      "checksum": "f7467da9f9313f4686fcc3393bbab2500ebdb3a8a81f644d4c1e5c022f8d8612",
+      "path": "visualizations/static/workload_energy_summary.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.summary"
+    }
+  ]
+}

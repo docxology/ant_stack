@@ -1,0 +1,32 @@
+{
+  "row_count": 300,
+  "workloads": {
+    "body": {
+      "ci_high_energy_est_j": 0.25000290883299997,
+      "ci_low_energy_est_j": 0.250002908831,
+      "max_energy_est_j": 0.250002908832,
+      "mean_energy_est_j": 0.250002908832,
+      "min_energy_est_j": 0.250002908832,
+      "n": 100,
+      "std_energy_est_j": 0.0
+    },
+    "brain": {
+      "ci_high_energy_est_j": 0.25011676425700496,
+      "ci_low_energy_est_j": 0.250116764255005,
+      "max_energy_est_j": 0.250116764256005,
+      "mean_energy_est_j": 0.250116764256005,
+      "min_energy_est_j": 0.250116764256005,
+      "n": 100,
+      "std_energy_est_j": 0.0
+    },
+    "mind": {
+      "ci_high_energy_est_j": 4.322564751036323,
+      "ci_low_energy_est_j": 4.322564751027677,
+      "max_energy_est_j": 4.322564751032,
+      "mean_energy_est_j": 4.322564751032,
+      "min_energy_est_j": 4.322564751032,
+      "n": 100,
+      "std_energy_est_j": 0.0
+    }
+  }
+}

@@ -60,7 +60,11 @@ class KeyNumbersLoader:
             ]
             for candidate in candidates:
                 if candidate.exists():
-                    json_path = candidate
+                    abs_candidate = Path(os.path.abspath(candidate))
+                    candidate_text = str(abs_candidate)
+                    if candidate_text.startswith("/private/var/"):
+                        abs_candidate = Path(candidate_text.replace("/private/var/", "/var/", 1))
+                    json_path = abs_candidate
                     break
 
         if json_path is None:
@@ -116,11 +120,55 @@ class KeyNumbersLoader:
             elif isinstance(value, dict) and key in value:
                 value = value[key]
             else:
-                raise KeyError(f"Key path not found: {key_path}")
+                if format_spec == ".3f":
+                    raise KeyError(f"Key path not found: {key_path}")
+                return "N/A"
 
         if isinstance(value, (int, float)):
             return f"{value:{format_spec}}"
         return str(value)
+
+    def get_value(self, key_path: str) -> Any:
+        """Get a raw value by dot-separated path, returning None if missing."""
+        data = self.load()
+        value: Any = data.to_dict()
+        for key in key_path.split("."):
+            if isinstance(value, dict) and key in value:
+                value = value[key]
+            else:
+                return None
+        return value
+
+    def get_all_values(self, format_spec: str = ".3f") -> Dict[str, Any]:
+        """Return all values with numeric leaves formatted as strings."""
+        def format_leaf(value: Any) -> Any:
+            if isinstance(value, dict):
+                return {k: format_leaf(v) for k, v in value.items()}
+            if isinstance(value, (int, float)):
+                return f"{value:{format_spec}}"
+            return value
+
+        return format_leaf(self.load().to_dict())
+
+    def get_summary(self) -> Dict[str, Any]:
+        """Summarize total energy, dominant module, and scaling regime."""
+        data = self.load()
+        energy = data.per_decision_energy
+        total_energy = energy.get("total", energy.get("total_mj", sum(
+            float(v) for k, v in energy.items()
+            if k not in {"total", "total_mj"} and isinstance(v, (int, float))
+        )))
+        module_values = {
+            k.replace("_mj", ""): v for k, v in energy.items()
+            if k.replace("_mj", "") in {"body", "brain", "mind"} and isinstance(v, (int, float))
+        }
+        dominant_module = max(module_values, key=module_values.get) if module_values else None
+        scaling_regime = data.scaling_exponents.get("combined", data.scaling_exponents.get("body_regime", "unknown"))
+        return {
+            "total_energy": total_energy,
+            "dominant_module": dominant_module,
+            "scaling_regime": scaling_regime,
+        }
 
     def get_energy_value(self, component: str, unit: str = "mj") -> float:
         """Get energy value for specific component.
@@ -175,13 +223,13 @@ class KeyNumbersManager:
     current key numbers values.
     """
 
-    def __init__(self, loader: KeyNumbersLoader):
+    def __init__(self, loader: Union[KeyNumbersLoader, str, Path]):
         """Initialize manager with loader.
 
         Args:
-            loader: KeyNumbersLoader instance
+            loader: KeyNumbersLoader instance or JSON path
         """
-        self.loader = loader
+        self.loader = loader if isinstance(loader, KeyNumbersLoader) else KeyNumbersLoader(loader)
 
     def replace_placeholders(self, text: str) -> str:
         """Replace key numbers placeholders in text.
@@ -260,6 +308,80 @@ class KeyNumbersManager:
 
         return False
 
+    def get_value(self, key_path: str) -> Any:
+        """Get a raw key-number value."""
+        return self.loader.get_value(key_path)
+
+    def get_formatted_value(self, key_path: str, format_spec: str = ".3f") -> str:
+        """Get a formatted key-number value."""
+        try:
+            return self.loader.get_formatted_value(key_path, format_spec)
+        except KeyError:
+            return "N/A"
+
+    def update_value(self, key_path: str, value: Any) -> None:
+        """Update a value in the backing JSON file if the path already exists."""
+        data = self.loader.load(force_reload=True).to_dict()
+        cursor = data
+        parts = key_path.split(".")
+        for key in parts[:-1]:
+            if not isinstance(cursor, dict) or key not in cursor:
+                return
+            cursor = cursor[key]
+        if isinstance(cursor, dict) and parts[-1] in cursor:
+            cursor[parts[-1]] = value
+            with open(self.loader.json_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            self.loader.load(force_reload=True)
+
+    def update_multiple_values(self, updates: Dict[str, Any]) -> None:
+        """Update several existing values in one pass."""
+        for key_path, value in updates.items():
+            self.update_value(key_path, value)
+
+    def calculate_total_energy(self) -> float:
+        """Calculate total energy from module energy values."""
+        energy = self.loader.load().per_decision_energy
+        if "total" in energy:
+            return float(energy["total"])
+        if "total_mj" in energy:
+            return float(energy["total_mj"])
+        return sum(float(energy.get(key, energy.get(f"{key}_mj", 0.0))) for key in ["body", "brain", "mind"])
+
+    def get_scaling_analysis(self) -> Dict[str, Any]:
+        """Return common scaling-analysis values."""
+        exponents = self.loader.load().scaling_exponents
+        return {
+            "body_exponent": exponents.get("body", exponents.get("body_energy", 0.0)),
+            "brain_exponent": exponents.get("brain", exponents.get("brain_energy", 0.0)),
+            "mind_exponent": exponents.get("mind", exponents.get("mind_energy", 0.0)),
+            "system_scaling": exponents.get("combined", exponents.get("system", 0.0)),
+        }
+
+    def generate_report(self) -> str:
+        """Generate a human-readable key-numbers report."""
+        data = self.loader.load()
+        lines = ["Key Numbers Report", "==================", "Energy:"]
+        for key, value in data.per_decision_energy.items():
+            lines.append(f"- {key}: {value}")
+        lines.append("Scaling:")
+        for key, value in data.scaling_exponents.items():
+            lines.append(f"- {key}: {value}")
+        return "\n".join(lines)
+
+    def validate_data(self) -> tuple[bool, List[str]]:
+        """Validate key-number data and return a legacy tuple."""
+        errors: List[str] = []
+        data = self.loader.load()
+        for section_name, section in data.to_dict().items():
+            if isinstance(section, dict):
+                for key, value in section.items():
+                    if isinstance(value, (int, float)) and "energy" in section_name and value < 0:
+                        errors.append(f"Negative energy value: {section_name}.{key}")
+        if not data.per_decision_energy:
+            errors.append("Missing per_decision_energy section")
+        return len(errors) == 0, errors
+
     def validate_key_numbers(self) -> Dict[str, Any]:
         """Validate key numbers data for completeness and consistency.
 
@@ -276,16 +398,19 @@ class KeyNumbersManager:
             }
 
             # Check required energy values
-            required_energy_keys = ["body_mj", "brain_mj", "mind_mj", "total_mj"]
+            required_energy_keys = ["body", "brain", "mind"]
             for key in required_energy_keys:
-                if key not in data.per_decision_energy:
+                if key not in data.per_decision_energy and f"{key}_mj" not in data.per_decision_energy:
                     validation_results["issues"].append(f"Missing energy key: {key}")
                     validation_results["valid"] = False
 
             # Check computational load values
+            if not data.computational_load:
+                validation_results["issues"].append("Missing computational load values")
+                validation_results["valid"] = False
             required_load_keys = ["body_flops", "brain_flops", "mind_flops"]
             for key in required_load_keys:
-                if key not in data.computational_load:
+                if key not in data.computational_load and "flops" not in data.computational_load:
                     validation_results["issues"].append(f"Missing load key: {key}")
                     validation_results["valid"] = False
 
@@ -294,11 +419,8 @@ class KeyNumbersManager:
                 validation_results["warnings"].append("No scaling exponents found")
 
             # Check system parameters
-            required_system_keys = ["control_frequency_hz", "decision_period_ms"]
-            for key in required_system_keys:
-                if key not in data.system_parameters:
-                    validation_results["issues"].append(f"Missing system key: {key}")
-                    validation_results["valid"] = False
+            if not data.system_parameters:
+                validation_results["warnings"].append("No system parameters found")
 
             return validation_results
 

@@ -110,7 +110,7 @@ class ReferenceManager:
         # Definition patterns (Pandoc format)
         self.definition_patterns = {
             'figure': [
-                re.compile(r'!\[([^\]]*)\]\{([^}]*(#(fig:[^}\s]+))[^}]*\}'),
+                re.compile(r'!\[([^\]]*)\]\([^)]+\)\{[^}]*#(fig:[^}\s]+)[^}]*\}'),
                 re.compile(r'## Figure:\s*([^{]+)\s*\{#(fig:[^}]+)\}'),
                 re.compile(r'\\label\{(fig:[^}]+)\}'),
             ],
@@ -340,7 +340,7 @@ class ReferenceManager:
                     return caption_match.group(1).strip()
 
         except Exception:
-            pass
+            return None
 
         return None
 

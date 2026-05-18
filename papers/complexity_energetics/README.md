@@ -4,13 +4,15 @@
 
 This research presents a comprehensive analysis of computational complexity and energetics for the Ant Stack, an integrated framework for embodied artificial intelligence. As a companion paper to The Ant Stack, our work focuses specifically on algorithmic complexity characterization, detailed energy modeling, and empirical scaling property analysis. The document structure mirrors the primary paper to enable direct side-by-side comparison and support fully reproducible computational builds.
 
-**Research Philosophy**: Our approach represents a significant departure from traditional AI complexity analysis by integrating energy estimation directly with complexity characterization to inform practical design trade-offs. We monitor workload and environmental complexity in real-time and develop adaptive algorithms that adjust computational effort accordingly. 
+**Research Philosophy**: The paper integrates energy estimation with complexity characterization to inform practical design trade-offs. Claims about real ant behavior or robotic deployment should remain tied to cited references, explicit assumptions, or reproducible generated outputs.
 
 For example, we implement early-stopping planning strategies when expected energy savings diminish, following principles established in compute-energy integrated motion planning (CEIMP) methodologies \href{https://lean.mit.edu/papers/ceimp-icra}{(Sudhakar et al., 2020)}.
 
 **Methodological Foundation**: Our energy modeling leverages device-level energy coefficients and workload-specific counters to provide accurate Joules-per-decision estimates \href{https://ieeexplore.ieee.org/document/5440129}{(Koomey et al., 2011)}. This approach enables hardware-agnostic analysis while maintaining the precision necessary for energy-constrained system optimization. 
 
-Additional methodological context draws from established scientific computing standards and rigorous reference practices to ensure reproducible and verifiable results. All methods are tested and validated through comprehensive testing.
+Additional methodological context draws from scientific-computing and reference-management practices to support reproducible and verifiable results. The current repository-level validation target is the `uv run pytest -q` suite and the manifest-driven runner documented in the root README.
+
+Canonical run-all outputs are written under `outputs/<run_id>/`; this paper retains paper-local compatibility outputs in `out/`, `assets/`, and `Generated.md`.
 
 ## Roadmap & Contributions
 

@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 import math
-from complexity_energetics.src.ce.estimators import ComputeLoad, estimate_compute_energy
-from complexity_energetics.src.ce.units import EnergyCoefficients, pj_to_j, aj_to_j
-from complexity_energetics.src.ce.workloads import estimate_body_energy_mech
+
+from antstack_core.analysis import (
+    ComputeLoad,
+    EnergyCoefficients,
+    aj_to_j,
+    estimate_compute_energy,
+    estimate_body_energy_mech,
+    pj_to_j,
+)
 
 
 def main() -> int:
@@ -22,5 +28,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
 

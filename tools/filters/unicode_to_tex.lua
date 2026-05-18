@@ -4,6 +4,7 @@
 local replacements = {
   ['∼'] = '\\sim', ['≈'] = '\\approx', ['≤'] = '\\le', ['≥'] = '\\ge',
   ['≠'] = '\\ne', ['±'] = '\\pm', ['×'] = '\\times', ['÷'] = '\\div',
+  ['⋅'] = '\\cdot', ['∘'] = '\\circ',
   ['→'] = '\\to', ['↔'] = '\\leftrightarrow', ['⇒'] = '\\Rightarrow', ['⇔'] = '\\Leftrightarrow',
   ['∈'] = '\\in', ['∉'] = '\\notin', ['∩'] = '\\cap', ['∪'] = '\\cup',
   ['⊂'] = '\\subset', ['⊆'] = '\\subseteq', ['⊇'] = '\\supseteq', ['∅'] = '\\varnothing',
@@ -63,5 +64,4 @@ function Math(el)
   -- leave math intact; handled by LaTeX
   return nil
 end
-
 

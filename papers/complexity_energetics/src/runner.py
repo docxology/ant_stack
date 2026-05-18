@@ -26,7 +26,7 @@ import os
 import random
 import sys
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import asdict
 from pathlib import Path
 
@@ -52,6 +52,7 @@ from antstack_core.analysis import (
 )
 from antstack_core.analysis import measure_energy, NullPowerMeter, RaplPowerMeter, NvmlPowerMeter
 from antstack_core.figures import bar_plot, line_plot, scatter_plot
+from antstack_core.publishing import build_run_provenance, write_provenance
 
 # Configure logging
 logging.basicConfig(
@@ -74,7 +75,63 @@ CLOSED_FORM_WORKLOADS = {
 }
 
 
-def run_manifest(manifest_path: str, out_dir: str) -> None:
+class RunManifestResult:
+    """Structured result returned by the complexity energetics runner."""
+
+    def __init__(
+        self,
+        *,
+        manifest_path: str,
+        output_dir: str,
+        csv_path: str,
+        summary_path: str,
+        generated_markdown_path: str,
+        provenance_path: str,
+        output_paths: List[str],
+        rows: List[Dict[str, Any]],
+        scaling_exponents: Dict[str, Dict[str, float]],
+    ) -> None:
+        self.manifest_path = manifest_path
+        self.output_dir = output_dir
+        self.csv_path = csv_path
+        self.summary_path = summary_path
+        self.generated_markdown_path = generated_markdown_path
+        self.provenance_path = provenance_path
+        self.output_paths = output_paths
+        self.rows = rows
+        self.scaling_exponents = scaling_exponents
+
+
+def _workload_config(manifest: ExperimentManifest, workload: str):
+    """Return a workload config from a manifest, or None when absent."""
+    return (manifest.workloads or {}).get(workload)
+
+
+def _workload_params(manifest: ExperimentManifest, workload: str) -> dict:
+    """Return a mutable copy of workload parameters for scaling sweeps."""
+    cfg = _workload_config(manifest, workload)
+    return dict((cfg.params if cfg else {}) or {})
+
+
+def _load_for_manifest_mode(
+    manifest: ExperimentManifest,
+    workload: str,
+    duration_s: float,
+    params: dict,
+):
+    """Compute workload load using the manifest-selected execution mode."""
+    cfg = _workload_config(manifest, workload)
+    mode = (cfg.mode if cfg else "loop") or "loop"
+    if mode == "closed_form":
+        fn = CLOSED_FORM_WORKLOADS.get(workload)
+    else:
+        fn = WORKLOADS.get(workload)
+    if fn is None:
+        raise ValueError(f"Unknown workload for scaling analysis: {workload}")
+    return fn(duration_s, params)
+
+
+def run_manifest(manifest_path: str, out_dir: str) -> RunManifestResult:
     """
     Execute the complete analysis pipeline based on a manifest configuration.
     
@@ -329,7 +386,7 @@ def run_manifest(manifest_path: str, out_dir: str) -> None:
 
             x_vals = []
             y_energy = []
-            tmp_params = dict((manifest.workloads.get(wl, {}).params if manifest.workloads else {}))
+            tmp_params = _workload_params(manifest, wl)
 
             # Special handling for brain scaling with mind policies
             if mind_policies and wl == "brain":
@@ -345,7 +402,7 @@ def run_manifest(manifest_path: str, out_dir: str) -> None:
                         pol_params[param] = max(1, int(v * K_gate)) if param == 'K' else v
                         if 'rho' in pol_params:
                             pol_params['rho'] = float(tmp_params.get('rho', pol_params['rho'])) * rho_mult
-                        load = brain_workload(0.25, pol_params)
+                        load = _load_for_manifest_mode(manifest, wl, 0.25, pol_params)
                         e_est = estimate_compute_energy(load, coeff)
                         series_y.append(e_est)
                     series.append(series_y)
@@ -384,12 +441,7 @@ def run_manifest(manifest_path: str, out_dir: str) -> None:
                 # Single curve scaling analysis
                 for v in values:
                     tmp_params[param] = v
-                    if wl == "body":
-                        load = body_workload(0.25, tmp_params)
-                    elif wl == "mind":
-                        load = mind_workload(0.25, tmp_params)
-                    else:
-                        load = brain_workload(0.25, tmp_params)
+                    load = _load_for_manifest_mode(manifest, wl, 0.25, tmp_params)
                     e_est = estimate_compute_energy(load, coeff)
                     x_vals.append(v)
                     y_energy.append(e_est)
@@ -616,6 +668,47 @@ def run_manifest(manifest_path: str, out_dir: str) -> None:
         f.writelines(lines)
     print(f"wrote: {gen_md_path}")
 
+    output_paths = [
+        csv_path,
+        json_path,
+        gen_md_path,
+        str(abs_plot_path),
+        str(abs_body_split_path),
+        str(abs_breakdown_path),
+        *[str(path) for path in scaling_assets],
+    ]
+    provenance = build_run_provenance(
+        project="ant-stack-complexity-energetics",
+        command=sys.argv,
+        input_paths=[manifest_path],
+        output_paths=[path for path in output_paths if Path(path).exists()],
+        parameters={
+            "seed": manifest.seed,
+            "meter_type": meter_type,
+            "workloads": sorted((manifest.workloads or {}).keys()),
+            "scaling_analyses": sorted(scaling_exponents.keys()),
+        },
+        cwd=project_root,
+    )
+    summary["provenance"] = provenance.to_dict()
+    summary["output_paths"] = provenance.output_paths
+    with open(json_path, "w", encoding="utf-8") as jf:
+        json.dump(summary, jf, indent=2)
+    provenance_path = write_provenance(Path(out_dir) / "provenance.json", provenance)
+    print(f"wrote: {provenance_path}")
+    realized_output_paths = [path for path in output_paths if Path(path).exists()]
+    return RunManifestResult(
+        manifest_path=str(manifest_path),
+        output_dir=str(out_dir),
+        csv_path=str(csv_path),
+        summary_path=str(json_path),
+        generated_markdown_path=str(gen_md_path),
+        provenance_path=str(provenance_path),
+        output_paths=realized_output_paths + [str(provenance_path)],
+        rows=rows,
+        scaling_exponents=scaling_exponents,
+    )
+
 
 def main() -> None:
     """
@@ -693,5 +786,3 @@ Examples:
 
 if __name__ == "__main__":
     main()
-
-

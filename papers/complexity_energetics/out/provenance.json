@@ -1,0 +1,56 @@
+{
+  "command": [
+    "/Users/4d/Documents/GitHub/ant_stack/.venv/bin/run-all-antstack",
+    "--config",
+    "configs/run_all_antstack.example.yaml"
+  ],
+  "created_at_utc": "2026-05-18T21:10:58.910501+00:00",
+  "dependencies": {
+    "jinja2": "3.1.6",
+    "matplotlib": "3.10.9",
+    "numpy": "2.4.5",
+    "pandas": "3.0.3",
+    "pyyaml": "6.0.3",
+    "scipy": "1.17.1"
+  },
+  "git_commit": "50aa5952cf82e56428183f2ec18e312cf5465331",
+  "git_dirty": true,
+  "input_paths": [
+    "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/manifest.example.yaml"
+  ],
+  "output_paths": [
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/out/results.csv",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/out/summary.json",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/Generated.md",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/energy.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/body_split.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/per_decision_breakdown.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J_scatter.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_body_J.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_brain_K.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K_scatter.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png",
+    "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_mind_H_p.png"
+  ],
+  "package_version": "1.0.0",
+  "parameters": {
+    "meter_type": "null",
+    "scaling_analyses": [
+      "body_J",
+      "brain_K",
+      "mind_H_p"
+    ],
+    "seed": 123,
+    "workloads": [
+      "body",
+      "brain",
+      "mind"
+    ]
+  },
+  "platform": "macOS-26.5-arm64-arm-64bit",
+  "project": "ant-stack-complexity-energetics",
+  "python_version": "3.12.13"
+}

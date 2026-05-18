@@ -223,16 +223,18 @@ class ModularPaperBuilder:
                     if manifest_file.exists():
                         print(f"[{paper_name}] Running analysis pipeline...")
                         
-                        # Run the analysis using the original runner
-                        runner_script = paper_dir / 'src' / 'ce' / 'runner.py'
                         cmd = [
-                            sys.executable, str(runner_script),
-                            str(manifest_file), '--out', str(output_dir)
+                            sys.executable,
+                            "-m",
+                            "antstack_core.cli.ce",
+                            str(manifest_file),
+                            "--out",
+                            str(output_dir),
                         ]
                         
-                        # Set PYTHONPATH to include the src directory
+                        # Keep the project root importable for package CLI execution.
                         env = os.environ.copy()
-                        env['PYTHONPATH'] = str(paper_dir / 'src')
+                        env['PYTHONPATH'] = str(self.project_root)
 
                         result = subprocess.run(
                             cmd,
@@ -571,13 +573,13 @@ class ModularPaperBuilder:
             '--pdf-engine=xelatex',
             '--toc',
             '--number-sections',
-            '--highlight-style=tango',
+            '--syntax-highlighting=tango',
             '-V', f'geometry:margin=2.5cm',
             '-V', f'title={title}',
             '-V', f'author={author}',
             '-V', f'email={email}',
             '-V', f'date={datetime.now().strftime("%B %d, %Y")}',
-            '-V', 'mainfont=Helvetica',
+            '-V', 'mainfont=Arial Unicode MS',
             '--resource-path', f'.:{str(paper_dir)}:{str(paper_dir)}/assets:{str(paper_dir)}/assets/mermaid',
             '-o', str(output_pdf)
         ]
@@ -681,8 +683,6 @@ class ModularPaperBuilder:
 \newunicodechar{⚡}{[Lightning]}
 
 % Math symbols
-\newunicodechar{⋅}{\ensuremath{\cdot}}
-\newunicodechar{∘}{\ensuremath{\circ}}
 \newunicodechar{↑}{\ensuremath{\uparrow}}
 \newunicodechar{↓}{\ensuremath{\downarrow}}
 \newunicodechar{∝}{\ensuremath{\propto}}
@@ -807,7 +807,7 @@ class ModularPaperBuilder:
 }
 
 % Set main font
-\setmainfont{Helvetica}
+\setmainfont{Arial Unicode MS}
 
 % Custom table of contents
 \makeatletter
@@ -884,8 +884,6 @@ class ModularPaperBuilder:
             return self.project_root / "1_ant_stack.pdf"
         elif paper_name == 'complexity_energetics':
             return self.project_root / "2_complexity_energetics.pdf"
-        elif paper_name == 'cohereAnts':
-            return self.project_root / "3_cohereAnts.pdf"
         elif paper_name == 'documentation':
             return self.project_root / "1_ant_stack_documentation.pdf"
         else:

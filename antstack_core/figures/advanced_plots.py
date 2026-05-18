@@ -18,12 +18,14 @@ References:
 from __future__ import annotations
 
 import math
+import random
 from typing import Dict, List, Tuple, Optional, Any, Sequence
 from pathlib import Path
 
 # Optional plotting dependencies (graceful degradation)
 plt = None  # type: ignore
 np = None   # type: ignore
+sns = None  # type: ignore
 try:
     import matplotlib
     matplotlib.use("Agg")  # headless backend for server environments
@@ -37,7 +39,7 @@ try:
         sns.set_style("whitegrid")
         sns.set_palette("husl")
     except ImportError:
-        pass  # seaborn is optional enhancement
+        sns = None
 except Exception:
     plt = None  # graceful degradation
 
@@ -504,8 +506,8 @@ def multi_scale_visualization(
                     r_squared = 1 - (np.sum((y_data - y_pred) ** 2) / np.sum((y_data - np.mean(y_data)) ** 2))
                     ax.text(0.05, 0.95, f'R² = {r_squared:.3f}', transform=ax.transAxes,
                            bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-                except:
-                    pass
+                except (ValueError, ZeroDivisionError):
+                    r_squared = None
         
         # Enhanced styling for each subplot
         ax.set_title(f'{scale_name.title()} Scale', fontsize=12, fontweight='bold')

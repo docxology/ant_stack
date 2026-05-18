@@ -93,6 +93,7 @@ class ComputeLoad:
     sram_bytes: float = 0.0      # SRAM bytes transferred  
     dram_bytes: float = 0.0      # DRAM bytes transferred
     spikes: float = 0.0          # Neuromorphic spike events
+    time_seconds: float = 0.0    # Optional wall-clock duration for integration workflows
     
     # Additional optional metrics
     memory_bandwidth_gb_s: float = 0.0  # Memory bandwidth utilization
@@ -105,6 +106,7 @@ class ComputeLoad:
             sram_bytes=self.sram_bytes * factor,
             dram_bytes=self.dram_bytes * factor,
             spikes=self.spikes * factor,
+            time_seconds=self.time_seconds * factor,
             memory_bandwidth_gb_s=self.memory_bandwidth_gb_s * factor,
             cache_hit_rate=self.cache_hit_rate  # Hit rate doesn't scale
         )
@@ -457,5 +459,4 @@ def calculate_landauer_limit(bits_erased: float, temperature_k: float = 300.0) -
     """
     k_boltzmann = 1.380649e-23  # J/K (Boltzmann constant)
     return bits_erased * k_boltzmann * temperature_k * math.log(2)
-
 

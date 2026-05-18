@@ -232,16 +232,16 @@ Before building your paper, ensure:
 
 ```bash
 # Validate paper syntax
-python3 scripts/validate_rendering_system.py --paper paper_name --verbose
+uv run python scripts/validate_rendering_system.py --paper paper_name --verbose
 
 # Build specific paper
-python3 scripts/common_pipeline/build_core.py --paper paper_name
+uv run antstack-build --paper paper_name
 
 # Build all papers
-python3 scripts/common_pipeline/build_core.py
+uv run antstack-build
 
 # Validate only (no PDF generation)
-python3 scripts/common_pipeline/build_core.py --validate-only
+uv run antstack-build --validate-only
 ```
 
 This example demonstrates the reliable syntax patterns that ensure consistent, professional PDF generation across all Ant Stack papers.

@@ -14,6 +14,7 @@ Following .cursorrules principles:
 import unittest
 import tempfile
 import os
+import warnings
 from pathlib import Path
 import sys
 
@@ -31,7 +32,7 @@ except ImportError:
     HAS_MATPLOTLIB = False
     plt = None
 
-from antstack_core.figures.plots import bar_plot, line_plot, scatter_plot
+from antstack_core.figures.plots import PlotConfig, bar_plot, line_plot, scatter_plot
 
 
 @unittest.skipUnless(HAS_MATPLOTLIB, "matplotlib not available")
@@ -244,12 +245,28 @@ class TestScatterPlot(unittest.TestCase):
             output_path = tmp.name
 
         try:
-            scatter_plot([1], [10], "Single Point Plot", "X", "Y", output_path)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                scatter_plot([1], [10], "Single Point Plot", "X", "Y", output_path)
             self.assertTrue(os.path.exists(output_path))
 
         finally:
             if os.path.exists(output_path):
                 os.unlink(output_path)
+
+    def test_scatter_plot_config_disables_statistics(self):
+        """Test configurable statistical annotation controls."""
+        fig = scatter_plot(
+            [1, 1, 1],
+            [2, 2, 2],
+            "Degenerate Scatter",
+            "X",
+            "Y",
+            config=PlotConfig(annotate_statistics=False, figure_size=(4, 3)),
+        )
+
+        self.assertIsNotNone(fig)
+        self.assertEqual(tuple(fig.get_size_inches()), (4.0, 3.0))
 
 
 @unittest.skipUnless(HAS_MATPLOTLIB, "matplotlib not available")

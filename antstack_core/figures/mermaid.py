@@ -26,7 +26,15 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Union
 
 
-def validate_mermaid_syntax(mermaid_code: str) -> Dict[str, Union[bool, str, List[str]]]:
+class ValidationResult(dict):
+    """Dictionary result that can also be unpacked as ``valid, issues``."""
+
+    def __iter__(self):
+        yield self.get("valid", False)
+        yield self.get("issues", [])
+
+
+def validate_mermaid_syntax(mermaid_code: str) -> ValidationResult:
     """Validate Mermaid syntax and identify potential issues.
     
     Args:
@@ -37,11 +45,15 @@ def validate_mermaid_syntax(mermaid_code: str) -> Dict[str, Union[bool, str, Lis
     """
     issues = []
     suggestions = []
+
+    block_match = re.search(r"```mermaid[^\n]*\n(.*?)\n\s*```", mermaid_code, re.DOTALL)
+    if block_match:
+        mermaid_code = block_match.group(1)
     
     # Check for common syntax issues
     if not mermaid_code.strip():
         issues.append("Empty Mermaid code")
-        return {"valid": False, "issues": issues, "suggestions": suggestions}
+        return ValidationResult({"valid": False, "issues": issues, "suggestions": suggestions})
     
     lines = mermaid_code.strip().split('\n')
     first_line = lines[0].strip()
@@ -68,6 +80,11 @@ def validate_mermaid_syntax(mermaid_code: str) -> Dict[str, Union[bool, str, Lis
         if re.search(pattern, mermaid_code):
             issues.append("LaTeX commands found - may not render in Mermaid")
             suggestions.append("Remove or replace LaTeX formatting")
+
+    if mermaid_code.count("[") != mermaid_code.count("]"):
+        issues.append("Unbalanced square brackets")
+    if mermaid_code.count("{") != mermaid_code.count("}"):
+        issues.append("Unbalanced braces")
     
     # Check for proper node termination
     if 'end' in mermaid_code:
@@ -76,12 +93,12 @@ def validate_mermaid_syntax(mermaid_code: str) -> Dict[str, Union[bool, str, Lis
             issues.append("'end' keyword not on separate line")
             suggestions.append("Put 'end' terminators on their own lines")
     
-    return {
+    return ValidationResult({
         "valid": len(issues) == 0,
         "issues": issues,
         "suggestions": suggestions,
         "line_count": len(lines)
-    }
+    })
 
 
 def sanitize_mermaid_for_rendering(mermaid_code: str) -> str:
@@ -136,7 +153,7 @@ def sanitize_mermaid_for_rendering(mermaid_code: str) -> str:
 
 def preprocess_mermaid_diagrams(
     markdown_content: str,
-    output_dir: Path,
+    output_dir: Path | str | None = None,
     img_format: str = "png",
     kroki_url: str = "https://kroki.io",
     clean_existing: bool = True
@@ -156,6 +173,9 @@ def preprocess_mermaid_diagrams(
     Returns:
         Processed markdown with Mermaid blocks replaced by images
     """
+    if output_dir is None:
+        return markdown_content
+
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import math
 import random
+import time
 from typing import Dict, List, Tuple, Optional, Any, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -130,7 +131,8 @@ class AgentBasedModel:
             
             # Calculate emergent metrics
             emergent_metrics['total_energy'].append(sum(energies))
-            emergent_metrics['state_variance'].append(np.var(states) if HAS_NUMPY else self._variance(states))
+            state_variance = float(np.var(states)) if HAS_NUMPY and states else self._variance(states)
+            emergent_metrics['state_variance'].append(state_variance)
             emergent_metrics['interaction_strength'].append(sum(abs(s) for _, _, s in self.interactions))
             emergent_metrics['clustering_coefficient'].append(self._calculate_clustering(states))
             emergent_metrics['entropy'].append(self._calculate_entropy(states))
@@ -212,7 +214,11 @@ class NetworkComplexityAnalyzer:
     
     def __init__(self):
         """Initialize network complexity analyzer."""
-        pass
+        self.backend_capabilities = {
+            "numpy": HAS_NUMPY,
+            "scipy": HAS_SCIPY,
+        }
+        self.last_metrics: Optional[ComplexityMetrics] = None
     
     def analyze_network_complexity(self, adjacency_matrix: List[List[float]]) -> ComplexityMetrics:
         """Analyze network complexity using multiple metrics.
@@ -224,7 +230,8 @@ class NetworkComplexityAnalyzer:
             ComplexityMetrics with network analysis results
         """
         if not adjacency_matrix or len(adjacency_matrix) == 0:
-            return ComplexityMetrics()
+            self.last_metrics = ComplexityMetrics()
+            return self.last_metrics
         
         n_nodes = len(adjacency_matrix)
         
@@ -250,7 +257,7 @@ class NetworkComplexityAnalyzer:
         entropy = self._calculate_network_entropy(adj_matrix)
         mutual_info = self._calculate_mutual_information(adj_matrix)
         
-        return ComplexityMetrics(
+        metrics = ComplexityMetrics(
             network_density=density,
             clustering_coefficient=clustering,
             path_length=path_length,
@@ -258,6 +265,8 @@ class NetworkComplexityAnalyzer:
             entropy=entropy,
             mutual_information=mutual_info
         )
+        self.last_metrics = metrics
+        return metrics
     
     def _calculate_density(self, adj_matrix) -> float:
         """Calculate network density."""
@@ -454,7 +463,7 @@ class ComplexityEntropyAnalyzer:
     
     def __init__(self):
         """Initialize complexity-entropy analyzer."""
-        pass
+        self.last_diagram: Optional[Dict[str, List[float]]] = None
     
     def create_complexity_entropy_diagram(self, 
                                         time_series: List[float],
@@ -469,7 +478,8 @@ class ComplexityEntropyAnalyzer:
             Dictionary with complexity and entropy values
         """
         if len(time_series) < window_size:
-            return {'complexity': [], 'entropy': []}
+            self.last_diagram = {'complexity': [], 'entropy': [], 'time_points': []}
+            return self.last_diagram
         
         complexities = []
         entropies = []
@@ -485,11 +495,13 @@ class ComplexityEntropyAnalyzer:
             entropy = self._calculate_shannon_entropy(window)
             entropies.append(entropy)
         
-        return {
+        diagram = {
             'complexity': complexities,
             'entropy': entropies,
             'time_points': list(range(len(complexities)))
         }
+        self.last_diagram = diagram
+        return diagram
     
     def _calculate_lemple_ziv_complexity(self, sequence: List[float]) -> float:
         """Calculate Lempel-Ziv complexity (simplified)."""

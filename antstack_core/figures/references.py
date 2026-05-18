@@ -23,6 +23,14 @@ from typing import Dict, List, Tuple, Set, Optional
 from pathlib import Path
 
 
+class ValidationResult(dict):
+    """Dictionary result that can also be unpacked as ``valid, issues``."""
+
+    def __iter__(self):
+        yield self.get("valid", False)
+        yield self.get("issues", [])
+
+
 class CrossReferenceValidator:
     """Validator for cross-references in scientific documents."""
     
@@ -55,7 +63,7 @@ class CrossReferenceValidator:
         # Check for undefined figures
         undefined_figs = self._find_undefined_figures()
         if undefined_figs:
-            issues.extend(undefined_figs)
+            warnings.extend(undefined_figs)
         
         # Check for unused definitions
         unused_defs = self._find_unused_definitions()
@@ -67,14 +75,14 @@ class CrossReferenceValidator:
         if format_issues:
             issues.extend(format_issues)
         
-        self.validation_results = {
+        self.validation_results = ValidationResult({
             "valid": len(issues) == 0,
             "issues": issues,
             "warnings": warnings,
             "figure_definitions": len(self.figure_definitions),
             "figure_references": sum(len(refs) for refs in self.figure_references.values()),
             "file_path": file_path
-        }
+        })
         
         return self.validation_results
     
@@ -83,7 +91,7 @@ class CrossReferenceValidator:
         definitions = {}
         
         # Pattern for figure definitions following .cursorrules format
-        pattern = r'^##\s+Figure:\s+([^{]+)\s+\{#fig:([^}]+)\}'
+        pattern = r'^\s*##\s+Figure:\s+([^{]+)\s+\{#fig:([^}]+)\}'
         
         for match in re.finditer(pattern, content, re.MULTILINE):
             title = match.group(1).strip()
@@ -103,6 +111,8 @@ class CrossReferenceValidator:
         
         # Pattern for figure references
         patterns = [
+            r'Figure\s+\{@fig:([^}]+)\}',
+            r'\{@fig:([^}]+)\}',
             r'Figure~\\ref\{fig:([^}]+)\}',
             r'\\cref\{fig:([^}]+)\}',
             r'\\ref\{fig:([^}]+)\}'
@@ -171,7 +181,7 @@ class CrossReferenceValidator:
             )
         
         # Check for figures without captions
-        fig_def_pattern = r'^##\s+Figure:[^{]+\{#fig:([^}]+)\}'
+        fig_def_pattern = r'^\s*##\s+Figure:[^{]+\{#fig:([^}]+)\}'
         caption_pattern = r'\*\*Caption:\*\*'
         
         lines = content.split('\n')
@@ -179,7 +189,7 @@ class CrossReferenceValidator:
             if re.match(fig_def_pattern, line):
                 # Look for caption in next few lines
                 caption_found = False
-                for j in range(i + 1, min(i + 5, len(lines))):
+                for j in range(i + 1, min(i + 12, len(lines))):
                     if re.search(caption_pattern, lines[j]):
                         caption_found = True
                         break
@@ -192,6 +202,11 @@ class CrossReferenceValidator:
                             f"Figure 'fig:{fig_id}' on line {i + 1} missing "
                             f"'**Caption:**' (required per .cursorrules)"
                         )
+
+        malformed_fig_pattern = r'^\s*##\s+Figure:\s+([^{}\n]+)$'
+        for match in re.finditer(malformed_fig_pattern, content, re.MULTILINE):
+            line_num = content[:match.start()].count('\n') + 1
+            issues.append(f"Malformed figure definition on line {line_num}: missing {{#fig:id}}")
         
         return issues
 
@@ -221,14 +236,17 @@ def fix_figure_ids(content: str, id_mapping: Optional[Dict[str, str]] = None) ->
         Fixed content with consistent IDs
     """
     if id_mapping is None:
-        # Generate automatic mapping based on sequential numbering
         validator = CrossReferenceValidator()
         definitions = validator._extract_figure_definitions(content)
+        references = validator._extract_figure_references(content)
         
         id_mapping = {}
-        for i, old_id in enumerate(sorted(definitions.keys()), 1):
-            new_id = f"fig_{i:03d}"
-            id_mapping[old_id] = new_id
+        broken_refs = [ref_id for ref_id in references if ref_id not in definitions]
+        if len(definitions) == 1 and broken_refs:
+            target_id = next(iter(definitions.keys()))
+            id_mapping = {broken_ref: target_id for broken_ref in broken_refs}
+        else:
+            return content
     
     # Apply ID mapping to definitions
     def replace_definition(match):
@@ -238,7 +256,7 @@ def fix_figure_ids(content: str, id_mapping: Optional[Dict[str, str]] = None) ->
         return f"## Figure: {title} {{#fig:{new_id}}}"
     
     content = re.sub(
-        r'^##\s+Figure:\s+([^{]+)\s+\{#fig:([^}]+)\}',
+        r'^\s*##\s+Figure:\s+([^{]+)\s+\{#fig:([^}]+)\}',
         replace_definition,
         content,
         flags=re.MULTILINE
@@ -248,6 +266,8 @@ def fix_figure_ids(content: str, id_mapping: Optional[Dict[str, str]] = None) ->
     for old_id, new_id in id_mapping.items():
         # Replace various reference formats
         patterns = [
+            (f'Figure {{@fig:{old_id}}}', f'Figure {{@fig:{new_id}}}'),
+            (f'{{@fig:{old_id}}}', f'{{@fig:{new_id}}}'),
             (f'Figure~\\ref{{fig:{old_id}}}', f'Figure~\\ref{{fig:{new_id}}}'),
             (f'\\cref{{fig:{old_id}}}', f'\\cref{{fig:{new_id}}}'),
             (f'\\ref{{fig:{old_id}}}', f'\\ref{{fig:{new_id}}}')

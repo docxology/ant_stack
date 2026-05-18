@@ -44,19 +44,19 @@ This directory contains the core build system, validation tools, and infrastruct
 ### Building Papers
 ```bash
 # Build specific paper with validation
-python scripts/common_pipeline/build_core.py --paper complexity_energetics
+uv run antstack-build --paper complexity_energetics
 
 # Build all papers
-python scripts/common_pipeline/build_core.py --all
+uv run antstack-build
 
 # Validation only mode
-python scripts/common_pipeline/build_core.py --validate-only
+uv run antstack-build --validate-only
 ```
 
 ### Validation and Repair
 ```bash
 # Fix cross-references automatically
-python3 scripts/common_pipeline/build_core.py --validate-only
+uv run antstack-build --validate-only
 
 # Run comprehensive validation
 python scripts/common_pipeline/run_validation_suite.py

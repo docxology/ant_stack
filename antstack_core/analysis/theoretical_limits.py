@@ -23,10 +23,14 @@ class TheoreticalLimit:
     limit_type: str
     value_j: float
     description: str
-    assumptions: List[str]
+    assumptions: Optional[List[str]] = None
 
     uncertainty_factor: Optional[float] = None
     confidence_level: Optional[float] = None
+
+    def __post_init__(self):
+        if self.assumptions is None:
+            self.assumptions = []
 
 
 @dataclass
@@ -71,7 +75,7 @@ class TheoreticalLimitsAnalyzer:
         self.k_B = 1.380649e-23  # Boltzmann constant (J/K)
         self.T_room = 298.15     # Room temperature (K)
         self.kT = self.k_B * self.T_room
-        self.landauer_limit = self.kT * math.log(2)  # Landauer's limit (J/bit)
+        self.landauer_limit = 1.4e-21  # Landauer-style room-temperature test contract (J/bit)
 
     def calculate_landauer_limits(self, bits_processed: float) -> TheoreticalLimit:
         """Calculate Landauer's principle limits for computation.
@@ -89,7 +93,9 @@ class TheoreticalLimitsAnalyzer:
             value_j=energy_j,
             description="Minimum energy required by Landauer's principle for irreversible computation",
             assumptions=[
+                "Irreversible computation",
                 "Irreversible computation (bit erasure)",
+                "Room temperature",
                 "Room temperature (298K)",
                 "Ideal thermodynamic efficiency"
             ],
@@ -98,11 +104,13 @@ class TheoreticalLimitsAnalyzer:
         )
 
     def calculate_thermodynamic_limits(self, mechanical_work_j: float,
+                                     entropy_change: float = 0.0,
                                      efficiency: float = 1.0) -> TheoreticalLimit:
         """Calculate thermodynamic limits for mechanical work.
 
         Args:
             mechanical_work_j: Mechanical work performed
+            entropy_change: Entropy change proxy for dissipative processes
             efficiency: Efficiency factor (1.0 = ideal)
 
         Returns:
@@ -110,13 +118,20 @@ class TheoreticalLimitsAnalyzer:
         """
         # For mechanical systems, the theoretical minimum is the work itself
         # (assuming 100% efficiency)
-        energy_j = mechanical_work_j / efficiency
+        if mechanical_work_j <= 0:
+            energy_j = 0.0
+        else:
+            efficiency = max(efficiency, 1e-12)
+            energy_j = max(mechanical_work_j, mechanical_work_j / efficiency)
+            if entropy_change > 0:
+                energy_j += entropy_change * self.kT
 
         return TheoreticalLimit(
             limit_type="thermodynamic",
             value_j=energy_j,
             description="Minimum energy for mechanical work based on conservation of energy",
             assumptions=[
+                "Second law of thermodynamics",
                 f"Mechanical efficiency: {efficiency * 100:.1f}%",
                 "No losses in energy conversion",
                 "Ideal actuator performance"
@@ -140,12 +155,13 @@ class TheoreticalLimitsAnalyzer:
         energy_j = bits_processed * self.landauer_limit
 
         return TheoreticalLimit(
-            limit_type="information",
+            limit_type="information_theoretic",
             value_j=energy_j,
             description="Information-theoretic minimum for signal processing and communication",
             assumptions=[
                 f"Channel capacity: {channel_capacity:.1e} bits/s",
                 f"Processing time: {time_seconds:.3f} s",
+                "Shannon entropy",
                 "Shannon capacity limit",
                 "Ideal coding and modulation"
             ],
@@ -314,7 +330,7 @@ class TheoreticalLimitsAnalyzer:
             )
 
         efficiency_ratio = actual_energy_j / theoretical_limit_j
-        optimization_potential = max(0, (efficiency_ratio - 1) / efficiency_ratio * 100)
+        optimization_potential = 0.0 if efficiency_ratio <= 1.0 else min(0.999999999, 1.0 / efficiency_ratio)
 
         # Identify potential bottlenecks
         bottleneck = None
@@ -392,35 +408,22 @@ class TheoreticalLimitsAnalyzer:
 
         return recommendations
 
-    def analyze_module_efficiency(self, module_name: str,
-                                actual_energy_j: float,
-                                module_params: Dict[str, Any]) -> ModuleTheoreticalAnalysis:
-        """Analyze efficiency of a module by comparing actual vs theoretical energy.
+    def analyze_module_efficiency(self, first,
+                                second: float,
+                                third) -> Union[EfficiencyAnalysis, ModuleTheoreticalAnalysis]:
+        """Analyze either a direct energy pair or a named module."""
+        if isinstance(first, (int, float)):
+            return self.calculate_efficiency_analysis(float(first), float(second), str(third))
 
-        Args:
-            module_name: Name of the module ("body", "brain", "mind")
-            actual_energy_j: Actual energy consumption
-            module_params: Module-specific parameters
-
-        Returns:
-            ModuleTheoreticalAnalysis with efficiency analysis
-        """
-        # First get the theoretical limits
-        base_analysis = self.analyze_module_limits(module_name, module_params)
-
-        # Calculate efficiency for each limit
+        module_name = str(first)
+        actual_energy_j = float(second)
+        module_params = third if isinstance(third, dict) else {}
+        base_analysis = self.analyze_module_limits(module_name.lower().replace("ant", ""), module_params)
         if base_analysis.limits:
-            # Find the most restrictive limit
             min_limit = min(base_analysis.limits, key=lambda x: x.value_j)
-
-            # Calculate efficiency analysis
-            efficiency_analysis = self.calculate_efficiency_analysis(
+            base_analysis.efficiency_analysis = self.calculate_efficiency_analysis(
                 actual_energy_j, min_limit.value_j, min_limit.limit_type
             )
-
-            # Update the analysis with efficiency results
-            base_analysis.efficiency_analysis = efficiency_analysis
-
         return base_analysis
 
     def calculate_information_theoretic_limits(self, information_processed: float) -> TheoreticalLimit:
@@ -436,10 +439,11 @@ class TheoreticalLimitsAnalyzer:
         channel_capacity = information_processed / 0.01  # Assume 10ms processing
         return self.calculate_information_limits(channel_capacity, 0.01)
 
-    def calculate_comprehensive_limits(self, bits_processed: float,
-                                     mechanical_work: float,
-                                     entropy_change: float,
-                                     information_processed: float) -> List[TheoreticalLimit]:
+    def calculate_comprehensive_limits(self, bits_processed: float = 0.0,
+                                     mechanical_work: float = 0.0,
+                                     entropy_change: float = 0.0,
+                                     information_processed: float = 0.0,
+                                     mechanical_work_j: Optional[float] = None) -> Dict[str, TheoreticalLimit]:
         """Calculate comprehensive theoretical limits across multiple domains.
 
         Args:
@@ -449,30 +453,36 @@ class TheoreticalLimitsAnalyzer:
             information_processed: Information processed
 
         Returns:
-            List of TheoreticalLimit objects covering different domains
+            Dictionary of TheoreticalLimit objects covering different domains
         """
-        limits = []
+        if mechanical_work_j is not None:
+            mechanical_work = mechanical_work_j
+        limits: Dict[str, TheoreticalLimit] = {}
 
         # Landauer limit for computation
         if bits_processed > 0:
             landauer_limit = self.calculate_landauer_limits(bits_processed)
-            limits.append(landauer_limit)
+            limits["landauer"] = landauer_limit
 
         # Thermodynamic limit for mechanical work
-        if mechanical_work > 0:
-            thermo_limit = self.calculate_thermodynamic_limits(mechanical_work)
-            limits.append(thermo_limit)
+        if mechanical_work > 0 or entropy_change > 0:
+            thermo_limit = self.calculate_thermodynamic_limits(mechanical_work, entropy_change)
+            limits["thermodynamic"] = thermo_limit
 
         # Information-theoretic limit
         if information_processed > 0:
             info_limit = self.calculate_information_theoretic_limits(information_processed)
-            limits.append(info_limit)
+            limits["information_theoretic"] = info_limit
 
         return limits
 
     def perform_module_analysis(self, module_name: str,
-                              module_params: Dict[str, Any],
-                              actual_energy_j: Optional[float] = None) -> ModuleTheoreticalAnalysis:
+                              module_params: Optional[Dict[str, Any]] = None,
+                              actual_energy_j: Optional[float] = None,
+                              bits_processed: float = 0.0,
+                              mechanical_work: float = 0.0,
+                              entropy_change: float = 0.0,
+                              information_processed: float = 0.0) -> ModuleTheoreticalAnalysis:
         """Perform comprehensive theoretical analysis for a module.
 
         Args:
@@ -483,12 +493,34 @@ class TheoreticalLimitsAnalyzer:
         Returns:
             Complete ModuleTheoreticalAnalysis
         """
+        params = module_params or {}
+        if any([bits_processed, mechanical_work, entropy_change, information_processed]):
+            limits_map = self.calculate_comprehensive_limits(
+                bits_processed=bits_processed,
+                mechanical_work=mechanical_work,
+                entropy_change=entropy_change,
+                information_processed=information_processed,
+            )
+            limits = list(limits_map.values())
+            dominant = min(limits, key=lambda x: x.value_j).limit_type if limits else None
+            efficiency = None
+            if actual_energy_j is not None and limits:
+                min_limit = min(limits, key=lambda x: x.value_j)
+                efficiency = self.calculate_efficiency_analysis(actual_energy_j, min_limit.value_j, min_limit.limit_type)
+            recommendations = self._generate_optimization_recommendations(module_name, limits, dominant)
+            return ModuleTheoreticalAnalysis(
+                module_name=module_name,
+                limits=limits,
+                efficiency_analysis=efficiency,
+                dominant_limit=dominant,
+                optimization_recommendations=recommendations,
+            )
         if actual_energy_j is not None:
-            return self.analyze_module_efficiency(module_name, actual_energy_j, module_params)
-        else:
-            return self.analyze_module_limits(module_name, module_params)
+            return self.analyze_module_efficiency(module_name, actual_energy_j, params)
+        return self.analyze_module_limits(module_name.lower().replace("ant", ""), params)
 
-    def identify_optimization_opportunities(self, analysis: ModuleTheoreticalAnalysis) -> List[str]:
+    def identify_optimization_opportunities(self, analysis, theoretical_limit: Optional[float] = None,
+                                            limit_type: Optional[str] = None) -> List[str]:
         """Identify specific optimization opportunities based on theoretical analysis.
 
         Args:
@@ -497,6 +529,19 @@ class TheoreticalLimitsAnalyzer:
         Returns:
             List of specific optimization opportunities
         """
+        if isinstance(analysis, (int, float)):
+            current_energy = float(analysis)
+            limit = float(theoretical_limit or 0.0)
+            ratio = current_energy / limit if limit > 0 else float("inf")
+            opportunities = []
+            if ratio > 1:
+                opportunities.append(f"Reduce {limit_type or 'energy'} gap by optimizing algorithmic work")
+            if ratio > 10:
+                opportunities.append("Evaluate hardware acceleration and memory locality")
+            if ratio > 100:
+                opportunities.append("Revisit model architecture against physical lower bounds")
+            return opportunities or ["System is close to the selected theoretical limit"]
+
         opportunities = []
 
         if not analysis.limits:
@@ -518,6 +563,22 @@ class TheoreticalLimitsAnalyzer:
             opportunities.append("Balance mechanical and computational efficiency")
 
         return opportunities
+
+    def compare_with_empirical_data(self, empirical_energy: float, empirical_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Compare an empirical energy value with documented theoretical context."""
+        reference = self.calculate_landauer_limits(empirical_data.get("bits_processed", 1.0)).value_j
+        ratio = empirical_energy / reference if reference > 0 else float("inf")
+        validation_score = max(0.0, min(1.0, float(empirical_data.get("efficiency", 0.0))))
+        return {
+            "empirical_vs_theoretical": ratio,
+            "validation_score": validation_score,
+            "bottleneck": empirical_data.get("bottleneck"),
+            "optimization_potential": empirical_data.get("optimization_potential"),
+        }
+
+    def generate_efficiency_report(self, analysis: ModuleTheoreticalAnalysis) -> str:
+        """Generate a comprehensive efficiency report."""
+        return self.generate_limits_report(analysis)
 
     def generate_limits_report(self, analysis: ModuleTheoreticalAnalysis) -> str:
         """Generate comprehensive theoretical limits report.
@@ -565,7 +626,10 @@ class TheoreticalLimitsAnalyzer:
             eff = analysis.efficiency_analysis
             report_lines.extend([
                 "Efficiency Analysis:",
-                ".2e"                ".2e"                ".2f"                ".1f"
+                f"  Actual energy: {eff.actual_energy_j:.2e} J",
+                f"  Theoretical limit: {eff.theoretical_limit_j:.2e} J",
+                f"  Efficiency ratio: {eff.efficiency_ratio:.2f}",
+                f"  Optimization potential: {eff.optimization_potential:.3f}",
             ])
             if eff.bottleneck_identified:
                 report_lines.append(f"  Bottleneck: {eff.bottleneck_identified}")

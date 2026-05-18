@@ -296,16 +296,16 @@ papers/paper_name/
 
 ```bash
 # Build all papers
-python3 scripts/common_pipeline/build_core.py
+uv run antstack-build
 
 # Build specific paper
-python3 scripts/common_pipeline/build_core.py --paper paper_name
+uv run antstack-build --paper paper_name
 
 # Validate only (no PDF generation)
-python3 scripts/common_pipeline/build_core.py --validate-only
+uv run antstack-build --validate-only
 
 # Skip tests
-python3 scripts/common_pipeline/build_core.py --no-tests
+uv run antstack-build --no-tests
 ```
 
 ### Legacy System
@@ -359,13 +359,13 @@ Build reports are generated in `build_report.md` with:
 
 ```bash
 # All tests
-python3 -m pytest tests/
+uv run pytest tests/
 
 # Specific component
-python3 -m pytest tests/core_rendering/
+uv run pytest tests/core_rendering/
 
 # With coverage
-python3 -m pytest --cov=antstack_core tests/
+uv run pytest --cov=antstack_core tests/
 ```
 
 ## Common Issues and Solutions

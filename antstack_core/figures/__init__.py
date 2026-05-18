@@ -13,9 +13,13 @@ Following .cursorrules specifications for:
 - Pandoc-compatible cross-reference format
 """
 
-from .plots import bar_plot, line_plot, scatter_plot
+from .plots import PlotConfig, bar_plot, line_plot, scatter_plot
 from .publication_plots import (
-    FigureManager, publication_bar_plot, publication_line_plot, publication_scatter_plot
+    FigureManager,
+    PublicationPlotConfig,
+    publication_bar_plot,
+    publication_line_plot,
+    publication_scatter_plot,
 )
 from .mermaid import preprocess_mermaid_diagrams, validate_mermaid_syntax
 from .references import validate_cross_references, fix_figure_ids
@@ -25,7 +29,9 @@ __all__ = [
     "bar_plot",
     "line_plot", 
     "scatter_plot",
+    "PlotConfig",
     "FigureManager",
+    "PublicationPlotConfig",
     "publication_bar_plot",
     "publication_line_plot", 
     "publication_scatter_plot",

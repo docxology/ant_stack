@@ -4,15 +4,15 @@ Energy efficiency has emerged as a critical constraint in embodied AI systems, y
 
 We derive closed-form expressions for per-module time and space complexity in core computational loops, incorporating analytical scaling relationships from computational experiments. Our analysis bridges algorithmic complexity to detailed energy models that account for compute operations (FLOPs at 1.0 pJ each), memory hierarchy (SRAM at 0.10 pJ/byte, DRAM at 20.0 pJ/byte), neuromorphic spikes (1.0 aJ each), and physical actuation, enabling energy budgeting with bootstrap confidence intervals for uncertainty quantification.
 
-Our analysis reveals three distinct computational regimes across the Ant Stack modules with profound design implications. The AntBody exhibits $\mathcal{O}(J + C^{1.5})$ complexity dominated by contact resolution rather than joint dynamics, where the $C^{1.5}$ scaling of Projected Gauss-Seidel solvers creates computational bottlenecks beyond 20 active contacts. This demonstrates locomotion efficiency within robotic platform ranges (CoT $\approx$ 1.93), though 2-6$\times$ higher than biological ants (CoT 0.1-0.3). 
+Within the configured analytical models, the analysis identifies three computational regimes across the Ant Stack modules with design implications that should be interpreted as model-based estimates. The AntBody exhibits $\mathcal{O}(J + C^{1.5})$ complexity dominated by contact resolution rather than joint dynamics, where the $C^{1.5}$ scaling of Projected Gauss-Seidel solvers creates computational bottlenecks beyond 20 active contacts. The resulting locomotion estimate falls within robotic platform ranges (CoT $\approx$ 1.93), though above reported biological ant ranges (CoT 0.1-0.3).
 
-The AntBrain scales as $\mathcal{O}(K + \rho N_{KC} + H)$ with biological sparsity patterns ($\rho \approx 0.02$) that prevent combinatorial explosion, enabling sub-linear energy scaling as sensory dimensionality increases. This reveals the largest optimization potential ($4.2 \times 10^8\times$ theoretical minimum) through neuromorphic hardware acceleration. The AntMind demonstrates $\mathcal{O}(B H_p)$ complexity through bounded rationality, but exponential policy tree growth creates super-linear energy scaling that limits planning horizons to $H_p \leq 15$ for computational tractability.
+The AntBrain scales as $\mathcal{O}(K + \rho N_{KC} + H)$ with biological sparsity patterns ($\rho \approx 0.02$) that reduce combinatorial growth in the modeled workload, enabling sub-linear energy scaling as sensory dimensionality increases. This suggests the largest modeled optimization potential ($4.2 \times 10^8\times$ theoretical minimum) through neuromorphic hardware acceleration. The AntMind demonstrates $\mathcal{O}(B H_p)$ complexity through bounded rationality, but exponential policy tree growth creates super-linear energy scaling that limits planning horizons to $H_p \leq 15$ in the real-time configuration studied here.
 
-Our work provides validated theoretical contributions to embodied AI complexity analysis, including an analytical complexity framework with solver-dependent contact dynamics analysis (PGS: $\mathcal{O}(C^{1.5})$, LCP: $\mathcal{O}(C^3)$, MLCP: $\mathcal{O}(C^{2.5})$) incorporating biologically-motivated neural sparsity ($\rho \leq 0.02$) and bounded rational active inference limits ($H_p \leq 15$). We establish comprehensive energy modeling spanning FLOP-based computation, hierarchical memory access, neuromorphic spikes, and mechanical actuation, validated against Landauer limits ($kT \ln 2 \approx 2.8 \times 10^{-21}$ J/bit) and thermodynamic efficiency bounds. 
+The contribution is a tested analytical workflow for embodied AI complexity analysis, including solver-dependent contact dynamics analysis (PGS: $\mathcal{O}(C^{1.5})$, LCP: $\mathcal{O}(C^3)$, MLCP: $\mathcal{O}(C^{2.5})$) incorporating biologically motivated neural sparsity ($\rho \leq 0.02$) and bounded-rational active inference limits ($H_p \leq 15$). The energy model spans FLOP-based computation, hierarchical memory access, neuromorphic spikes, and mechanical actuation, and compares these estimates against Landauer-style information limits and thermodynamic efficiency bounds.
 
 Additional contributions include information-theoretic foundations connecting Shannon's channel capacity, Landauer's principle, and Carnot efficiency limits for embodied AI system design, with quantitative validation against biological benchmarks. We provide phase transition analysis identifying critical points in system behavior such as contact density transitions ($C \approx 20$) and neural sparsity thresholds ($\rho \approx 0.02$), with scaling regime classification. Our biological validation framework provides quantitative comparison with real ant energetics to establish efficiency targets and optimization potential. Finally, we present a reproducible analysis methodology featuring manifest-driven experiments with bootstrap confidence intervals ($n \geq 1000$), deterministic seeding, automated figure generation, and cross-validation against established benchmarks.
 
-Our work establishes design principles for energy-efficient insect-inspired embodied AI systems, providing analytical frameworks for mechanical actuation efficiency and neural processing optimization. These findings inform hardware-software co-design strategies and provide benchmarks for energy-constrained autonomous systems, with particular relevance for mobile robotics, autonomous vehicles, and distributed sensor networks. The framework bridges theoretical complexity analysis with practical energy considerations, offering a systematic approach to understanding and optimizing the computational and energetic trade-offs in biomimetic embodied intelligence.
+The resulting design principles are best read as model-derived guidance for energy-efficient insect-inspired embodied AI systems. They inform hardware-software co-design strategies and provide benchmark targets for energy-constrained autonomous systems, with particular relevance for mobile robotics and distributed sensor networks. The framework bridges theoretical complexity analysis with practical energy considerations, offering a systematic approach to studying computational and energetic trade-offs in biomimetic embodied intelligence.
 
 
 # Computational Complexity and Energetics of the Ant Stack
@@ -21,13 +21,13 @@ Our work establishes design principles for energy-efficient insect-inspired embo
 
 This research presents a comprehensive analysis of computational complexity and energetics for the Ant Stack, an integrated framework for embodied artificial intelligence. As a companion paper to The Ant Stack, our work focuses specifically on algorithmic complexity characterization, detailed energy modeling, and empirical scaling property analysis. The document structure mirrors the primary paper to enable direct side-by-side comparison and support fully reproducible computational builds.
 
-**Research Philosophy**: Our approach represents a significant departure from traditional AI complexity analysis by integrating energy estimation directly with complexity characterization to inform practical design trade-offs. We monitor workload and environmental complexity in real-time and develop adaptive algorithms that adjust computational effort accordingly. 
+**Research Philosophy**: The paper integrates energy estimation with complexity characterization to inform practical design trade-offs. Claims about real ant behavior or robotic deployment should remain tied to cited references, explicit assumptions, or reproducible generated outputs.
 
 For example, we implement early-stopping planning strategies when expected energy savings diminish, following principles established in compute-energy integrated motion planning (CEIMP) methodologies \href{https://lean.mit.edu/papers/ceimp-icra}{(Sudhakar et al., 2020)}.
 
 **Methodological Foundation**: Our energy modeling leverages device-level energy coefficients and workload-specific counters to provide accurate Joules-per-decision estimates \href{https://ieeexplore.ieee.org/document/5440129}{(Koomey et al., 2011)}. This approach enables hardware-agnostic analysis while maintaining the precision necessary for energy-constrained system optimization. 
 
-Additional methodological context draws from established scientific computing standards and rigorous reference practices to ensure reproducible and verifiable results. All methods are tested and validated through comprehensive testing.
+Additional methodological context draws from scientific-computing and reference-management practices to support reproducible and verifiable results. The current repository-level validation target is the `uv run pytest -q` suite and the manifest-driven runner documented in the root README.
 
 ## Roadmap & Contributions
 
@@ -54,7 +54,7 @@ This work addresses computational complexity and energy analysis for embodied ar
 
 ### Core Research Challenges
 
-**Embodied AI Complexity Analysis**: Traditional approaches analyze complexity and energy separately. Our integrated framework reveals that solver selection changes the real-time feasibility boundary: PGS achieves $\mathcal{O}(C^{1.5})$ enabling 100 Hz control with $C \leq 20$ contacts, while LCP's $\mathcal{O}(C^3)$ limits practical operation to $C \leq 10$ contacts. This 2$\times$ capacity difference demonstrates how algorithmic complexity directly determines hardware requirements and energy budgets for embodied systems.
+**Embodied AI Complexity Analysis**: Traditional approaches often analyze complexity and energy separately. In the configured Ant Stack model, solver selection changes the real-time feasibility boundary: PGS achieves $\mathcal{O}(C^{1.5})$ enabling 100 Hz control with $C \leq 20$ contacts, while LCP's $\mathcal{O}(C^3)$ limits practical operation to $C \leq 10$ contacts. This 2$\times$ modeled capacity difference illustrates how algorithmic complexity can shape hardware requirements and energy budgets for embodied systems.
 
 **Energy-Aware System Design**: Embodied systems face fundamental energy constraints: mechanical actuation dominates at 96.5% of total power (360 mJ per 10 ms decision for 18-joint hexapod), while neural processing operates at $4.2 \times 10^8\times$ above Landauer's thermodynamic minimum ($kT \ln 2 \approx 2.8 \times 10^{-21}$ J/bit). These specific gaps—6$\times$ in mechanical efficiency vs biological muscle, and 8 orders of magnitude in computational efficiency—define concrete optimization targets for hardware-software co-design.
 
@@ -70,13 +70,13 @@ Our investigation operates across three integrated analytical dimensions, ground
 
 Energy estimation and complexity co-design are increasingly central in robotics as systems transition from controlled laboratory environments to real-world deployment scenarios. The field has evolved from simple power consumption models to sophisticated frameworks that integrate computational complexity with energy optimization across multiple system layers. Insects represent a unique model system for embodied AI systems, as they are computationally efficient, found in abundance around the world, and have a well-studied neuroethology.
 
-**Platform-Specific Energy Modeling**: Accurate platform-specific power models for mobile bases and manipulators enable planning that respects battery and thermal envelopes \href{https://journals.sagepub.com/doi/full/10.1177/1729881420909654}{(Jaramillo-Morales et al., 2020)}. Recent work has demonstrated that energy-aware motion planning can achieve 20-40% energy savings through intelligent trajectory optimization that accounts for both computational and mechanical energy costs.
+**Platform-Specific Energy Modeling**: Accurate platform-specific power models for mobile bases and manipulators enable planning that respects battery and thermal envelopes \href{https://journals.sagepub.com/doi/full/10.1177/1729881420909654}{(Jaramillo-Morales et al., 2020)}. Reported energy-aware motion-planning work indicates that trajectory optimization can reduce energy use when both computational and mechanical costs are modeled.
 
-**Industrial Energy Optimization**: Industrial practice leverages ML-based trajectory and process optimization to reduce kWh/part. Advanced manufacturing systems now routinely incorporate energy efficiency as a primary optimization objective, with some implementations achieving 30-50% reduction in energy consumption through integrated computational and mechanical optimization.
+**Industrial Energy Optimization**: Industrial practice increasingly uses trajectory and process optimization to reduce kWh/part. This provides context for treating energy efficiency as a primary optimization objective, but implementation-specific savings must be cited and validated per platform.
 
 **Compute-Energy Integration**: Methods such as CEIMP \href{https://lean.mit.edu/papers/ceimp-icra}{(Sudhakar et al., 2020)} explicitly trade compute energy against expected actuation savings, stopping planning when it becomes energetically counterproductive. This represents a paradigm shift from traditional approaches that optimize computational and mechanical systems independently.
 
-**Device-Level Energy Scaling**: These threads complement device-level scaling for energy/FLOP and memory energy per byte \href{https://ieeexplore.ieee.org/document/5440129}{(Koomey et al., 2011)}, and attojoule-scale spike estimates underpinning neuromorphic efficiency \href{https://www.frontiersin.org/articles/10.3389/fnins.2019.00095}{(Sengupta et al., 2019)}. Recent advances in neuromorphic computing have demonstrated orders-of-magnitude improvements in energy efficiency for specific computational tasks, particularly those involving sparse, event-driven processing.
+**Device-Level Energy Scaling**: These threads complement device-level scaling for energy/FLOP and memory energy per byte \href{https://ieeexplore.ieee.org/document/5440129}{(Koomey et al., 2011)}, and attojoule-scale spike estimates underpinning neuromorphic efficiency \href{https://www.frontiersin.org/articles/10.3389/fnins.2019.00095}{(Sengupta et al., 2019)}. Neuromorphic efficiency claims should remain task-specific because improvements depend on workload sparsity, hardware, and measurement method.
 
 **Theoretical Foundations**: Our analysis builds upon fundamental principles from multiple theoretical domains. From computational complexity theory, we leverage asymptotic analysis and parameterized complexity to characterize algorithmic scaling behavior. Information theory provides the foundation for understanding the fundamental limits of computation through Landauer's principle ($kT \ln 2$ per irreversible bit operation) and Shannon's capacity theorems for sensory processing bandwidth. Thermodynamic principles establish the physical bounds for energy efficiency, with Carnot efficiency limits for mechanical work and the second law constraints on information processing. 
 
@@ -1143,7 +1143,7 @@ E_total = E_flops + E_sram + E_dram + E_spikes + E_baseline
 
 # Generated Results (from src)
 
-Provenance: commit=278fd36, seed=123, python=3.13.7
+Provenance: commit=50aa595, seed=123, python=3.12.13
 
 
 ## Per-Workload Estimated Energy (mean [95% CI], J)
@@ -1161,7 +1161,7 @@ Only Body and Brain expend energy; Mind is a symbolic layer (0 J by convention).
 
 **Caption:** Total estimated energy by workload. Only Body and Brain expend energy; Mind is symbolic (0 J).
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/energy.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/energy.png}{(View absolute file)}
 
 ## Figure: Body Energy Partition {#fig:body_partition}
 
@@ -1169,23 +1169,23 @@ Only Body and Brain expend energy; Mind is a symbolic layer (0 J by convention).
 
 **Caption:** Estimated Body energy partition into Sensing and Actuation, aggregated over runs.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/body_split.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/body_split.png}{(View absolute file)}
 
 ## Figure: AntBody Energy Scaling vs Joint Count (J) {#fig:scaling_body_J}
 
 ![antbody energy scaling vs joint count (j)](papers/complexity_energetics/assets/scale_body_J.png)
 
-**Caption:** AntBody energy scaling with joint count (J). Demonstrates flat scaling $E \propto J^{-0.49}$ $R^2=0.987$ due to baseline power dominance (50 mW from sensors and controllers), making morphological complexity essentially free in terms of energy cost.
+**Caption:** AntBody energy scaling with joint count (J). Demonstrates flat scaling $E \propto J^{1.00}$ $R^2=0.975$ due to baseline power dominance (50 mW from sensors and controllers), making morphological complexity essentially free in terms of energy cost.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/scale_body_J.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_body_J.png}{(View absolute file)}
 
 ## Figure: AntBody Energy Scaling vs Joint Count (J) [scatter] {#fig:scaling_body_J_scatter}
 
 ![antbody energy scaling vs joint count (j) [scatter]](papers/complexity_energetics/assets/scale_body_J_scatter.png)
 
-**Caption:** Scatter plot of AntBody energy consumption across different joint counts (J). Shows the dominance of baseline power consumption over joint-dependent computation, resulting in essentially flat energy scaling $E \propto J^{-0.49}$.
+**Caption:** Scatter plot of AntBody energy consumption across different joint counts (J). Shows the dominance of baseline power consumption over joint-dependent computation, resulting in essentially flat energy scaling $E \propto J^{1.00}$.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/scale_body_J_scatter.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_body_J_scatter.png}{(View absolute file)}
 
 ## Figure: Pareto Frontier (Energy vs Performance) {#fig:pareto_body_J}
 
@@ -1193,15 +1193,15 @@ Only Body and Brain expend energy; Mind is a symbolic layer (0 J by convention).
 
 **Caption:** Pareto frontier for AntBody showing energy-performance trade-offs with varying joint counts. Performance proxy represents morphological dexterity.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/pareto_body_J.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/pareto_body_J.png}{(View absolute file)}
 
 ## Figure: AntBrain Energy Scaling vs AL Channels (K) {#fig:scaling_brain_K}
 
 ![antbrain energy scaling vs al channels (k)](papers/complexity_energetics/assets/scale_brain_K.png)
 
-**Caption:** AntBrain energy scaling as a function of antennal lobe input channels (K). Demonstrates sub-linear scaling $E \propto K^{0.33}$ $R^2=0.930$ due to biological sparsity patterns ($\rho = 0.02$), enabling massive sensory expansion (64 to 1024 channels) without proportional energy increase. Multiple curves represent different AntMind policy variants affecting neural processing efficiency.
+**Caption:** AntBrain energy scaling as a function of antennal lobe input channels (K). Demonstrates sub-linear scaling $E \propto K^{0.09}$ $R^2=0.890$ due to biological sparsity patterns ($\rho = 0.02$), enabling massive sensory expansion (64 to 1024 channels) without proportional energy increase. Multiple curves represent different AntMind policy variants affecting neural processing efficiency.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/scale_brain_K.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_brain_K.png}{(View absolute file)}
 
 ## Figure: Pareto Frontier (Energy vs Performance) {#fig:pareto_brain_K}
 
@@ -1209,31 +1209,31 @@ Only Body and Brain expend energy; Mind is a symbolic layer (0 J by convention).
 
 **Caption:** Pareto frontier analysis showing the trade-off between energy consumption and sensory processing capacity in AntBrain. Performance is proxied by inverse AL input channels (1/K), representing information processing capability.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/pareto_brain_K.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/pareto_brain_K.png}{(View absolute file)}
 
 ## Figure: AntBrain Energy Scaling vs AL Channels (K) [scatter] {#fig:scaling_brain_K_scatter}
 
 ![antbrain energy scaling vs al channels (k) [scatter]](papers/complexity_energetics/assets/scale_brain_K_scatter.png)
 
-**Caption:** Scatter plot representation of AntBrain energy scaling with antennal lobe input channels (K). Individual data points show experimental measurements with variability, complementing the line plot smoothing. Demonstrates the robustness of sub-linear scaling $E \propto K^{0.33}$ across different sensory configurations.
+**Caption:** Scatter plot representation of AntBrain energy scaling with antennal lobe input channels (K). Individual data points show experimental measurements with variability, complementing the line plot smoothing. Demonstrates the robustness of sub-linear scaling $E \propto K^{0.09}$ across different sensory configurations.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/scale_brain_K_scatter.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_brain_K_scatter.png}{(View absolute file)}
 
 ## Figure: AntMind Energy Scaling vs Planning Horizon (H_p) {#fig:scaling_mind_H_p}
 
 ![antmind energy scaling vs planning horizon (h_p)](papers/complexity_energetics/assets/scale_mind_H_p.png)
 
-**Caption:** AntMind energy scaling with policy planning horizon (H_p). Shows super-linear exponential growth $E \propto H_p^{1.01}$ $R^2=0.997$ due to combinatorial explosion in policy evaluation, establishing fundamental limits for real-time active inference.
+**Caption:** AntMind energy scaling with policy planning horizon (H_p). Shows super-linear exponential growth $E \propto H_p^{13.30}$ $R^2=0.947$ due to combinatorial explosion in policy evaluation, establishing fundamental limits for real-time active inference.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/scale_mind_H_p.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_mind_H_p.png}{(View absolute file)}
 
 ## Figure: AntMind Energy Scaling vs Planning Horizon (H_p) [scatter] {#fig:scaling_mind_H_p_scatter}
 
 ![antmind energy scaling vs planning horizon (h_p) [scatter]](papers/complexity_energetics/assets/scale_mind_H_p_scatter.png)
 
-**Caption:** Scatter plot showing exponential energy growth $E \propto H_p^{1.01}$ in AntMind as planning horizon (H_p) increases. Illustrates the fundamental computational barriers of exact active inference beyond 15-step horizons.
+**Caption:** Scatter plot showing exponential energy growth $E \propto H_p^{13.30}$ in AntMind as planning horizon (H_p) increases. Illustrates the fundamental computational barriers of exact active inference beyond 15-step horizons.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png}{(View absolute file)}
 
 ## Figure: Pareto Frontier (Energy vs Performance) {#fig:pareto_mind_H_p}
 
@@ -1241,7 +1241,7 @@ Only Body and Brain expend energy; Mind is a symbolic layer (0 J by convention).
 
 **Caption:** Pareto frontier for AntMind showing fundamental trade-offs between planning horizon and computational feasibility.
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/assets/pareto_mind_H_p.png}{(View absolute file)}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/pareto_mind_H_p.png}{(View absolute file)}
 
 ## Figure: Per-Decision Energy Breakdown {#fig:per_decision}
 
@@ -1262,7 +1262,7 @@ Only Body and Brain expend energy; Mind is a symbolic layer (0 J by convention).
 
 ## Raw Results (CSV)
 
-\href{file:///Users/4d/Documents/GitHub/ant/papers/complexity_energetics/out/results.csv}{View Results CSV}
+\href{file:///Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/out/results.csv}{View Results CSV}
 
 ## Derived Metric: Cost of Transport (dimensionless)
 
@@ -1283,7 +1283,7 @@ Biological ants achieve CoT 0.1-0.3, indicating 6.4$\times$ optimization potenti
 
 ## Overview of Empirical Findings
 
-Our comprehensive analysis reveals distinct computational and energetic regimes across the Ant Stack modules, establishing fundamental scaling laws and efficiency bounds for embodied AI systems. The results demonstrate how biological design principles enable efficient scaling while identifying fundamental computational limits.
+The manifest-driven analysis identifies distinct computational and energetic regimes across the Ant Stack modules. These results estimate scaling laws and efficiency bounds for the modeled embodied AI system; they should not be read as direct empirical claims about biological ants without the external-data workflow described in the repository documentation.
 
 **Analysis Framework**: We employ a multi-dimensional analysis framework combining analytical modeling, empirical measurement, and statistical validation. All analyses use manifest-driven configurations with deterministic seeding (seed=123) to ensure complete reproducibility across different experimental conditions and hardware platforms.
 
@@ -1295,7 +1295,7 @@ Our comprehensive analysis reveals distinct computational and energetic regimes 
 
 ### AntBody: Mechanical Efficiency Regime
 
-The AntBody module demonstrates flat energy scaling dominated by baseline power consumption, establishing that morphological complexity comes at essentially zero energy cost within practical ranges.
+The AntBody module shows approximately flat modeled energy scaling dominated by baseline power consumption, suggesting that joint-count changes have low incremental compute-energy cost within the tested parameter range.
 
 **Joint Count Scaling Analysis**:
 
@@ -1307,7 +1307,7 @@ The AntBody module demonstrates flat energy scaling dominated by baseline power 
 
 - **Physical Mechanism**: Baseline power consumption (sensors + controllers) dominates over joint-dependent computation
 
-- **Design Implication**: Adding morphological degrees of freedom has negligible energy penalty
+- **Design Implication**: Adding morphological degrees of freedom has low modeled compute-energy penalty in this configuration
 
 **Computational Complexity Results**:
 
@@ -1317,11 +1317,11 @@ The AntBody module demonstrates flat energy scaling dominated by baseline power 
 
 - **Real-Time Feasibility**: Contact solver selection (PGS vs LCP) becomes critical for $C > 20$ active contacts
 
-**Key Finding**: Energy consumption remains constant despite morphological scaling, making sensor optimization and contact resolution the primary efficiency targets rather than joint count minimization.
+**Key Finding**: Modeled energy consumption remains nearly constant across the sampled morphological range, making sensor optimization and contact resolution the primary efficiency targets in this configuration.
 
 ### AntBrain: Sparsity-Enabled Scaling
 
-The AntBrain module demonstrates remarkable energy efficiency through biological sparsity patterns, enabling sub-linear scaling that prevents computational explosion as sensory dimensionality increases.
+The AntBrain module shows sub-linear modeled energy scaling under biological sparsity assumptions, which reduces computational growth as sensory dimensionality increases.
 
 **Energy Scaling Results**:
 
@@ -1345,11 +1345,11 @@ The AntBrain module demonstrates remarkable energy efficiency through biological
 
 - **Scaling Advantage**: 16$\times$ sensory expansion (64 to 1024 channels) with <1% energy increase
 
-**Key Finding**: Biological sparsity enables 16$\times$ sensory scaling (64 to 1024 channels) with constant energy consumption, establishing fundamental efficiency advantages over dense neural architectures.
+**Key Finding**: Under the configured sparsity assumption, the model supports 16$\times$ sensory scaling (64 to 1024 channels) with minimal energy increase, suggesting an efficiency advantage relative to dense neural architectures.
 
 ### AntMind: Exponential Complexity Frontier
 
-The AntMind module demonstrates super-linear scaling with fundamental computational limits, establishing practical boundaries for active inference in real-time embodied systems.
+The AntMind module shows super-linear scaling in the sampled configuration, indicating practical boundaries for real-time active inference implementations.
 
 **Planning Horizon Scaling Analysis**:
 
@@ -1373,11 +1373,11 @@ The AntMind module demonstrates super-linear scaling with fundamental computatio
 
 - **Critical Threshold**: $H_p = 15$ represents fundamental complexity barrier
 
-**Key Finding**: Exponential complexity growth establishes fundamental limits for exact active inference, requiring bounded rationality approximations and hierarchical decomposition for practical cognitive processing.
+**Key Finding**: Exponential policy-tree growth makes exact active inference expensive in the tested regime, motivating bounded-rational approximations and hierarchical decomposition for practical cognitive processing.
 
 ## Theoretical Efficiency Analysis
 
-Our analysis establishes efficiency baselines by comparing measured energy consumption against fundamental physical limits, revealing substantial optimization opportunities across different computational domains.
+The analysis establishes model-based efficiency baselines by comparing estimated energy consumption against physical lower-bound references, revealing potential optimization opportunities across different computational domains.
 
 ### Efficiency Gap Analysis
 
@@ -1423,7 +1423,7 @@ Our analysis establishes efficiency baselines by comparing measured energy consu
 
 ### Key Theoretical Insights
 
-**Mechanical vs Computational Efficiency Regimes**: AntBody demonstrates that physical actuation can achieve efficiency exceeding information processing limits, while computational modules (Brain, Mind) reveal substantial optimization opportunities through hardware-software co-design.
+**Mechanical vs Computational Efficiency Regimes**: AntBody is dominated by physical actuation in the model, while computational modules (Brain, Mind) show larger modeled optimization gaps through hardware-software co-design.
 
 **Scaling Law Implications**: The efficiency gaps correlate directly with scaling regimes---mechanical systems show optimal efficiency, sparse neural systems offer maximum improvement potential, and cognitive systems face fundamental complexity barriers.
 
@@ -1433,11 +1433,11 @@ Our analysis establishes efficiency baselines by comparing measured energy consu
 
 ### Real Ant Energetics Benchmarking
 
-To validate our theoretical models against biological reality, we compare our computational predictions with empirical data from real ant colonies. This validation provides crucial insights into the biological plausibility of our energy models and identifies areas where biomimetic design principles can be improved.
+To contextualize the theoretical models against biological reality, we compare computational predictions with reported ant energetics. This comparison is a plausibility check, not a replacement for a dataset-specific empirical validation workflow.
 
 **Metabolic Rate Comparison**: Real ants (Formica rufa) exhibit metabolic rates of approximately 0.1-0.5 W/kg during active foraging, with resting rates around 0.01-0.05 W/kg (Lighton & Feener, 2005). Our AntBody model predicts 37.4 W total power for a biologically realistic 0.001 kg platform (1 mg ant mass), corresponding to 37,400 W/kg—within expected ranges for robotic platforms given electromechanical actuator inefficiencies.
 
-**Energy Efficiency Ratios**: Biological ants achieve cost-of-transport (CoT) values of 0.1-0.3 (Alexander, 2005), while our model predicts CoT $\approx$ 1.93 for an 18-DOF hexapod. This 6-19$\times$ difference quantitatively demonstrates the fundamental efficiency advantages of biological muscle (22% efficiency, 450 W/kg power density) over electromechanical actuators (45% efficiency, 250 W/kg power density), and biological carbohydrate energy storage (17 MJ/kg) over Li-ion batteries (0.87 MJ/kg)—a 19$\times$ energy density disadvantage.
+**Energy Efficiency Ratios**: Biological ants are reported with cost-of-transport (CoT) values of 0.1-0.3 (Alexander, 2005), while the model predicts CoT $\approx$ 1.93 for an 18-DOF hexapod. This 6-19$\times$ difference is used here as an engineering target for comparing biological muscle, electromechanical actuators, carbohydrate energy storage, and Li-ion batteries; the exact ratio depends on platform assumptions and dataset-specific calibration.
 
 **Neural Processing Efficiency**: Real ant mushroom bodies consume approximately 0.1-0.5 mW during active processing (Strausfeld et al., 2009), while our AntBrain model predicts 0.5 mJ per decision (50 mW at 100 Hz). This discrepancy reflects both the sparse biological processing we model and the potential for neuromorphic hardware optimization to bridge this gap.
 
@@ -1451,7 +1451,7 @@ To validate our theoretical models against biological reality, we compare our co
 
 ### Scaling Law Validation
 
-Our computational scaling laws are validated against biological scaling relationships:
+The computational scaling laws are compared with biological scaling relationships:
 
 **Body Mass Scaling**: Biological ants follow $E \propto m^{0.75}$ scaling (Kleiber's law), while our robotic model shows flat energy consumption independent of morphological complexity. This difference reflects the dominance of fixed baseline power (sensors, controllers) in robotic systems versus metabolic scaling in biological systems.
 
@@ -1538,7 +1538,8 @@ See auto-generated figure and table in ``Generated.md``.
 
 - Scaling plot (brain energy vs K; multiple Mind policy curves by default): see ``Generated.md`` figure and caption
 
-- Pareto frontier (Energy vs proxy performance): see ``Generated.md`` figure and caption
+- Pareto frontier (Energy vs proxy performance): see ``Generated.md`` figure and caption
+
 
 # Discussion
 

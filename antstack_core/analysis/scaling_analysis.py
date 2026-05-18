@@ -69,7 +69,11 @@ class ScalingAnalyzer:
 
     def __init__(self):
         """Initialize scaling analyzer."""
-        pass
+        self.backend_capabilities = {
+            "numpy": HAS_NUMPY,
+            "scipy": HAS_SCIPY,
+        }
+        self.last_result: Optional[ScalingResult] = None
 
     def analyze_single_parameter_scaling(self,
                                        parameter_values: List[float],
@@ -140,10 +144,11 @@ class ScalingAnalyzer:
                             ci_high_idx = min(n_exp - 1, int(0.975 * n_exp))
                             confidence_interval = (exponents[ci_low_idx], exponents[ci_high_idx])
 
-            except Exception:
-                pass  # Keep confidence_interval as None if calculation fails
+            except (ArithmeticError, ValueError, TypeError):
+                confidence_interval = None
+                p_value = None
 
-        return ScalingResult(
+        result = ScalingResult(
             parameter_name=parameter_name,
             parameter_values=parameter_values,
             response_values=response_values,
@@ -155,6 +160,8 @@ class ScalingAnalyzer:
             p_value=p_value,
             valid=analysis_valid
         )
+        self.last_result = result
+        return result
 
     def analyze_multi_parameter_scaling(self,
                                       primary_param: str,

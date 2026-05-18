@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import math
 import random
+import time
 from typing import Dict, List, Tuple, Optional, Any, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -130,7 +131,8 @@ class AgentBasedModel:
             
             # Calculate emergent metrics
             emergent_metrics['total_energy'].append(sum(energies))
-            emergent_metrics['state_variance'].append(np.var(states) if HAS_NUMPY else self._variance(states))
+            state_variance = float(np.var(states)) if HAS_NUMPY and states else self._variance(states)
+            emergent_metrics['state_variance'].append(state_variance)
             emergent_metrics['interaction_strength'].append(sum(abs(s) for _, _, s in self.interactions))
             emergent_metrics['clustering_coefficient'].append(self._calculate_clustering(states))
             emergent_metrics['entropy'].append(self._calculate_entropy(states))
@@ -199,7 +201,11 @@ class NetworkComplexityAnalyzer:
     
     def __init__(self):
         """Initialize network complexity analyzer."""
-        pass
+        self.backend_capabilities = {
+            "numpy": HAS_NUMPY,
+            "scipy": HAS_SCIPY,
+        }
+        self.last_metrics: Optional[ComplexityMetrics] = None
     
     def analyze_network_complexity(self, adjacency_matrix: List[List[float]]) -> ComplexityMetrics:
         """Analyze network complexity using multiple metrics.
@@ -211,7 +217,8 @@ class NetworkComplexityAnalyzer:
             ComplexityMetrics with network analysis results
         """
         if not adjacency_matrix or len(adjacency_matrix) == 0:
-            return ComplexityMetrics()
+            self.last_metrics = ComplexityMetrics()
+            return self.last_metrics
         
         n_nodes = len(adjacency_matrix)
         
@@ -237,7 +244,7 @@ class NetworkComplexityAnalyzer:
         entropy = self._calculate_network_entropy(adj_matrix)
         mutual_info = self._calculate_mutual_information(adj_matrix)
         
-        return ComplexityMetrics(
+        metrics = ComplexityMetrics(
             network_density=density,
             clustering_coefficient=clustering,
             path_length=path_length,
@@ -245,21 +252,47 @@ class NetworkComplexityAnalyzer:
             entropy=entropy,
             mutual_information=mutual_info
         )
+        self.last_metrics = metrics
+        return metrics
     
     def _calculate_density(self, adj_matrix) -> float:
         """Calculate network density."""
+        if HAS_NUMPY and not hasattr(adj_matrix, "shape"):
+            adj_matrix = np.array(adj_matrix)
         if HAS_NUMPY:
             n = adj_matrix.shape[0]
+            if n < 2:
+                return 0.0
             return np.sum(adj_matrix > 0) / (n * (n - 1))
         else:
             n = len(adj_matrix)
+            if n < 2:
+                return 0.0
             edges = sum(1 for row in adj_matrix for val in row if val > 0)
             return edges / (n * (n - 1))
     
     def _calculate_clustering_coefficient(self, adj_matrix) -> float:
         """Calculate average clustering coefficient."""
+        if HAS_NUMPY and not hasattr(adj_matrix, "shape"):
+            adj_matrix = np.array(adj_matrix)
         if not HAS_NUMPY:
-            return 0.0  # Simplified without numpy
+            n = len(adj_matrix)
+            if n == 0:
+                return 0.0
+            coeffs = []
+            for i in range(n):
+                neighbors = [j for j, val in enumerate(adj_matrix[i]) if val > 0 and j != i]
+                k_i = len(neighbors)
+                if k_i < 2:
+                    coeffs.append(0.0)
+                    continue
+                triangles = 0
+                for a, j in enumerate(neighbors):
+                    for k in neighbors[a + 1:]:
+                        if adj_matrix[j][k] > 0:
+                            triangles += 1
+                coeffs.append(triangles / (k_i * (k_i - 1) / 2))
+            return sum(coeffs) / len(coeffs)
         
         n = adj_matrix.shape[0]
         clustering_coeffs = []
@@ -287,8 +320,24 @@ class NetworkComplexityAnalyzer:
     
     def _calculate_path_length(self, adj_matrix) -> float:
         """Calculate average shortest path length."""
+        if HAS_NUMPY and not hasattr(adj_matrix, "shape"):
+            adj_matrix = np.array(adj_matrix)
         if not HAS_NUMPY:
-            return 0.0  # Simplified without numpy
+            n = len(adj_matrix)
+            if n == 0:
+                return 0.0
+            dist = [[math.inf] * n for _ in range(n)]
+            for i in range(n):
+                dist[i][i] = 0.0
+                for j in range(n):
+                    if adj_matrix[i][j] > 0:
+                        dist[i][j] = 1.0
+            for k in range(n):
+                for i in range(n):
+                    for j in range(n):
+                        dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+            finite = [d for row in dist for d in row if math.isfinite(d)]
+            return sum(finite) / len(finite) if finite else 0.0
         
         n = adj_matrix.shape[0]
         
@@ -314,6 +363,8 @@ class NetworkComplexityAnalyzer:
     
     def _calculate_modularity(self, adj_matrix) -> float:
         """Calculate network modularity (simplified)."""
+        if HAS_NUMPY and not hasattr(adj_matrix, "shape"):
+            adj_matrix = np.array(adj_matrix)
         if not HAS_NUMPY:
             return 0.0  # Simplified without numpy
         
@@ -337,6 +388,8 @@ class NetworkComplexityAnalyzer:
     
     def _calculate_network_entropy(self, adj_matrix) -> float:
         """Calculate Shannon entropy of network structure."""
+        if HAS_NUMPY and not hasattr(adj_matrix, "shape"):
+            adj_matrix = np.array(adj_matrix)
         if not HAS_NUMPY:
             return 0.0  # Simplified without numpy
         
@@ -356,6 +409,8 @@ class NetworkComplexityAnalyzer:
     
     def _calculate_mutual_information(self, adj_matrix) -> float:
         """Calculate mutual information between node pairs."""
+        if HAS_NUMPY and not hasattr(adj_matrix, "shape"):
+            adj_matrix = np.array(adj_matrix)
         if not HAS_NUMPY:
             return 0.0  # Simplified without numpy
         
@@ -431,8 +486,22 @@ class ThermodynamicComplexityAnalyzer:
         dissipated_energy = energy_breakdown.total - energy_breakdown.compute_flops
         return dissipated_energy / (self.temperature_k * 0.01)  # 10ms decision cycle
     
-    def _calculate_free_energy(self, computational_work: float, entropy_production: float) -> float:
+    def _calculate_entropy_production_rate(self, energy_values: Sequence[float]) -> float:
+        """Calculate a non-negative entropy-production proxy from energy samples."""
+        if not energy_values:
+            return 0.0
+        dissipated = max(0.0, float(sum(abs(v) for v in energy_values)))
+        return dissipated / (self.temperature_k * max(len(energy_values), 1))
+
+    def _calculate_free_energy(self, computational_work, entropy_production: Optional[float] = None) -> float:
         """Calculate free energy available for computation."""
+        if entropy_production is None:
+            values = list(computational_work or [])
+            if not values:
+                return 0.0
+            work = float(sum(values) / len(values))
+            entropy_production = self._calculate_entropy_production_rate(values)
+            computational_work = work
         return computational_work - self.temperature_k * entropy_production
 
 
@@ -441,7 +510,7 @@ class ComplexityEntropyAnalyzer:
     
     def __init__(self):
         """Initialize complexity-entropy analyzer."""
-        pass
+        self.last_diagram: Optional[Dict[str, List[float]]] = None
     
     def create_complexity_entropy_diagram(self, 
                                         time_series: List[float],
@@ -456,7 +525,8 @@ class ComplexityEntropyAnalyzer:
             Dictionary with complexity and entropy values
         """
         if len(time_series) < window_size:
-            return {'complexity': [], 'entropy': []}
+            self.last_diagram = {'complexity': [], 'entropy': [], 'time_points': []}
+            return self.last_diagram
         
         complexities = []
         entropies = []
@@ -472,11 +542,13 @@ class ComplexityEntropyAnalyzer:
             entropy = self._calculate_shannon_entropy(window)
             entropies.append(entropy)
         
-        return {
+        diagram = {
             'complexity': complexities,
             'entropy': entropies,
             'time_points': list(range(len(complexities)))
         }
+        self.last_diagram = diagram
+        return diagram
     
     def _calculate_lemple_ziv_complexity(self, sequence: List[float]) -> float:
         """Calculate Lempel-Ziv complexity (simplified)."""
@@ -544,6 +616,35 @@ class ComplexityEntropyAnalyzer:
                 entropy -= p * math.log2(p)
         
         return entropy
+
+    def _calculate_conditional_entropy(self, sequence: List[float]) -> float:
+        """Calculate a simple first-order conditional entropy estimate."""
+        if len(sequence) < 2:
+            return 0.0
+        if HAS_NUMPY:
+            quantiles = np.percentile(sequence, [25, 50, 75])
+            discrete = [int(x) for x in np.digitize(sequence, quantiles)]
+        else:
+            min_val = min(sequence)
+            max_val = max(sequence)
+            width = (max_val - min_val) / 4 if max_val > min_val else 1.0
+            discrete = [min(int((x - min_val) / width), 3) for x in sequence]
+
+        transitions: Dict[int, Dict[int, int]] = {}
+        for prev, current in zip(discrete, discrete[1:]):
+            transitions.setdefault(prev, {})
+            transitions[prev][current] = transitions[prev].get(current, 0) + 1
+
+        total_pairs = len(discrete) - 1
+        conditional = 0.0
+        for counts in transitions.values():
+            state_total = sum(counts.values())
+            state_entropy = 0.0
+            for count in counts.values():
+                p = count / state_total
+                state_entropy -= p * math.log2(p)
+            conditional += (state_total / total_pairs) * state_entropy
+        return conditional
 
 
 class EnhancedBootstrapAnalyzer:
@@ -645,7 +746,11 @@ class EnhancedBootstrapAnalyzer:
             corrected_exp = original_result.get('scaling_exponent', 0) - bias_exp
             corrected_int = original_result.get('intercept', 0) - bias_int
         
-        return {
+        result = {
+            'scaling_exponent': original_result.get('scaling_exponent', corrected_exp),
+            'intercept': original_result.get('intercept', corrected_int),
+            'r_squared': original_result.get('r_squared', 0.0),
+            'confidence_interval': tuple(exp_ci),
             'original_result': original_result,
             'bootstrap_exponents': bootstrap_exponents,
             'bootstrap_intercepts': bootstrap_intercepts,
@@ -666,6 +771,16 @@ class EnhancedBootstrapAnalyzer:
                 'std_r_squared': self._calculate_std(bootstrap_r_squared)
             }
         }
+        return result
+
+    def _generate_bootstrap_sample(self, values: List[float]) -> List[float]:
+        """Return one bootstrap resample with replacement."""
+        if not values:
+            return []
+        if HAS_NUMPY:
+            indices = np.random.choice(len(values), len(values), replace=True)
+            return [values[int(i)] for i in indices]
+        return [random.choice(values) for _ in values]
     
     def _calculate_std(self, values: List[float]) -> float:
         """Calculate standard deviation without numpy."""
