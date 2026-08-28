@@ -448,7 +448,9 @@ class TestScalingAnalyzer(unittest.TestCase):
         for regime, exponent in regimes_to_test:
             interpretation = self.analyzer._interpret_regime(regime, exponent)
             self.assertIsInstance(interpretation, str)
-            self.assertIn(".3f", interpretation)
+            # The formatted exponent (3 decimal places) must appear in the text.
+            self.assertIn(f"{exponent:.3f}", interpretation)
+            self.assertNotIn(".3f", interpretation)  # format spec, not literal text
 
         # Test unknown regime
         interpretation = self.analyzer._interpret_regime("unknown", 2.5)
