@@ -1052,12 +1052,33 @@ def _save_workload_energy_plot(
     labels = list(summary)
     values = [summary[label]["mean_energy_est_j"] for label in labels]
     yerr = [
-        max(0.0, summary[label]["ci_high_energy_est_j"] - summary[label]["mean_energy_est_j"])
+        (
+            max(0.0, summary[label]["mean_energy_est_j"] - summary[label]["ci_low_energy_est_j"]),
+            max(0.0, summary[label]["ci_high_energy_est_j"] - summary[label]["mean_energy_est_j"]),
+        )
         for label in labels
     ]
+    err_array = (
+        [[lo for lo, _hi in yerr], [hi for _lo, hi in yerr]]
+        if visualization.statistical_annotations and values
+        else None
+    )
     fig, ax = plt.subplots(figsize=visualization.figure_size)
-    ax.bar(labels, values, yerr=yerr if visualization.statistical_annotations else None, capsize=4)
-    ax.set_title("Workload Energy Summary")
+    bars = ax.bar(labels, values, yerr=err_array, capsize=4)
+    top = max(
+        (value + hi for value, (_lo, hi) in zip(values, yerr)),
+        default=0.0,
+    )
+    ax.set_ylim(0.0, top * 1.2 if top > 0 else 1.0)
+    # Value labels above each bar (including upper CI) so small bars stay readable
+    for bar, value, (_lo, hi) in zip(bars, values, yerr):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            value + hi + (top * 0.02 if top > 0 else 0.0),
+            f"{value:.3g}",
+            ha="center", va="bottom", fontsize=9, fontweight="bold",
+        )
+    ax.set_title("Workload Energy Summary (mean, 95% CI)")
     ax.set_ylabel("Mean estimated energy (J)")
     ax.set_xlabel("Workload")
     fig.tight_layout()
