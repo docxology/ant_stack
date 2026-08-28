@@ -2,6 +2,10 @@
 
 Real subprocess execution against the project venv interpreters — no mocks.
 --help / --validate-only paths are used so runs stay fast and side-effect free.
+
+The default subprocess timeout is generous (420s): each CLI invocation imports
+the full antstack_core package, which on a heavily loaded machine (parallel
+agent/pytest runs) can exceed two minutes before main() starts.
 """
 
 from __future__ import annotations
@@ -13,7 +17,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _run(script: str, *args: str, timeout: int = 120) -> subprocess.CompletedProcess:
+def _run(script: str, *args: str, timeout: int = 420) -> subprocess.CompletedProcess:
     python = Path(sys.executable)
     # Prefer the project venv console-script environment when present.
     venv_python = PROJECT_ROOT / ".venv" / "bin" / "python"
