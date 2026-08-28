@@ -2,7 +2,7 @@
   "artifact_count": 66,
   "artifacts": [
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/provenance/run_config.yaml",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/provenance/run_config.yaml",
       "artifact_type": "provenance",
       "bytes": 963,
       "checksum": "237ead243d356684963552357f4960cb8a31772d65b80ddc761f5fd2d2a9c1a0",
@@ -11,16 +11,16 @@
       "source_config": "run_all.config"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/data/raw/complexity_energetics_manifest.yaml",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/data/raw/complexity_energetics_manifest.yaml",
       "artifact_type": "yaml",
-      "bytes": 10701,
-      "checksum": "fc8366b511abdc5bf1722aa273886cbac5e90362a1e326e7e45ed4c80bcea5f7",
+      "bytes": 10700,
+      "checksum": "899fee4db05b88051b2f0dcc3fb44c366a66dde5113238de1d2249ec4903878c",
       "path": "data/raw/complexity_energetics_manifest.yaml",
       "producing_task": "data",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/out/results.csv",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/out/results.csv",
       "artifact_type": "csv",
       "bytes": 20546,
       "checksum": "14e4986d0ac7465453b7614540cd36e103bfee35a3ac2ee853d451a36a392923",
@@ -29,25 +29,25 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/out/summary.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/out/summary.json",
       "artifact_type": "json",
-      "bytes": 75773,
-      "checksum": "b6e5205e1a48f0474868af0df1e44de0e52d3219f36b30b14bc7ae7e2dee0254",
+      "bytes": 76837,
+      "checksum": "9ea9dd2c6d53bf0294e13f2b85657f77b8b2d5639e481085d580a8bb5eafaca4",
       "path": "papers/complexity_energetics/out/summary.json",
       "producing_task": "complexity_energetics",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/Generated.md",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/Generated.md",
       "artifact_type": "markdown",
-      "bytes": 8433,
-      "checksum": "2284088d8c8301a96f5aeda08f13cadf5aaf1b86ba3f2e0f7ad97858a84f5469",
+      "bytes": 9224,
+      "checksum": "8637c50171d5a60332a3f53817e36fd2bad468e92d3ac961e348c17a7804d427",
       "path": "papers/complexity_energetics/Generated.md",
       "producing_task": "complexity_energetics",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/energy.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/energy.png",
       "artifact_type": "image",
       "bytes": 80147,
       "checksum": "d331b8efadd5f808d5b1581264fda9fb20e99c215ed38a0d8b21a007122614d8",
@@ -56,7 +56,7 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/body_split.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/body_split.png",
       "artifact_type": "image",
       "bytes": 106846,
       "checksum": "6e5892eecab8d352b871313ba5d83b7d7084e5fa49ab6780f52c5e9a27e7e277",
@@ -65,7 +65,7 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/per_decision_breakdown.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/per_decision_breakdown.png",
       "artifact_type": "image",
       "bytes": 130439,
       "checksum": "f3e55001379902a56ced26df7b6866ed011733d935d18161fbff60b3fee51e89",
@@ -74,34 +74,34 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J.png",
       "artifact_type": "image",
-      "bytes": 221748,
-      "checksum": "574206e1772459d1e0073bfed6b3c7f32809e82982c1ae734200804e3aa81da9",
+      "bytes": 221704,
+      "checksum": "e4b03610bc33519b3f65ac82674330b9a5a518507968cd23ace43c59054fd87a",
       "path": "papers/complexity_energetics/assets/scale_body_J.png",
       "producing_task": "complexity_energetics",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J_scatter.png",
       "artifact_type": "image",
-      "bytes": 195715,
-      "checksum": "c6a65aa6a7aa026f630f39465a584b7deea0423039683d4add5c9d4e87c9ea87",
+      "bytes": 200736,
+      "checksum": "eb02940beba48af519a872d1e8cb693d31db52e84e1bdc63d1a6942a877f8ebf",
       "path": "papers/complexity_energetics/assets/scale_body_J_scatter.png",
       "producing_task": "complexity_energetics",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_body_J.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_body_J.png",
       "artifact_type": "image",
-      "bytes": 219956,
-      "checksum": "61299bc929338c58c8dd7cac7d8ea7f0018992745607e6c568594b235d703e2e",
+      "bytes": 219793,
+      "checksum": "521a8d08a4b5353d619edaa441caeaabdfd9a7688a0982d773a87efb2bd2438e",
       "path": "papers/complexity_energetics/assets/pareto_body_J.png",
       "producing_task": "complexity_energetics",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K.png",
       "artifact_type": "image",
       "bytes": 191956,
       "checksum": "686316597dde15a5cb61e7df57278ed178cc189ca8d70be39a968ea09a46071f",
@@ -110,7 +110,7 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_brain_K.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_brain_K.png",
       "artifact_type": "image",
       "bytes": 181617,
       "checksum": "bc2b8c6f7d59e9b70121df35b5939af515e1eb69bd192460621770d3045eda72",
@@ -119,16 +119,16 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K_scatter.png",
       "artifact_type": "image",
-      "bytes": 203997,
-      "checksum": "30730198849c8391c5983ab0bc17c818fc3293bd9185c194370d9070009d28df",
+      "bytes": 209434,
+      "checksum": "aed64315f99151c209306dd02927d9e4c465b2f1f2d0ffa8b23ddfb07d745f57",
       "path": "papers/complexity_energetics/assets/scale_brain_K_scatter.png",
       "producing_task": "complexity_energetics",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p.png",
       "artifact_type": "image",
       "bytes": 193814,
       "checksum": "5304b43f7c1540bba2eb72590b4a4224fa35f260e5d426cee243ec964343e6ef",
@@ -137,16 +137,16 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png",
       "artifact_type": "image",
-      "bytes": 243511,
-      "checksum": "11e0c800571f7bc4a4177dc723614cbdfdabf2bbfaae4289031a72405bc1b184",
+      "bytes": 248621,
+      "checksum": "c2c5819efb66dc240ca7c9f0630cf9202b537bb7ddf34262cb33b37880800ca5",
       "path": "papers/complexity_energetics/assets/scale_mind_H_p_scatter.png",
       "producing_task": "complexity_energetics",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_mind_H_p.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_mind_H_p.png",
       "artifact_type": "image",
       "bytes": 182146,
       "checksum": "839a2300dd36a62ff5b9812007b53605debf9f4610473d66d6fbbcbb54346cc3",
@@ -155,25 +155,25 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/complexity_energetics/out/provenance.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/out/provenance.json",
       "artifact_type": "provenance",
-      "bytes": 2734,
-      "checksum": "6ca94f149ef877f2b6ad0f543945257966666894e79228d0758689ed70a221a9",
+      "bytes": 3303,
+      "checksum": "e84081931cf5f24af4ba0b758f5f36582da2463b239055b7fc862f04f8cebe24",
       "path": "papers/complexity_energetics/out/provenance.json",
       "producing_task": "complexity_energetics",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/out/provenance.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/out/provenance.json",
       "artifact_type": "provenance",
-      "bytes": 2734,
-      "checksum": "6ca94f149ef877f2b6ad0f543945257966666894e79228d0758689ed70a221a9",
+      "bytes": 3303,
+      "checksum": "e84081931cf5f24af4ba0b758f5f36582da2463b239055b7fc862f04f8cebe24",
       "path": "papers/complexity_energetics/out/provenance.json",
       "producing_task": "paper_projection",
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/out/results.csv",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/out/results.csv",
       "artifact_type": "csv",
       "bytes": 20546,
       "checksum": "14e4986d0ac7465453b7614540cd36e103bfee35a3ac2ee853d451a36a392923",
@@ -182,16 +182,16 @@
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/out/summary.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/out/summary.json",
       "artifact_type": "json",
-      "bytes": 75773,
-      "checksum": "b6e5205e1a48f0474868af0df1e44de0e52d3219f36b30b14bc7ae7e2dee0254",
+      "bytes": 76837,
+      "checksum": "9ea9dd2c6d53bf0294e13f2b85657f77b8b2d5639e481085d580a8bb5eafaca4",
       "path": "papers/complexity_energetics/out/summary.json",
       "producing_task": "paper_projection",
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/body_split.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/body_split.png",
       "artifact_type": "image",
       "bytes": 106846,
       "checksum": "6e5892eecab8d352b871313ba5d83b7d7084e5fa49ab6780f52c5e9a27e7e277",
@@ -200,7 +200,7 @@
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/energy.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/energy.png",
       "artifact_type": "image",
       "bytes": 80147,
       "checksum": "d331b8efadd5f808d5b1581264fda9fb20e99c215ed38a0d8b21a007122614d8",
@@ -209,16 +209,16 @@
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/pareto_body_J.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/pareto_body_J.png",
       "artifact_type": "image",
-      "bytes": 219956,
-      "checksum": "61299bc929338c58c8dd7cac7d8ea7f0018992745607e6c568594b235d703e2e",
+      "bytes": 219793,
+      "checksum": "521a8d08a4b5353d619edaa441caeaabdfd9a7688a0982d773a87efb2bd2438e",
       "path": "papers/complexity_energetics/assets/pareto_body_J.png",
       "producing_task": "paper_projection",
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/pareto_brain_K.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/pareto_brain_K.png",
       "artifact_type": "image",
       "bytes": 181617,
       "checksum": "bc2b8c6f7d59e9b70121df35b5939af515e1eb69bd192460621770d3045eda72",
@@ -227,7 +227,7 @@
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/pareto_mind_H_p.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/pareto_mind_H_p.png",
       "artifact_type": "image",
       "bytes": 182146,
       "checksum": "839a2300dd36a62ff5b9812007b53605debf9f4610473d66d6fbbcbb54346cc3",
@@ -236,7 +236,7 @@
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/per_decision_breakdown.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/per_decision_breakdown.png",
       "artifact_type": "image",
       "bytes": 130439,
       "checksum": "f3e55001379902a56ced26df7b6866ed011733d935d18161fbff60b3fee51e89",
@@ -245,25 +245,25 @@
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_body_J.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/scale_body_J.png",
       "artifact_type": "image",
-      "bytes": 221748,
-      "checksum": "574206e1772459d1e0073bfed6b3c7f32809e82982c1ae734200804e3aa81da9",
+      "bytes": 221704,
+      "checksum": "e4b03610bc33519b3f65ac82674330b9a5a518507968cd23ace43c59054fd87a",
       "path": "papers/complexity_energetics/assets/scale_body_J.png",
       "producing_task": "paper_projection",
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_body_J_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/scale_body_J_scatter.png",
       "artifact_type": "image",
-      "bytes": 195715,
-      "checksum": "c6a65aa6a7aa026f630f39465a584b7deea0423039683d4add5c9d4e87c9ea87",
+      "bytes": 200736,
+      "checksum": "eb02940beba48af519a872d1e8cb693d31db52e84e1bdc63d1a6942a877f8ebf",
       "path": "papers/complexity_energetics/assets/scale_body_J_scatter.png",
       "producing_task": "paper_projection",
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_brain_K.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/scale_brain_K.png",
       "artifact_type": "image",
       "bytes": 191956,
       "checksum": "686316597dde15a5cb61e7df57278ed178cc189ca8d70be39a968ea09a46071f",
@@ -272,16 +272,16 @@
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_brain_K_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/scale_brain_K_scatter.png",
       "artifact_type": "image",
-      "bytes": 203997,
-      "checksum": "30730198849c8391c5983ab0bc17c818fc3293bd9185c194370d9070009d28df",
+      "bytes": 209434,
+      "checksum": "aed64315f99151c209306dd02927d9e4c465b2f1f2d0ffa8b23ddfb07d745f57",
       "path": "papers/complexity_energetics/assets/scale_brain_K_scatter.png",
       "producing_task": "paper_projection",
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_mind_H_p.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/scale_mind_H_p.png",
       "artifact_type": "image",
       "bytes": 193814,
       "checksum": "5304b43f7c1540bba2eb72590b4a4224fa35f260e5d426cee243ec964343e6ef",
@@ -290,25 +290,25 @@
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png",
       "artifact_type": "image",
-      "bytes": 243511,
-      "checksum": "11e0c800571f7bc4a4177dc723614cbdfdabf2bbfaae4289031a72405bc1b184",
+      "bytes": 248621,
+      "checksum": "c2c5819efb66dc240ca7c9f0630cf9202b537bb7ddf34262cb33b37880800ca5",
       "path": "papers/complexity_energetics/assets/scale_mind_H_p_scatter.png",
       "producing_task": "paper_projection",
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/papers/complexity_energetics/Generated.md",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/papers/complexity_energetics/Generated.md",
       "artifact_type": "markdown",
-      "bytes": 8433,
-      "checksum": "2284088d8c8301a96f5aeda08f13cadf5aaf1b86ba3f2e0f7ad97858a84f5469",
+      "bytes": 9224,
+      "checksum": "8637c50171d5a60332a3f53817e36fd2bad468e92d3ac961e348c17a7804d427",
       "path": "papers/complexity_energetics/Generated.md",
       "producing_task": "paper_projection",
       "source_config": "paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/data/derived/complexity_energetics_results.csv",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/data/derived/complexity_energetics_results.csv",
       "artifact_type": "csv",
       "bytes": 20546,
       "checksum": "14e4986d0ac7465453b7614540cd36e103bfee35a3ac2ee853d451a36a392923",
@@ -317,16 +317,16 @@
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/data/derived/complexity_energetics_summary.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/data/derived/complexity_energetics_summary.json",
       "artifact_type": "json",
-      "bytes": 75773,
-      "checksum": "b6e5205e1a48f0474868af0df1e44de0e52d3219f36b30b14bc7ae7e2dee0254",
+      "bytes": 76837,
+      "checksum": "9ea9dd2c6d53bf0294e13f2b85657f77b8b2d5639e481085d580a8bb5eafaca4",
       "path": "data/derived/complexity_energetics_summary.json",
       "producing_task": "data",
       "source_config": "complexity_energetics.manifest"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/statistics/workload_summary.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/statistics/workload_summary.json",
       "artifact_type": "json",
       "bytes": 927,
       "checksum": "51ef5e8ff8ffdf90e0eb84970e2b5c93bdef363ef45e35b99bb74eab393559d0",
@@ -335,7 +335,7 @@
       "source_config": "complexity_energetics.summary"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/statistics/scaling_summary.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/statistics/scaling_summary.json",
       "artifact_type": "json",
       "bytes": 1801,
       "checksum": "f10d539d91b4a8422ea7061a4c5b9b02ff1af3e9bbc531ac1d203a8f034ad39d",
@@ -344,7 +344,7 @@
       "source_config": "complexity_energetics.scaling"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/statistics/bootstrap_intervals.csv",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/statistics/bootstrap_intervals.csv",
       "artifact_type": "csv",
       "bytes": 266,
       "checksum": "f5f1a82a04fe4f3113df1650eb98cef1840901f766ac7bfeb8d5daa87a306d98",
@@ -353,7 +353,7 @@
       "source_config": "complexity_energetics.summary"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_body_split.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_body_split.png",
       "artifact_type": "image",
       "bytes": 106846,
       "checksum": "6e5892eecab8d352b871313ba5d83b7d7084e5fa49ab6780f52c5e9a27e7e277",
@@ -362,7 +362,7 @@
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_energy.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_energy.png",
       "artifact_type": "image",
       "bytes": 80147,
       "checksum": "d331b8efadd5f808d5b1581264fda9fb20e99c215ed38a0d8b21a007122614d8",
@@ -371,16 +371,16 @@
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_pareto_body_J.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_pareto_body_J.png",
       "artifact_type": "image",
-      "bytes": 219956,
-      "checksum": "61299bc929338c58c8dd7cac7d8ea7f0018992745607e6c568594b235d703e2e",
+      "bytes": 219793,
+      "checksum": "521a8d08a4b5353d619edaa441caeaabdfd9a7688a0982d773a87efb2bd2438e",
       "path": "visualizations/static/complexity_energetics_pareto_body_J.png",
       "producing_task": "visualizations",
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_pareto_brain_K.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_pareto_brain_K.png",
       "artifact_type": "image",
       "bytes": 181617,
       "checksum": "bc2b8c6f7d59e9b70121df35b5939af515e1eb69bd192460621770d3045eda72",
@@ -389,7 +389,7 @@
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_pareto_mind_H_p.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_pareto_mind_H_p.png",
       "artifact_type": "image",
       "bytes": 182146,
       "checksum": "839a2300dd36a62ff5b9812007b53605debf9f4610473d66d6fbbcbb54346cc3",
@@ -398,7 +398,7 @@
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_per_decision_breakdown.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_per_decision_breakdown.png",
       "artifact_type": "image",
       "bytes": 130439,
       "checksum": "f3e55001379902a56ced26df7b6866ed011733d935d18161fbff60b3fee51e89",
@@ -407,25 +407,25 @@
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_body_J.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_body_J.png",
       "artifact_type": "image",
-      "bytes": 221748,
-      "checksum": "574206e1772459d1e0073bfed6b3c7f32809e82982c1ae734200804e3aa81da9",
+      "bytes": 221704,
+      "checksum": "e4b03610bc33519b3f65ac82674330b9a5a518507968cd23ace43c59054fd87a",
       "path": "visualizations/static/complexity_energetics_scale_body_J.png",
       "producing_task": "visualizations",
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_body_J_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_body_J_scatter.png",
       "artifact_type": "image",
-      "bytes": 195715,
-      "checksum": "c6a65aa6a7aa026f630f39465a584b7deea0423039683d4add5c9d4e87c9ea87",
+      "bytes": 200736,
+      "checksum": "eb02940beba48af519a872d1e8cb693d31db52e84e1bdc63d1a6942a877f8ebf",
       "path": "visualizations/static/complexity_energetics_scale_body_J_scatter.png",
       "producing_task": "visualizations",
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_brain_K.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_brain_K.png",
       "artifact_type": "image",
       "bytes": 191956,
       "checksum": "686316597dde15a5cb61e7df57278ed178cc189ca8d70be39a968ea09a46071f",
@@ -434,16 +434,16 @@
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_brain_K_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_brain_K_scatter.png",
       "artifact_type": "image",
-      "bytes": 203997,
-      "checksum": "30730198849c8391c5983ab0bc17c818fc3293bd9185c194370d9070009d28df",
+      "bytes": 209434,
+      "checksum": "aed64315f99151c209306dd02927d9e4c465b2f1f2d0ffa8b23ddfb07d745f57",
       "path": "visualizations/static/complexity_energetics_scale_brain_K_scatter.png",
       "producing_task": "visualizations",
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_mind_H_p.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_mind_H_p.png",
       "artifact_type": "image",
       "bytes": 193814,
       "checksum": "5304b43f7c1540bba2eb72590b4a4224fa35f260e5d426cee243ec964343e6ef",
@@ -452,34 +452,34 @@
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_mind_H_p_scatter.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/complexity_energetics_scale_mind_H_p_scatter.png",
       "artifact_type": "image",
-      "bytes": 243511,
-      "checksum": "11e0c800571f7bc4a4177dc723614cbdfdabf2bbfaae4289031a72405bc1b184",
+      "bytes": 248621,
+      "checksum": "c2c5819efb66dc240ca7c9f0630cf9202b537bb7ddf34262cb33b37880800ca5",
       "path": "visualizations/static/complexity_energetics_scale_mind_H_p_scatter.png",
       "producing_task": "visualizations",
       "source_config": "complexity_energetics.assets"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/workload_energy_summary.png",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/workload_energy_summary.png",
       "artifact_type": "image",
-      "bytes": 26545,
-      "checksum": "f7467da9f9313f4686fcc3393bbab2500ebdb3a8a81f644d4c1e5c022f8d8612",
+      "bytes": 32144,
+      "checksum": "5086f303b0bbbcbca7cb9d79ad3b7fa5c86fceed8439f36532a032fc444e5ff8",
       "path": "visualizations/static/workload_energy_summary.png",
       "producing_task": "visualizations",
       "source_config": "complexity_energetics.summary"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/static/visualization_inventory.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/static/visualization_inventory.json",
       "artifact_type": "json",
-      "bytes": 6309,
-      "checksum": "f2369c40d988b2e765eff01e5aa35205cf856c75ca6f2fa86db2c6759cdbdf75",
+      "bytes": 6738,
+      "checksum": "c0509f091761559f5fd2d5d933e53c52978c921c9876986f703ceceac41a02e8",
       "path": "visualizations/static/visualization_inventory.json",
       "producing_task": "visualizations",
       "source_config": "visualization.config"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/animations/energy_components.gif",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/animations/energy_components.gif",
       "artifact_type": "animation",
       "bytes": 43407,
       "checksum": "962c473ac1aeb8daabf06327b61c06ad7990ba8abc35b5705737bf04604e93eb",
@@ -488,7 +488,7 @@
       "source_config": "complexity_energetics.summary"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/animations/scaling_sweep.gif",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/animations/scaling_sweep.gif",
       "artifact_type": "animation",
       "bytes": 80902,
       "checksum": "ce05a2718b304c4c1fd9da37ec6794ae5655f972a9c3ad556c93c0de3c6b4ed9",
@@ -497,7 +497,7 @@
       "source_config": "complexity_energetics.scaling"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/visualizations/animations/preview.html",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/visualizations/animations/preview.html",
       "artifact_type": "animation",
       "bytes": 377,
       "checksum": "c6b77b1b9d2ab0d14295eeb67dff7e7e931e6212d84b290f27d5db49d20d0a0c",
@@ -506,25 +506,25 @@
       "source_config": "visualization.animation_formats"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/reports/complexity_energetics_generated.md",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/reports/complexity_energetics_generated.md",
       "artifact_type": "markdown",
-      "bytes": 8433,
-      "checksum": "2284088d8c8301a96f5aeda08f13cadf5aaf1b86ba3f2e0f7ad97858a84f5469",
+      "bytes": 9224,
+      "checksum": "8637c50171d5a60332a3f53817e36fd2bad468e92d3ac961e348c17a7804d427",
       "path": "reports/complexity_energetics_generated.md",
       "producing_task": "reports",
       "source_config": "complexity_energetics.generated"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/reports/run_summary.md",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/reports/run_summary.md",
       "artifact_type": "markdown",
-      "bytes": 1075,
-      "checksum": "541abf2edacf4505c19ce940ed037e6ca1139a200712427136d4bec2d4ce0a3c",
+      "bytes": 1108,
+      "checksum": "4a3920045a5d728bfd3c9fd4f8fc535d27d97ba3e84eed7a6984726b1ebcf60e",
       "path": "reports/run_summary.md",
       "producing_task": "reports",
       "source_config": "run_all.config"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/2_complexity_energetics.pdf",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/2_complexity_energetics.pdf",
       "artifact_type": "paper",
       "bytes": 2461029,
       "checksum": "6a01638ab9e1fd8b0165238c7a45e9bf23f89d3c13175e35fd57be80640a807c",
@@ -533,34 +533,34 @@
       "source_config": "complexity_energetics.pdf_sources"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/papers/paper_artifacts.md",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/paper_artifacts.md",
       "artifact_type": "paper",
-      "bytes": 307,
-      "checksum": "77bb422d8540eb2380689325ede9ffc70bcb38ee27033d3f62a9e0175d618b54",
+      "bytes": 340,
+      "checksum": "d68413b2572412b04a0cab8ab015d4783515f4d0d8737c430262667a7efe2d94",
       "path": "papers/paper_artifacts.md",
       "producing_task": "papers",
       "source_config": "complexity_energetics.paper_projection"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/logs/run_all_antstack.log",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/logs/run_all_antstack.log",
       "artifact_type": "log",
-      "bytes": 2791,
-      "checksum": "5963a0aa0a3654ed8b9e4e93b1692184896409bd93ed19a776d04571aad230e0",
+      "bytes": 2890,
+      "checksum": "c94e979bd6117b601cfe749d0a62e10d28eddc4a3ad4057fd638e24c2adc075b",
       "path": "logs/run_all_antstack.log",
       "producing_task": "logging",
       "source_config": "run.log_level"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/statistics/validation_summary.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/statistics/validation_summary.json",
       "artifact_type": "json",
       "bytes": 6064,
-      "checksum": "cc164d31754d46b7e4f98d789632bda6679f6f8b7ddbb6a1651170dc8eac74b3",
+      "checksum": "7c692842ce82426c7efad3202651eae372bac12fa8f4d881dde70ea847c07524",
       "path": "statistics/validation_summary.json",
       "producing_task": "validation",
       "source_config": "validation.config"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/provenance/dependency_versions.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/provenance/dependency_versions.json",
       "artifact_type": "provenance",
       "bytes": 154,
       "checksum": "b1aa949a8fc7615533a653b69909850f366c1a26910216ce830dc28be8e1b9ae",
@@ -569,28 +569,28 @@
       "source_config": "runtime.dependencies"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/provenance/git_state.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/provenance/git_state.json",
       "artifact_type": "provenance",
-      "bytes": 133,
-      "checksum": "9748556e07c39c3b24e3d5a060bba5cc41ae3e84ee7aa59899f4dbd5cfa1bb8a",
+      "bytes": 166,
+      "checksum": "afff3b28c5d19999e44301185f7fe9eede693a2797c1a8093c08a8a3b3998000",
       "path": "provenance/git_state.json",
       "producing_task": "provenance",
       "source_config": "git"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/provenance/provenance.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/provenance/provenance.json",
       "artifact_type": "provenance",
-      "bytes": 8442,
-      "checksum": "27bb066300cfba9de13aa8b7e80b7d2c58856cc34e19e1466b0e042ea4b369b9",
+      "bytes": 10793,
+      "checksum": "6fd235116cefa064d4a82e56f54f6a8689f88acb6ddc3ebff5c4ff294fdae915",
       "path": "provenance/provenance.json",
       "producing_task": "provenance",
       "source_config": "run_all.provenance"
     },
     {
-      "absolute_path": "/Users/4d/Documents/GitHub/ant_stack/outputs/example-run/provenance/output_inventory.json",
+      "absolute_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/provenance/output_inventory.json",
       "artifact_type": "provenance",
-      "bytes": 28805,
-      "checksum": "5d8a36ea68eec4e7d5de39a18f24929d4547db681ef0fa0e76073e4b05dc16fd",
+      "bytes": 30951,
+      "checksum": "c20ee13a6f0235b4987af9ede8b19dc668ca13b6c0637440c5d8840d053d25b9",
       "path": "provenance/output_inventory.json",
       "producing_task": "provenance",
       "source_config": "run_all.inventory"
@@ -606,7 +606,7 @@
         "2_complexity_energetics.pdf"
       ]
     },
-    "config_path": "/Users/4d/Documents/GitHub/ant_stack/configs/run_all_antstack.example.yaml",
+    "config_path": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/configs/run_all_antstack.example.yaml",
     "run": {
       "clean_run_dir": true,
       "log_level": "INFO",
@@ -655,11 +655,11 @@
       "statistical_annotations": true
     }
   },
-  "created_at_utc": "2026-05-18T21:11:01.070258+00:00",
-  "output_root": "/Users/4d/Documents/GitHub/ant_stack/outputs",
+  "created_at_utc": "2026-08-28T18:25:53.181699+00:00",
+  "output_root": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs",
   "run_id": "example-run",
   "schema_version": 1,
-  "source_config": "/Users/4d/Documents/GitHub/ant_stack/configs/run_all_antstack.example.yaml",
+  "source_config": "/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/configs/run_all_antstack.example.yaml",
   "tasks": [
     "data",
     "statistics",

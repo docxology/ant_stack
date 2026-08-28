@@ -1,7 +1,7 @@
 # Ant Stack Run Summary
 
 - Run ID: `example-run`
-- Output root: `/Users/4d/Documents/GitHub/ant_stack/outputs/example-run`
+- Output root: `/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run`
 - Tasks: `data, statistics, visualizations, animations, reports, papers, validation`
 - Artifact count at report time: `57`
 
