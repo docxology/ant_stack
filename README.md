@@ -6,7 +6,7 @@ Ant Stack is a reproducible scientific-publication and analysis workspace for em
 
 - Python package: `antstack_core`
 - CLI entrypoints: `antstack-build`, `antstack-ce`, and `run-all-antstack`
-- Verified test suite: `676 passed, 10 subtests passed` with `uv run pytest -q`
+- Test suite at the v2.0.0 release: `676 passed, 10 subtests passed` with `uv run pytest -q` (re-run locally for the current count)
 - Package manager: `uv`
 - Node/tooling manager: `bun`
 - Paper roots: `papers/ant_stack`, `papers/complexity_energetics`, and `papers/documentation`
@@ -105,7 +105,7 @@ uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out pape
 - Public API contracts: [docs/public_api_contracts.md](docs/public_api_contracts.md)
 - External ant-data integration: [docs/external_ant_data_integration.md](docs/external_ant_data_integration.md)
 - Paper roots: `papers/ant_stack`, `papers/complexity_energetics`, and `papers/documentation`
-- Legacy generated comparison root: `complexity_energetics`
+- Legacy generated-artifact root: `complexity_energetics/` — retained comparison figures and tables; generate canonical artifacts under `outputs/<run_id>/` instead
 
 Every intentional directory has a local `README.md` and `AGENTS.md`. Verify coverage after structural changes:
 

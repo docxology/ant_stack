@@ -26,6 +26,11 @@ uv run antstack-build --validate-only
 uv run run-all-antstack --config configs/run_all_antstack.example.yaml --validate-only
 ```
 
+## Side Effects Of Validation Commands
+
+- `uv run run-all-antstack ... --validate-only` parses and validates the config and writes nothing (verified against `antstack_core/orchestration/run_all.py`, which returns before run-layout creation).
+- `uv run antstack-build --validate-only` validates paper configs and environments but still regenerates the timestamped root `build_report.md`; it does not build PDFs or write paper artifacts.
+
 ## Acceptance Criteria
 
 - Tests collect without import or duplicate-file errors.
