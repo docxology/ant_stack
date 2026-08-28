@@ -94,9 +94,7 @@ class TheoreticalLimitsAnalyzer:
             description="Minimum energy required by Landauer's principle for irreversible computation",
             assumptions=[
                 "Irreversible computation",
-                "Irreversible computation (bit erasure)",
                 "Room temperature",
-                "Room temperature (298K)",
                 "Ideal thermodynamic efficiency"
             ],
             uncertainty_factor=1.0,  # Fundamental limit
@@ -133,7 +131,6 @@ class TheoreticalLimitsAnalyzer:
             assumptions=[
                 "Second law of thermodynamics",
                 f"Mechanical efficiency: {efficiency * 100:.1f}%",
-                "No losses in energy conversion",
                 "Ideal actuator performance"
             ],
             uncertainty_factor=1.0 / efficiency,
@@ -162,7 +159,6 @@ class TheoreticalLimitsAnalyzer:
                 f"Channel capacity: {channel_capacity:.1e} bits/s",
                 f"Processing time: {time_seconds:.3f} s",
                 "Shannon entropy",
-                "Shannon capacity limit",
                 "Ideal coding and modulation"
             ],
             uncertainty_factor=2.0,  # Practical coding overhead
@@ -330,6 +326,8 @@ class TheoreticalLimitsAnalyzer:
             )
 
         efficiency_ratio = actual_energy_j / theoretical_limit_j
+        # Repository test contract pins potential = limit/actual (1/ratio), capped
+        # away from 1.0; 0.0 when the system is already at or below the limit.
         optimization_potential = 0.0 if efficiency_ratio <= 1.0 else min(0.999999999, 1.0 / efficiency_ratio)
 
         # Identify potential bottlenecks
@@ -401,7 +399,7 @@ class TheoreticalLimitsAnalyzer:
         max_ratio = max((l.value_j for l in limits), default=0)
         min_ratio = min((l.value_j for l in limits), default=0)
 
-        if max_ratio / min_ratio > 10:
+        if min_ratio > 0 and max_ratio / min_ratio > 10:
             recommendations.append(
                 "Large gap between limits suggests opportunity for multi-objective optimization"
             )
@@ -554,7 +552,7 @@ class TheoreticalLimitsAnalyzer:
                 opportunities.append("Reduce algorithmic complexity")
             if eff.efficiency_ratio > 1000:
                 opportunities.append("Consider hardware acceleration")
-            if eff.optimization_potential > 50:
+            if eff.optimization_potential > 0.5:
                 opportunities.append("Major efficiency improvements possible")
 
         # Analyze limit relationships

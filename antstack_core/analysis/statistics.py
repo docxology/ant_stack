@@ -164,6 +164,8 @@ def analyze_scaling_relationship(
             scaling_regime = "quadratic"
         elif abs(scaling_exponent - 1.5) < 0.1:
             scaling_regime = "super-linear"
+        elif scaling_exponent < 0:
+            scaling_regime = "inverse"
         elif scaling_exponent < 1.0:
             scaling_regime = "sub-linear"
         elif scaling_exponent > 2.0:

@@ -127,7 +127,7 @@ class EnhancedEnergyEstimator:
             memory_values=memory_values,
             scaling_exponent=scaling_result.get("scaling_exponent"),
             r_squared=scaling_result.get("r_squared"),
-            scaling_regime=scaling_result.get("regime")
+            scaling_regime=scaling_result.get("scaling_regime")
         )
 
     def analyze_brain_scaling(self, k_values: List[int],
@@ -172,7 +172,7 @@ class EnhancedEnergyEstimator:
             memory_values=memory_values,
             scaling_exponent=scaling_result.get("scaling_exponent"),
             r_squared=scaling_result.get("r_squared"),
-            scaling_regime=scaling_result.get("regime")
+            scaling_regime=scaling_result.get("scaling_regime")
         )
 
     def analyze_mind_scaling(self, h_p_values: List[int],
@@ -217,7 +217,7 @@ class EnhancedEnergyEstimator:
             memory_values=memory_values,
             scaling_exponent=scaling_result.get("scaling_exponent"),
             r_squared=scaling_result.get("r_squared"),
-            scaling_regime=scaling_result.get("regime")
+            scaling_regime=scaling_result.get("scaling_regime")
         )
 
     def calculate_theoretical_limits(self, module_data: ModuleScalingData) -> Dict[str, float]:

@@ -272,12 +272,18 @@ class ScalingAnalyzer:
             Human-readable interpretation
         """
         interpretations = {
-            "constant": ".3f",
-            "linear": ".3f",
-            "quadratic": ".3f",
-            "cubic": ".3f",
-            "sub-linear": ".3f",
-            "super-linear": ".3f"
+            "constant": f"Approximately constant response (exponent {exponent:.3f}); "
+                        "the parameter has negligible effect on the response",
+            "linear": f"Linear scaling with exponent {exponent:.3f}; response grows "
+                      "proportionally with the parameter",
+            "quadratic": f"Quadratic scaling with exponent {exponent:.3f}; response grows "
+                         "with the square of the parameter",
+            "cubic": f"Cubic scaling with exponent {exponent:.3f}; response grows with the "
+                     "cube of the parameter",
+            "sub-linear": f"Sub-linear scaling with exponent {exponent:.3f}; economies of "
+                          "scale with increasing parameter",
+            "super-linear": f"Super-linear scaling with exponent {exponent:.3f}; response "
+                            "outpaces proportional growth"
         }
 
         return interpretations.get(regime, f"Unknown scaling regime with exponent {exponent:.3f}")
