@@ -23,19 +23,6 @@ ensure_folder_docs = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ensure_folder_docs)
 
 
-# xfail(reason=...): the three papers/*/assets/tmp_images/ ephemeral render-staging
-# directories exist (tracked via .gitkeep) but have no README.md/AGENTS.md, and
-# generate-the-docs (`tools/ensure_folder_docs.py --write`) or an explicit
-# DIRECTORIES exclusion is a source-side fix in tools/ensure_folder_docs.py and/or
-# papers/, outside the tests/ ownership boundary. Reported to the fleet lead.
-@pytest.mark.xfail(
-    reason=(
-        "papers/*/assets/tmp_images/ staging dirs lack generated docs; "
-        "fix requires editing tools/ensure_folder_docs.py (exclude) or running "
-        "--write into papers/, both outside tests/ ownership"
-    ),
-    strict=True,
-)
 def test_every_intentional_directory_has_local_docs() -> None:
     """All intentional directories should have both README.md and AGENTS.md."""
     assert ensure_folder_docs.missing_docs() == []

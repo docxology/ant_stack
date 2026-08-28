@@ -40,14 +40,12 @@ flowchart TD
 | `troubleshooting.md` | Common command, build, rendering, and data problems. |
 | `external_ant_data_integration.md` | Schema, provenance, and validation contract for empirical ant datasets. |
 
-## Known Documentation Gate
+## Folder-Docs Gate
 
-`uv run python tools/ensure_folder_docs.py --check` currently fails on the gitignored
-`papers/*/assets/tmp_images/` directories: the checker treats them as intentional
-directories (its registry in `tools/ensure_folder_docs.py` declares expected README/AGENTS
-content for them) while `.gitignore` excludes everything inside them. The mismatch lives in
-the checker/ignore configuration, not in documentation; until it is reconciled, treat the
-`tmp_images` entries as the expected failure and all other missing-directory reports as real.
+`uv run python tools/ensure_folder_docs.py --check` passes: the checker reads
+`.gitignore` directory patterns and skips registry entries they exclude (currently the
+gitignored `papers/*/assets/tmp_images/` render-staging directories). Any other
+missing-directory report is real documentation debt and should be fixed, not ignored.
 
 ## Local Commands
 

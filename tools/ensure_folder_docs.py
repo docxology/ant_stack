@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
 from pathlib import Path
 
 
@@ -247,9 +248,37 @@ def render_agents(path: str, meta: dict[str, str]) -> str:
     return AGENTS_TEMPLATE.format(path=path, role=meta["role"], commands=meta["commands"])
 
 
+def _gitignored_directory_patterns() -> list[str]:
+    """Directory ignore patterns from the repo .gitignore (line comments only)."""
+    patterns: list[str] = []
+    gitignore = ROOT / ".gitignore"
+    if not gitignore.is_file():
+        return patterns
+    for line in gitignore.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        patterns.append(stripped.rstrip("/"))
+    return patterns
+
+
+def _is_ignored_directory(rel: str, patterns: list[str]) -> bool:
+    """True when a .gitignore pattern excludes this directory path."""
+    for pattern in patterns:
+        if "/" in pattern:
+            if fnmatch.fnmatch(rel, pattern) or fnmatch.fnmatch(rel, pattern + "/*"):
+                return True
+        elif fnmatch.fnmatch(rel.split("/")[-1], pattern):
+            return True
+    return False
+
+
 def missing_docs() -> list[Path]:
     missing: list[Path] = []
+    ignore_patterns = _gitignored_directory_patterns()
     for rel in DIRECTORIES:
+        if _is_ignored_directory(rel, ignore_patterns):
+            continue
         directory = ROOT / rel
         if not directory.is_dir():
             missing.append(directory)

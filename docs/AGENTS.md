@@ -18,5 +18,5 @@ Run:
 uv run pytest -q tests/antstack_core/test_docs_contract.py; uv run python tools/ensure_folder_docs.py --check
 ```
 
-`ensure_folder_docs.py --check` currently reports the gitignored `papers/*/assets/tmp_images/`
-directories as missing their README/AGENTS signposts; see the note in `docs/README.md`.
+`ensure_folder_docs.py --check` passes: gitignored staging directories such as
+`papers/*/assets/tmp_images/` are excluded via `.gitignore` patterns; see `docs/README.md`.
