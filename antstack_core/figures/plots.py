@@ -194,6 +194,7 @@ def line_plot(
     ylabel: str = "",
     out_path: str | None = None,
     bands: Optional[Seq[Seq[tuple[float, float]]]] = None,
+    scaling_symbol: str = "x",
     *,
     x_data: Sequence[Sequence[float]] | None = None,
     y_data: Sequence[Sequence[float]] | None = None,
@@ -294,7 +295,7 @@ def line_plot(
                     # Add scaling annotation (LaTeX format)
                     mid_idx = len(series_x) // 2
                     ax.annotate(
-                        f'$\\propto K^{{{scaling_exp:.2f}}}$',
+                        f'$\\propto {scaling_symbol}^{{{scaling_exp:.2f}}}$',
                         xy=(series_x[mid_idx], y[mid_idx]),
                         xytext=(10, 10), textcoords='offset points',
                         fontsize=10, color=color, fontweight='bold',
@@ -406,17 +407,19 @@ def scatter_plot(
             cbar.set_label(ylabel, fontsize=12, fontweight='bold')
         
         # Fit regression line
+        drew_regression = False
         if plot_config.annotate_statistics and _has_linear_fit_signal(x_arr, y_arr):
             coeffs = np.polyfit(x_arr, y_arr, 1)
             x_fit = np.linspace(min(x_arr), max(x_arr), 100)
             y_fit = coeffs[0] * x_fit + coeffs[1]
             ax.plot(x_fit, y_fit, 'r--', linewidth=2, alpha=0.8, label='Linear fit')
+            drew_regression = True
             
             # Calculate correlation coefficient
             correlation = np.corrcoef(x_arr, y_arr)[0, 1]
             
             # Add statistics annotation
-            stats_text = f'R² = {correlation**2:.3f}\\nSlope = {coeffs[0]:.3e}'
+            stats_text = f'R² = {correlation**2:.3f}\nSlope = {coeffs[0]:.3e}'
             ax.text(
                 0.05, 0.95, stats_text, transform=ax.transAxes, 
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
@@ -433,7 +436,7 @@ def scatter_plot(
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
-    if 'fit' in locals():
+    if drew_regression:
         ax.legend(fontsize=11)
     
     fig.tight_layout()

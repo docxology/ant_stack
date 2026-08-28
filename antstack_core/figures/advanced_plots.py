@@ -261,7 +261,7 @@ def network_visualization(
         density = _calculate_network_density(adjacency_matrix)
         clustering = _calculate_clustering_coefficient(adjacency_matrix)
         
-        stats_text = f'Density: {density:.3f}\\nClustering: {clustering:.3f}'
+        stats_text = f'Density: {density:.3f}\nClustering: {clustering:.3f}'
         ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, 
                fontsize=10, verticalalignment='top',
                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
