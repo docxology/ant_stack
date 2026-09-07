@@ -18,12 +18,15 @@ This directory contains specialized scripts for analyzing the computational comp
 - `analyze_active_inference.py` - Active inference complexity and bounded rationality analysis
 - `analyze_contact_dynamics.py` - Contact dynamics solver performance comparison
 - `analyze_neural_networks.py` - Sparse neural network connectivity pattern analysis
+- `comprehensive_analysis.py` - Advanced complexity analysis with agent-based, network, thermodynamic, and entropy methods
 
 ### Figure and Results Generation
 - `generate_comprehensive_analysis.py` - Complete scaling analysis pipeline
+- `generate_biomechanical_benchmarks.py` - Biomechanical and robotic benchmark report generation
 - `generate_manuscript_figures.py` - Publication-quality figure generation
 - `generate_multipanel_figures.py` - Multi-panel figure layouts
 - `generate_results_figures.py` - Automated results visualization
+- `generate_publication_figures.py` - Publication figure suite with comprehensive captions
 - `generate_tables_and_numbers.py` - Key numbers and table generation
 
 ### Utilities

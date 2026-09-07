@@ -25,6 +25,7 @@ This directory contains the core build system, validation tools, and infrastruct
 
 ### Text Processing and Formatting
 - `comprehensive_formatting_fix.py` - Automated document formatting
+- `update_paper_key_numbers.py` - Automated key-number placeholder updates for paper sections
 - Cross-reference validation and repair is handled automatically by the build system
 - `diagnose_crossref_issue.py` - Diagnostic tools for cross-reference issues
 
