@@ -1,6 +1,6 @@
 # Scripts
 
-Thin operational wrappers for Ant Stack paper builds, validation, tracing, key-number updates, run-all orchestration, and complexity energetics analyses. All buildable logic lives in `antstack_core`; scripts only set paths, parse arguments, and invoke package entrypoints.
+Thin operational wrappers for Ant Stack paper builds, validation, tracing, key-number updates, run-all orchestration, and complexity energetics analyses. Most buildable logic lives in `antstack_core`; apart from the paper build pipeline in `common_pipeline/build_core.py`, scripts only set paths, parse arguments, and invoke package entrypoints.
 
 ## Top level
 
@@ -18,7 +18,7 @@ Thin operational wrappers for Ant Stack paper builds, validation, tracing, key-n
 | `unified_build.py` | Build and validate all configured papers | `antstack_core.orchestration.unified_build:run` | `uv run python scripts/common_pipeline/unified_build.py [--paper NAME] [--no-tests] [--validate-only]` |
 | `update_paper_key_numbers.py` | Replace hardcoded manuscript numbers with key-number placeholders | `antstack_core.analysis.key_numbers_updater:run` | `uv run python scripts/common_pipeline/update_paper_key_numbers.py [--paper NAME] [--section NAME] [--validate]` |
 | `comprehensive_formatting_fix.py` | Manuscript formatting fixes (citations, URLs, variables, references) | `antstack_core.publishing.formatting_fixes:main` | `uv run python scripts/common_pipeline/comprehensive_formatting_fix.py` |
-| `build_core.py` | Modular paper builder CLI | `antstack_core` publishing APIs via `ModularPaperBuilder` | `uv run antstack-build --validate-only` |
+| `build_core.py` | Paper build pipeline (`ModularPaperBuilder`) | `antstack_core.figures` and `antstack_core.analysis` helpers; loaded by `antstack_core.cli.build` | `uv run antstack-build --validate-only` |
 | `run_validation_suite.py` | Comprehensive validation suite runner | pytest and repo validators via subprocess | `uv run python scripts/common_pipeline/run_validation_suite.py` |
 | `test_ce_runner.py` | Complexity-energetics runner sanity assertions | `antstack_core.analysis` primitives | `uv run python scripts/common_pipeline/test_ce_runner.py` |
 | `diagnose_crossref_issue.py` | Cross-reference diagnostics | `tools/render_pdf.sh` via subprocess | `uv run python scripts/common_pipeline/diagnose_crossref_issue.py` |

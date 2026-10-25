@@ -628,8 +628,3 @@ class ExperimentManifest:
             workload_configs=workload_configs,
             **kwargs,
         )
-
-
-# Convenience aliases for backward compatibility
-WorkloadConfig = WorkloadConfig
-ExperimentManifest = ExperimentManifest

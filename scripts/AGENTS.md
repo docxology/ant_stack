@@ -19,7 +19,7 @@ Thin operational wrappers around antstack_core and paper-runner APIs.
 | `common_pipeline/unified_build.py` | `antstack_core.orchestration.unified_build:run` |
 | `common_pipeline/update_paper_key_numbers.py` | `antstack_core.analysis.key_numbers_updater:run` |
 | `common_pipeline/comprehensive_formatting_fix.py` | `antstack_core.publishing.formatting_fixes:main` |
-| `common_pipeline/build_core.py` | `antstack_core` publishing APIs via `ModularPaperBuilder` |
+| `common_pipeline/build_core.py` | loaded by `antstack_core.cli.build`; uses `antstack_core.figures` and `antstack_core.analysis` helpers |
 | `common_pipeline/run_validation_suite.py` | pytest and repo validators via subprocess |
 | `common_pipeline/test_ce_runner.py` | `antstack_core.analysis` primitives |
 | `common_pipeline/diagnose_crossref_issue.py` | `tools/render_pdf.sh` via subprocess |

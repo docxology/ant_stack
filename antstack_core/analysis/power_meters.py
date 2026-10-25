@@ -299,11 +299,3 @@ def create_power_meter(meter_type: str = "null", **kwargs) -> PowerMeter:
         return NvmlPowerMeter(**kwargs)
     else:
         raise ValueError(f"Unsupported meter type: {meter_type}")
-
-
-# Convenience aliases for backward compatibility
-PowerSample = PowerSample
-NullPowerMeter = NullPowerMeter
-RaplPowerMeter = RaplPowerMeter
-NvmlPowerMeter = NvmlPowerMeter
-measure_energy = measure_energy

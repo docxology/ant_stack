@@ -38,7 +38,7 @@ flowchart LR
 | `antstack_core.publishing` | PDF generation, templates, quality validation, reference health, build orchestration, and provenance helpers. | `uv run antstack-build --validate-only` |
 | `antstack_core.orchestration` | Run-all config validation, output layout creation, checksummed manifests, canonical outputs, compatibility projection, logs, and provenance. | `uv run pytest -q tests/antstack_core/test_run_all_antstack.py` |
 | `antstack_core.architecture` | Executable module/folder contracts, public export validation, layer indexing, and Mermaid architecture rendering. | `uv run pytest -q tests/antstack_core/test_architecture_contract.py` |
-| `antstack_core.mathematics` | Publishing-safe math normalization and LaTeX label extraction. | `uv run pytest -q tests/antstack_core/test_core_package.py` |
+| `antstack_core.mathematics` | Publishing-safe math normalization and LaTeX label extraction. | `uv run pytest -q tests/antstack_core/test_mathematics.py` |
 
 ## CLI Entrypoints
 

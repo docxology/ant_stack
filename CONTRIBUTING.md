@@ -16,7 +16,7 @@ flowchart TD
 
 - Use `uv run` for Python commands and dependency-managed execution.
 - Use `bun` for Mermaid and Node-backed document tooling.
-- Keep business logic in `antstack_core`; keep `scripts/` and `antstack_core/cli/` as thin wrappers.
+- Keep business logic in `antstack_core`; keep `scripts/` and `antstack_core/cli/` as thin wrappers. Known exception: the paper build pipeline still lives in `scripts/common_pipeline/build_core.py`, which `antstack_core.cli.build` loads at runtime for `antstack-build`.
 - Keep public APIs exported through module `__all__` when they are intended for users.
 - Preserve generated artifacts only when they are intentional, reproducible, and documented by a command.
 - Do not edit manuscript scientific claims unless they are source-backed or explicitly softened.

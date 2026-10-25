@@ -2,7 +2,6 @@
   "name": "ant-stack",
   "version": "2.0.0",
   "description": "Mermaid and workflow helpers for the Ant Stack scientific publication system.",
-  "main": "index.js",
   "private": true,
   "scripts": {
     "sync": "uv sync --extra dev",

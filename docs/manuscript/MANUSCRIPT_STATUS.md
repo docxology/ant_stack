@@ -10,8 +10,8 @@ sections and `papers/documentation/`).
 ## Why no top-level `manuscript/` directory was created
 The repo already manages its manuscripts under `papers/<name>/` with
 per-paper configs (`papers/ant_stack/paper_config.yaml`), section markdown, and
-generated PDFs (e.g. `Ant-Stack_v1_DAF_Aug-8-2025.pdf`,
-`Complexity-Energetics_AntStack_9-30-2025.pdf` at repo root). Creating a
+generated PDFs (e.g. `papers/ant_stack/Ant-Stack_v1_DAF_Aug-8-2025.pdf` and the
+root-level `Complexity-Energetics_AntStack_9-30-2025.pdf`). Creating a
 parallel top-level `manuscript/` with stub sections would duplicate real,
 existing manuscript content — not done.
 
