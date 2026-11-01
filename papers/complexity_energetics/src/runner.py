@@ -34,6 +34,23 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+
+def markdown_image_path(path: Path) -> str:
+    """Return a repository-relative path for a markdown image link.
+
+    Generated.md is built and rendered from the repository root, so image links
+    must be relative to that root to resolve on any machine. An absolute path
+    here resolves only in the checkout that produced it and appears as a broken
+    image everywhere else, including in the PDF build.
+
+    A path outside the repository has no repository-relative form, so it is
+    returned unchanged rather than rewritten into a wrong link.
+    """
+    try:
+        return path.resolve().relative_to(project_root.resolve()).as_posix()
+    except ValueError:
+        return str(path)
+
 # Use only real, compliant methods from antstack_core
 from antstack_core.analysis import ExperimentManifest
 from antstack_core.analysis import EnergyCoefficients
@@ -517,14 +534,14 @@ def run_manifest(manifest_path: str, out_dir: str) -> RunManifestResult:
     plot_uri = abs_plot_path.resolve().as_uri()
     if abs_plot_path.exists():
         lines.append(f"\n## Figure: Total Energy by Workload {{#fig:energy_by_workload}}\n")
-        lines.append(f"\n![Total estimated energy by workload]({str(abs_plot_path)})\n")
+        lines.append(f"\n![Total estimated energy by workload]({markdown_image_path(abs_plot_path)})\n")
         lines.append(f"\n**Caption:** Total estimated energy by workload. Only Body and Brain expend energy; Mind is symbolic (0 J).\n")
         lines.append(f"\n\\href{{{plot_uri}}}{{(View absolute file)}}\n")
     # Body split plot
     body_plot_uri = abs_body_split_path.resolve().as_uri()
     if abs_body_split_path.exists():
         lines.append(f"\n## Figure: Body Energy Partition {{#fig:body_partition}}\n")
-        lines.append(f"\n![Body energy partition]({str(abs_body_split_path)})\n")
+        lines.append(f"\n![Body energy partition]({markdown_image_path(abs_body_split_path)})\n")
         lines.append(f"\n**Caption:** Estimated Body energy partition into Sensing and Actuation, aggregated over runs.\n")
         lines.append(f"\n\\href{{{body_plot_uri}}}{{(View absolute file)}}\n")
     for p in scaling_assets:
@@ -608,13 +625,13 @@ def run_manifest(manifest_path: str, out_dir: str) -> RunManifestResult:
                 caption_text = "Scaling analysis figure."
 
             lines.append(f"\n## Figure: {title} {{#fig:{fig_id}}}\n")
-            lines.append(f"\n![{title.lower()}]({str(p)})\n")
+            lines.append(f"\n![{title.lower()}]({markdown_image_path(p)})\n")
             lines.append(f"\n**Caption:** {caption_text}\n")
             lines.append(f"\n\\href{{{p.resolve().as_uri()}}}{{(View absolute file)}}\n")
     # Per-decision breakdown figure and table
     if abs_breakdown_path.exists():
         lines.append(f"\n## Figure: Per-Decision Energy Breakdown {{#fig:per_decision}}\n")
-        lines.append(f"\n![Per-decision energy breakdown]({str(abs_breakdown_path)})\n")
+        lines.append(f"\n![Per-decision energy breakdown]({markdown_image_path(abs_breakdown_path)})\n")
         lines.append(f"\n**Caption:** Average per-decision (10 ms) energy components at 100 Hz. Mind compute is 0 by convention; baseline is system idle.\n")
         # Table version using same averages
         act = e_act_dec * 1e3
