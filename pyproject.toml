@@ -3,7 +3,7 @@ name = "ant-stack"
 version = "2.0.0"
 description = "Modular scientific publication and analysis framework for Ant Stack research."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
   { name = "Daniel Ari Friedman", email = "daniel@activeinference.institute" }
