@@ -2,7 +2,7 @@
 
 Directory `complexity_energetics` inside the `ant_stack/outputs/example-run/papers` tree of EntoTech.
 
-Part of `ant_stack/outputs/example-run/papers` (EntoTech lane, local-only under `projects/ongoing/`).
+Part of `ant_stack/outputs/example-run/papers`.
 
 ## Contents
 Subfolders: `assets/`, `out/`

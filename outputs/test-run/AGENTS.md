@@ -3,8 +3,6 @@
 > Directory `test-run` inside `ant_stack/outputs`. Verified by direct listing (fleet doc pass, 2026-08-29).
 
 ## Scope
-- Local-only path under `projects/ongoing/` — matched by the root `.gitignore`
-  rule `projects/*`; never commit, add, or push anything here.
 - Repository-wide policy for template projects is maintained in the template repository, not restated here; parent project docs: `ant_stack/outputs/AGENTS.md`.
 
 ## Layout
@@ -17,4 +15,4 @@ Files: `AGENTS.md`, `README.md`, `manifest.json`
 ## Agent notes
 
 ## Gotchas
-- None beyond the local-only rule above.
+- None.

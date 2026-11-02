@@ -2,7 +2,7 @@
 
 Directory `statistics` inside the `ant_stack/outputs/example-run` tree of EntoTech.
 
-Part of `ant_stack/outputs/example-run` (EntoTech lane, local-only under `projects/ongoing/`).
+Part of `ant_stack/outputs/example-run`.
 
 ## Contents
 Files: `AGENTS.md`, `README.md`, `bootstrap_intervals.csv`, `scaling_summary.json`, `validation_summary.json`, `workload_summary.json`

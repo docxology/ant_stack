@@ -2,7 +2,7 @@
 
 Directory `raw` inside the `ant_stack/outputs/test-run/data` tree of EntoTech.
 
-Part of `ant_stack/outputs/test-run/data` (EntoTech lane, local-only under `projects/ongoing/`).
+Part of `ant_stack/outputs/test-run/data`.
 
 ## Contents
 Files: `AGENTS.md`, `README.md`, `complexity_energetics_manifest.yaml`

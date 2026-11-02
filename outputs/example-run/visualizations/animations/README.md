@@ -2,7 +2,7 @@
 
 Directory `animations` inside the `ant_stack/outputs/example-run/visualizations` tree of EntoTech.
 
-Part of `ant_stack/outputs/example-run/visualizations` (EntoTech lane, local-only under `projects/ongoing/`).
+Part of `ant_stack/outputs/example-run/visualizations`.
 
 ## Contents
 Files: `AGENTS.md`, `README.md`, `energy_components.gif`, `preview.html`, `scaling_sweep.gif`

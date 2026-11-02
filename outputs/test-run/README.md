@@ -2,7 +2,7 @@
 
 Directory `test-run` inside the `ant_stack/outputs` tree of EntoTech.
 
-Part of `ant_stack/outputs` (EntoTech lane, local-only under `projects/ongoing/`).
+Part of `ant_stack/outputs`.
 
 ## Contents
 Subfolders: `data/`, `logs/`, `papers/`, `provenance/`, `reports/`, `statistics/`, `visualizations/`

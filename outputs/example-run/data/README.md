@@ -2,7 +2,7 @@
 
 `data/` of the parent project.
 
-Part of `ant_stack/outputs/example-run` (EntoTech lane, local-only under `projects/ongoing/`).
+Part of `ant_stack/outputs/example-run`.
 
 ## Contents
 Subfolders: `derived/`, `raw/`

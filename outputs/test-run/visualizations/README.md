@@ -2,7 +2,7 @@
 
 Directory `visualizations` inside the `ant_stack/outputs/test-run` tree of EntoTech.
 
-Part of `ant_stack/outputs/test-run` (EntoTech lane, local-only under `projects/ongoing/`).
+Part of `ant_stack/outputs/test-run`.
 
 ## Contents
 Subfolders: `animations/`, `static/`
