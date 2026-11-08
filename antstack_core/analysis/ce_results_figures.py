@@ -1,21 +1,17 @@
-"""Results figure generation orchestrator. Moved verbatim from scripts/complexity_energetics/generate_results_figures.py; thin wrapper retained for CLI compatibility."""
+"""Fresh-root results PNG families with explicit per-figure analytical boundaries."""
 
-import argparse
-import sys
-import os
 from pathlib import Path
 
 from antstack_core.analysis import (
-    estimate_detailed_energy, analyze_scaling_relationship,
-    calculate_energy_efficiency_metrics, estimate_theoretical_limits
-)
-from antstack_core.analysis import (
+    ComputeLoad, estimate_detailed_energy,
     enhanced_body_workload_closed_form, enhanced_brain_workload_closed_form,
     enhanced_mind_workload_closed_form, calculate_contact_complexity,
-    calculate_sparse_neural_complexity, calculate_active_inference_complexity
+    calculate_sparse_neural_complexity,
 )
 from antstack_core.analysis import EnergyCoefficients
-from antstack_core.figures import bar_plot, line_plot, scatter_plot
+from antstack_core.figures import bar_plot, interval_plot, line_plot, scatter_plot
+from antstack_core.analysis.ce_publication_figures import _standard_module_data
+from antstack_core.analysis.ce_manuscript_figures import _family_models, _publish_family
 
 
 def generate_body_scaling_figures(output_dir: Path, coeffs: EnergyCoefficients):
@@ -101,15 +97,15 @@ def generate_mind_scaling_figures(output_dir: Path, coeffs: EnergyCoefficients):
     
     # FLOPs explosion plot
     line_plot(horizons, [flops], ["FLOPs"], 
-             "AntMind Computational Explosion vs Policy Horizon", "Policy Horizon (H_p)", 
+             "AntMind Modeled FLOPs vs Policy Horizon (1000-policy cap)", "Policy Horizon (H_p)",
              "FLOPs per Decision", str(output_dir / "mind_horizon_flops_scaling.png"))
 
 
-def generate_connectivity_analysis_figures(output_dir: Path):
+def generate_connectivity_analysis_figures(output_dir: Path, coeffs=None):
     """Generate neural connectivity pattern analysis figures."""
     print("Generating connectivity analysis figures...")
     
-    patterns = ["random", "small_world", "scale_free", "biological"]
+    patterns = ["random", "structured"]
     N_total = 50000
     sparsity = 0.02
     
@@ -132,36 +128,31 @@ def generate_connectivity_analysis_figures(output_dir: Path):
     # Sparsity energy scaling
     sparsity_levels = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2]
     sparsity_energies = []
-    coeffs = EnergyCoefficients()
+    coeffs = EnergyCoefficients() if coeffs is None else coeffs
     
     for rho in sparsity_levels:
-        flops, memory, spikes = calculate_sparse_neural_complexity(N_total, rho, "biological")
-        load = type('Load', (), {'flops': flops, 'sram_bytes': memory, 'dram_bytes': 0, 'spikes': spikes})()
+        flops, memory, spikes = calculate_sparse_neural_complexity(N_total, rho, "random")
+        load = ComputeLoad(flops=flops, sram_bytes=memory, dram_bytes=0, spikes=spikes)
         energy = estimate_detailed_energy(load, coeffs, 0.01).total
         sparsity_energies.append(energy)
     
-    line_plot(sparsity_levels, [sparsity_energies], ["Energy"], 
-             "Neural Sparsity Energy Scaling", "Sparsity Level (ρ)", 
+    line_plot(sparsity_levels, [sparsity_energies], ["Isolated sparse network"],
+             "Sparse-Only Energy (All SRAM; No AL/CX/Plasticity)", "Sparsity Level (ρ)",
              "Energy per Decision (J)", str(output_dir / "sparsity_energy_scaling.png"))
 
 
 def generate_theoretical_limits_figures(output_dir: Path, coeffs: EnergyCoefficients):
-    """Generate theoretical limits comparison figures."""
-    print("Generating theoretical limits figures...")
-    
-    # Module comparison with theoretical limits
-    modules = ["Body", "Brain", "Mind"]
-    actual_energies = [0.0005, 0.000504, 0.00327]  # Example values
-    theoretical_energies = [0.001, 1.19e-12, 1.19e-9]  # Theoretical minimums
-    efficiency_ratios = [a/t for a, t in zip(actual_energies, theoretical_energies)]
-    
-    # Theoretical limits comparison
-    bar_plot(modules, actual_energies, "Actual vs Theoretical Energy Limits", 
-             str(output_dir / "theoretical_limits_comparison.png"), "Energy (J)")
-    
-    # Efficiency ratios (log scale will be handled by plot function)
-    bar_plot(modules, efficiency_ratios, "Energy Efficiency Ratios (Actual/Theoretical)", 
-             str(output_dir / "efficiency_ratios.png"), "Efficiency Ratio")
+    """Compare consistent modeled energy with an explicit conditional reference."""
+    data = _standard_module_data(coeffs)
+    modules = list(data)
+    energies = [item['breakdown'].total for item in data.values()]
+    references = [item['reference_j'] for item in data.values()]
+    ratios = [energy / reference for energy, reference in zip(energies, references)]
+    interval_plot([f'{name} model' for name in modules] + [f'{name} reference' for name in modules],
+                  energies + references, 'Model vs Conditional Erasure Reference (No Mechanics)',
+                  str(output_dir / 'theoretical_limits_comparison.png'), 'Energy per Decision (J)')
+    bar_plot(modules, ratios, 'Modeled Energy / Conditional Erasure Reference',
+             str(output_dir / 'efficiency_ratios.png'), 'Energy / Reference (Not Physical Efficiency)')
 
 
 def generate_contact_solver_figures(output_dir: Path):
@@ -169,7 +160,7 @@ def generate_contact_solver_figures(output_dir: Path):
     print("Generating contact solver figures...")
     
     contact_counts = [5, 10, 15, 20, 25, 30]
-    solvers = ["pgs", "lcp", "mlcp"]
+    solvers = ["pgs", "si", "ldlt"]
     
     solver_flops = {solver: [] for solver in solvers}
     solver_memory = {solver: [] for solver in solvers}
@@ -194,47 +185,21 @@ def generate_contact_solver_figures(output_dir: Path):
 
 
 def run(args):
-    output_dir = Path(args.output)
-    output_dir.mkdir(exist_ok=True)
-    
-    print("=" * 60)
-    print("Results Figure Generation Orchestrator")
-    print("=" * 60)
-    
-    # Initialize energy coefficients
+    """Publish the existing results model as one complete, fresh PNG family."""
     coeffs = EnergyCoefficients(
-        flops_pj=1.0,
-        sram_pj_per_byte=0.1,
-        dram_pj_per_byte=20.0,
-        spike_aj=1.0,
-        baseline_w=0.05
+        flops_pj=1.0, sram_pj_per_byte=0.1, dram_pj_per_byte=20.0,
+        spike_aj=1.0, baseline_w=0.05,
     )
-    
-    # Generate all figure sets using tested methods from ce/
-    generate_body_scaling_figures(output_dir, coeffs)
-    generate_brain_scaling_figures(output_dir, coeffs)
-    generate_mind_scaling_figures(output_dir, coeffs)
-    generate_connectivity_analysis_figures(output_dir)
-    generate_theoretical_limits_figures(output_dir, coeffs)
-    generate_contact_solver_figures(output_dir)
-    
-    print(f"\nAll Results.md figures generated successfully in: {output_dir}")
-    print("\nGenerated figures:")
-    print("  Module Scaling Analysis:")
-    print("    - body_joint_energy_scaling.png")
-    print("    - body_energy_complexity.png")
-    print("    - brain_channel_energy_scaling.png")
-    print("    - brain_channel_spikes_scaling.png")
-    print("    - mind_horizon_energy_scaling.png")
-    print("    - mind_horizon_flops_scaling.png")
-    print("  Neural Network Analysis:")
-    print("    - connectivity_patterns_flops.png")
-    print("    - connectivity_patterns_spikes.png")
-    print("    - sparsity_energy_scaling.png")
-    print("  Theoretical Limits Analysis:")
-    print("    - theoretical_limits_comparison.png")
-    print("    - efficiency_ratios.png")
-    print("  Contact Solver Analysis:")
-    print("    - contact_solver_flops_comparison.png")
-    print("    - contact_solver_memory_comparison.png")
+
+    def produce(stage):
+        generate_body_scaling_figures(stage, coeffs)
+        generate_brain_scaling_figures(stage, coeffs)
+        generate_mind_scaling_figures(stage, coeffs)
+        generate_connectivity_analysis_figures(stage, coeffs)
+        generate_theoretical_limits_figures(stage, coeffs)
+        generate_contact_solver_figures(stage)
+        return {"figures": {stem: str(stage / f"{stem}.png")
+                            for stem in _family_models("results", coeffs)}}
+
+    return _publish_family(args.output, "results", "results_figure_model.json", "png", coeffs, produce)
 

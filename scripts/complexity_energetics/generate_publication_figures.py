@@ -30,8 +30,8 @@ from antstack_core.analysis.ce_publication_figures import run
 
 def main():
     parser = argparse.ArgumentParser(description="Generate enhanced manuscript figures")
-    parser.add_argument("--output", default="papers/complexity_energetics/assets",
-                       help="Output directory for figures")
+    parser.add_argument("--output", required=True,
+                       help="Fresh absent/empty publication figure family root")
     parser.add_argument("--format", choices=["png", "svg", "pdf"], default="png",
                        help="Output format for figures")
     args = parser.parse_args()

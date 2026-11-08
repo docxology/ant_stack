@@ -19,6 +19,7 @@ Following .cursorrules principles:
 
 import unittest
 import math
+import random
 from typing import Dict, List, Tuple, Optional, Any
 from pathlib import Path
 
@@ -106,8 +107,7 @@ class TestStatisticalAnalyzer(unittest.TestCase):
         )
 
         self.assertIsInstance(uncertainty, float)
-        # Should return a small default uncertainty
-        self.assertGreater(uncertainty, 0)
+        self.assertTrue(math.isnan(uncertainty))
 
     def test_calculate_measurement_uncertainty_empty_data(self):
         """Test uncertainty calculation for empty data."""
@@ -569,6 +569,108 @@ class TestStatisticalAnalysisRobustness(unittest.TestCase):
         # Uncertainties should generally decrease with larger sample sizes
         # (though not strictly monotonically due to randomness)
         self.assertTrue(all(u > 0 for u in uncertainties))
+
+
+class TestScientificInferenceReferences(unittest.TestCase):
+    def test_student_t_small_sample_reference(self):
+        result = StatisticalAnalyzer().detect_statistical_significance({"x": [1, 2, 3]}, baseline=0)["x"]
+        self.assertAlmostEqual(result["t_statistic"], 2 * math.sqrt(3), places=12)
+        self.assertEqual(result["degrees_of_freedom"], 2)
+        self.assertAlmostEqual(result["p_value"], 1 - math.sqrt(6 / 7), places=12)
+        self.assertFalse(result["significant"])
+        # F_2(t) = 1/2 + t/(2 sqrt(t*t+2)); invert at .975 independently of scipy.
+        margin = math.sqrt(722 / 117)
+        self.assertAlmostEqual(result["confidence_interval"][0], 2 - margin, places=12)
+        self.assertAlmostEqual(result["confidence_interval"][1], 2 + margin, places=12)
+        wider = StatisticalAnalyzer().detect_statistical_significance({"x": [1, 2, 3]}, 0, alpha=0.01)["x"]
+        self.assertLess(wider["confidence_interval"][0], result["confidence_interval"][0])
+
+    def test_welch_small_sample_reference(self):
+        result = detect_significance({"a": [1, 2], "b": [4, 5]})["significant_differences"]["a_vs_b"]
+        self.assertAlmostEqual(result["t_statistic"], 3 * math.sqrt(2), places=12)
+        self.assertAlmostEqual(result["degrees_of_freedom"], 2, places=12)
+        self.assertAlmostEqual(result["p_value"], 1 - 3 / math.sqrt(10), places=12)
+        self.assertFalse(result["significant"])
+        unequal = detect_significance({"a": [1, 2], "b": [1, 3, 5]})["significant_differences"]["a_vs_b"]
+        self.assertAlmostEqual(unequal["degrees_of_freedom"], 361 / 137, places=12)
+        self.assertAlmostEqual(unequal["t_statistic"], 3 * math.sqrt(3 / 19), places=12)
+
+    def test_degenerate_samples_are_consistent(self):
+        analyzer = StatisticalAnalyzer()
+        equal = detect_significance({"a": [1, 1], "b": [1, 1]})
+        unequal = detect_significance({"a": [1, 1], "b": [2, 2]})
+        self.assertEqual(equal["significant_differences"]["a_vs_b"]["p_value"], 1)
+        self.assertTrue(math.isnan(equal["effect_sizes"]["a_vs_b"]))
+        self.assertEqual(unequal["significant_differences"]["a_vs_b"]["p_value"], 0)
+        self.assertEqual(unequal["effect_sizes"]["a_vs_b"], float("inf"))
+        self.assertIsNone(unequal["significant_differences"]["a_vs_b"]["degrees_of_freedom"])
+        self.assertEqual(unequal["significant_differences"]["a_vs_b"]["confidence_interval"], (1, 1))
+        self.assertEqual(analyzer.detect_statistical_significance({"a": [1, 1]}, 0)["a"]["p_value"], 0)
+        singleton = detect_significance({"a": [1], "b": [2, 3]})["significant_differences"]["a_vs_b"]
+        self.assertFalse(singleton["testable"])
+        self.assertIsNone(singleton["p_value"])
+
+    def test_two_sided_power_respects_alpha_and_unequal_sizes(self):
+        analyzer = StatisticalAnalyzer()
+        for alpha in [0.01, 0.05, 0.2]:
+            self.assertAlmostEqual(analyzer.calculate_statistical_power([1, 2, 3], [1, 2, 3], alpha), alpha, places=14)
+        # Unequal group sizes use n1*n2/(n1+n2), not min(n1,n2)/2.
+        left = [0, 1, 2]
+        right = [1, 2, 3, 1, 2, 3]
+        d = analyzer.calculate_effect_size(left, right)
+        signal = d * math.sqrt(2)
+        expected = 0.5 * math.erfc((1.959963984540054 - signal) / math.sqrt(2)) + 0.5 * math.erfc((1.959963984540054 + signal) / math.sqrt(2))
+        self.assertAlmostEqual(analyzer.calculate_statistical_power(left, right), expected, places=14)
+
+    def test_dictionary_list_interval_parity_and_rng_isolation(self):
+        values = list(range(1, 11))
+        state = random.getstate()
+        numpy_state = np.random.get_state()
+        analyzer = StatisticalAnalyzer(bootstrap_samples=1000, confidence_level=0.5, random_seed=7)
+        narrow = analyzer.calculate_confidence_intervals(values)
+        self.assertEqual(analyzer.calculate_confidence_intervals({"x": values})["x_50ci"], narrow[1:])
+        wide = StatisticalAnalyzer(1000, 0.99, 7).calculate_confidence_intervals({"x": values})["x_99ci"]
+        self.assertLess(narrow[2] - narrow[1], wide[1] - wide[0])
+        self.assertEqual(random.getstate(), state)
+        after = np.random.get_state()
+        self.assertEqual(numpy_state[0], after[0])
+        self.assertTrue(np.array_equal(numpy_state[1], after[1]))
+        self.assertEqual(numpy_state[2:], after[2:])
+        self.assertEqual(analyzer.calculate_confidence_intervals({"x": [0, 0]})["x_50ci"], (0, 0))
+
+    def test_balanced_folds_cover_remainder_exactly_once(self):
+        result = StatisticalAnalyzer().perform_k_fold_cross_validation({"x": [0, 0, 0, 0, 0, 100]}, 5)["x"]
+        self.assertEqual(result["cv_scores"], [25, 20, 20, 20, 100])
+        self.assertEqual([index for fold in result["test_indices"] for index in fold], list(range(6)))
+        self.assertEqual([len(fold) for fold in result["test_indices"]], [2, 1, 1, 1, 1])
+        for invalid in [0, 1, 7, 2.5, True]:
+            with self.subTest(k=invalid), self.assertRaises(ValueError):
+                StatisticalAnalyzer().perform_k_fold_cross_validation({"x": [1, 2, 3, 4, 5, 6]}, invalid)
+
+    def test_invalid_inference_domains(self):
+        for count in [0, -1, 2.5, True]:
+            with self.subTest(count=count), self.assertRaises(ValueError):
+                StatisticalAnalyzer(bootstrap_samples=count)
+        for confidence in [0, 1, float("nan"), float("inf")]:
+            with self.subTest(confidence=confidence), self.assertRaises(ValueError):
+                StatisticalAnalyzer(confidence_level=confidence)
+        analyzer = StatisticalAnalyzer()
+        for bad in [float("nan"), float("inf")]:
+            with self.subTest(value=bad), self.assertRaises(ValueError):
+                analyzer.analyze_measurement_quality({"x": [1, bad]})
+            with self.subTest(baseline=bad), self.assertRaises(ValueError):
+                analyzer.detect_statistical_significance({"x": [1, 2]}, bad)
+        with self.assertRaises(ValueError):
+            detect_significance({"a": [1, 2], "b": [3, 4]}, alpha=0)
+
+    def test_data_quality_does_not_prove_power_or_replication(self):
+        analysis = StatisticalAnalyzer().analyze_measurement_quality({"x": [1] * 20})
+        self.assertIsNone(analysis["validation_checks"]["statistical_power"])
+        self.assertIsNone(analysis["validation_checks"]["reproducibility"])
+        singleton = StatisticalAnalyzer().analyze_measurement_quality({"x": [5]})
+        self.assertNotIn("x", singleton["uncertainty"])
+        self.assertIsNone(singleton["statistical_metrics"]["x_std"])
+        self.assertEqual(singleton["confidence_intervals"], {})
 
 
 if __name__ == '__main__':

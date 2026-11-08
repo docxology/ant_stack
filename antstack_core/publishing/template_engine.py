@@ -1,19 +1,14 @@
-"""
-Template Engine for Ant Stack Publications
+"""Explicit-directory Jinja publishing for trusted templates, never a sandbox.
 
-Provides Jinja2-based templating system for consistent document formatting,
-supporting dynamic content generation, conditional rendering, and custom macros.
-
-Following .cursorrules specifications for:
-- Professional document templates
-- Consistent formatting standards
-- Dynamic content generation
-- LaTeX integration
+Missing variables, input resources and malformed data fail before atomic output
+publication. Template generation never writes into the installed package.
 """
 
 from __future__ import annotations
 
 import jinja2
+from decimal import Decimal, localcontext
+from jinja2 import meta
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
 import yaml
@@ -21,6 +16,8 @@ import json
 import re
 from dataclasses import dataclass, asdict
 import logging
+
+from .provenance import atomic_text, ordinary_path
 
 logger = logging.getLogger(__name__)
 
@@ -55,13 +52,8 @@ class TemplateEngine:
     - Scientific formatting utilities
     """
 
-    def __init__(self, config: Optional[TemplateConfig] = None):
-        """Initialize template engine with configuration."""
-        if config is None:
-            config = TemplateConfig(
-                template_dir=Path(__file__).parent / "templates"
-            )
-
+    def __init__(self, config: TemplateConfig):
+        """Use the caller's explicitly selected template directory."""
         self.config = config
         self._jinja_env = None
         self._setup_jinja_environment()
@@ -71,6 +63,7 @@ class TemplateEngine:
         # Create Jinja2 environment
         self._jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(str(self.config.template_dir)),
+            undefined=jinja2.StrictUndefined,
             auto_reload=self.config.auto_reload,
             cache_size=0 if not self.config.cache_templates else 400,
             trim_blocks=True,
@@ -123,19 +116,23 @@ class TemplateEngine:
         def format_uncertainty(value: Union[float, int],
                              uncertainty: Union[float, int],
                              precision: int = 2) -> str:
-            """Format value with uncertainty."""
-            if not isinstance(value, (int, float)) or not isinstance(uncertainty, (int, float)):
-                return f"{value} ± {uncertainty}"
-
-            # Determine precision based on uncertainty
-            uncertainty_str = f"{uncertainty:.{precision}g}"
-            if '.' in uncertainty_str:
-                decimal_places = len(uncertainty_str.split('.')[-1])
-                value_str = f"{value:.{decimal_places}f}"
-            else:
-                value_str = f"{value:.{precision}g}"
-
-            return f"{value_str} ± {uncertainty}"
+            """Round the value at the resolution of significant-digit uncertainty."""
+            if type(precision) is not int or precision < 1:
+                raise ValueError("uncertainty precision must be a positive integer")
+            estimate, sigma = Decimal(str(value)), Decimal(str(uncertainty))
+            if not estimate.is_finite() or not sigma.is_finite() or sigma < 0:
+                raise ValueError("value and uncertainty must be finite; uncertainty must be nonnegative")
+            if sigma == 0:
+                return f"{value} ± 0"
+            with localcontext() as context:
+                context.prec = max(28, len(estimate.as_tuple().digits) +
+                                   abs(estimate.adjusted() - sigma.adjusted()) + precision + 2)
+                quantum = Decimal(1).scaleb(sigma.adjusted() - precision + 1)
+                rounded_sigma = sigma.quantize(quantum)
+                resolution = Decimal(1).scaleb(rounded_sigma.adjusted() - precision + 1)
+                rounded_value = estimate.quantize(resolution)
+                rounded_sigma = rounded_sigma.quantize(resolution)
+                return f"{rounded_value:f} ± {rounded_sigma:g}"
 
         # Cross-reference formatting
         def format_ref(ref_type: str, ref_id: str) -> str:
@@ -184,34 +181,17 @@ class TemplateEngine:
 
         # Utility functions
         def include_file(filepath: str, encoding: str = 'utf-8') -> str:
-            """Include external file content."""
-            try:
-                path = Path(filepath)
-                if path.is_absolute():
-                    return path.read_text(encoding=encoding)
-                else:
-                    # Relative to template directory
-                    template_path = self.config.template_dir / filepath
-                    return template_path.read_text(encoding=encoding)
-            except Exception as e:
-                logger.warning(f"Failed to include file {filepath}: {str(e)}")
-                return f"<!-- Failed to include {filepath}: {str(e)} -->"
+            """Include trusted author-selected input; missing resources are fatal."""
+            path = Path(filepath)
+            if not path.is_absolute():
+                path = Path(self.config.template_dir) / path
+            return path.read_text(encoding=encoding)
 
-        def yaml_load(content: str) -> Dict[str, Any]:
-            """Load YAML content."""
-            try:
-                return yaml.safe_load(content)
-            except Exception as e:
-                logger.warning(f"Failed to parse YAML: {str(e)}")
-                return {}
+        def yaml_load(content: str) -> Any:
+            return yaml.safe_load(content)
 
-        def json_load(content: str) -> Dict[str, Any]:
-            """Load JSON content."""
-            try:
-                return json.loads(content)
-            except Exception as e:
-                logger.warning(f"Failed to parse JSON: {str(e)}")
-                return {}
+        def json_load(content: str) -> Any:
+            return json.loads(content)
 
         # Register globals
         globals_dict = {
@@ -242,8 +222,7 @@ class TemplateEngine:
             rendered_content = template.render(**context)
 
             if output_path:
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                output_path.write_text(rendered_content, encoding='utf-8')
+                atomic_text(output_path, rendered_content)
                 logger.info(f"Template rendered to: {output_path}")
 
             return rendered_content
@@ -304,39 +283,39 @@ class TemplateEngine:
 
         return "\n".join([header, separator] + rows)
 
-    def create_publication_template(self, paper_type: str,
-                                  template_name: str,
-                                  base_config: Dict[str, Any]) -> str:
+    def create_publication_template(self, paper_type: str, template_name: str) -> str:
         """
         Create publication template for specific paper type.
 
         Args:
             paper_type: Type of paper ("ant_stack", "complexity_energetics", etc.)
             template_name: Name for the new template
-            base_config: Base configuration for the template
 
         Returns:
             Path to created template
         """
-        template_dir = self.config.template_dir
-        template_dir.mkdir(parents=True, exist_ok=True)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", template_name):
+            raise ValueError("template_name must be one alphanumeric, underscore or hyphen name")
+        template_dir = ordinary_path(self.config.template_dir)
+        template_path = ordinary_path(template_dir / f"{template_name}.jinja")
+        if template_path.exists():
+            raise FileExistsError(f"Template already exists: {template_path}")
 
         # Template content based on paper type
         if paper_type == "ant_stack":
-            template_content = self._create_ant_stack_template(base_config)
+            template_content = self._create_ant_stack_template()
         elif paper_type == "complexity_energetics":
-            template_content = self._create_complexity_template(base_config)
+            template_content = self._create_complexity_template()
         else:
-            template_content = self._create_generic_template(base_config)
+            template_content = self._create_generic_template()
 
         # Save template
-        template_path = template_dir / f"{template_name}.jinja"
-        template_path.write_text(template_content, encoding='utf-8')
+        atomic_text(template_path, template_content)
 
         logger.info(f"Created template: {template_path}")
         return str(template_path)
 
-    def _create_ant_stack_template(self, config: Dict[str, Any]) -> str:
+    def _create_ant_stack_template(self) -> str:
         """Create template for Ant Stack framework papers."""
         return f"""# {{{{ title }}}}
 
@@ -426,7 +405,7 @@ class TemplateEngine:
 *Generated with AntStack Core v{{{{ antstack_version }}}}*
 """
 
-    def _create_complexity_template(self, config: Dict[str, Any]) -> str:
+    def _create_complexity_template(self) -> str:
         """Create template for complexity energetics papers."""
         return f"""# {{{{ title }}}}
 
@@ -495,7 +474,7 @@ class TemplateEngine:
 *Generated with AntStack Core v{{{{ antstack_version }}}}*
 """
 
-    def _create_generic_template(self, config: Dict[str, Any]) -> str:
+    def _create_generic_template(self) -> str:
         """Create generic template."""
         return f"""# {{{{ title }}}}
 
@@ -530,7 +509,7 @@ class TemplateEngine:
 
     def validate_template(self, template_name: str) -> Dict[str, Any]:
         """
-        Validate template syntax and structure.
+        Inspect syntax and required inputs; never execute a made-up document.
 
         Args:
             template_name: Name of template to validate
@@ -539,23 +518,15 @@ class TemplateEngine:
             Validation results
         """
         try:
-            template = self._jinja_env.get_template(f"{template_name}.jinja")
-
-            # Test basic rendering
-            test_context = {
-                'title': 'Test Document',
-                'authors': 'Test Author',
-                'abstract': 'Test abstract',
-                'content': 'Test content',
-                'references': 'Test references'
-            }
-
-            rendered = template.render(**test_context)
+            source, _filename, _uptodate = self._jinja_env.loader.get_source(
+                self._jinja_env, f"{template_name}.jinja")
+            parsed = self._jinja_env.parse(source)
 
             return {
                 'valid': True,
                 'template_name': template_name,
-                'rendered_length': len(rendered),
+                'validation_scope': 'syntax-only',
+                'required_variables': sorted(meta.find_undeclared_variables(parsed)),
                 'jinja_errors': []
             }
 
@@ -577,22 +548,17 @@ class TemplateEngine:
 
 
 # Convenience functions
-def create_publication_template(paper_type: str, config: Dict[str, Any],
-                              template_dir: Optional[Path] = None) -> TemplateEngine:
+def create_publication_template(paper_type: str, template_dir: Path) -> TemplateEngine:
     """
     Create template engine with publication-specific configuration.
 
     Args:
         paper_type: Type of publication
-        config: Configuration dictionary
-        template_dir: Optional template directory
+        template_dir: Explicit caller-owned template directory
 
     Returns:
         Configured TemplateEngine instance
     """
-    if template_dir is None:
-        template_dir = Path(__file__).parent / "templates"
-
     template_config = TemplateConfig(
         template_dir=template_dir,
         cache_templates=True,
@@ -604,13 +570,13 @@ def create_publication_template(paper_type: str, config: Dict[str, Any],
     # Create default template if it doesn't exist
     template_name = f"{paper_type}_default"
     if template_name not in engine.list_available_templates():
-        engine.create_publication_template(paper_type, template_name, config)
+        engine.create_publication_template(paper_type, template_name)
 
     return engine
 
 
 def render_scientific_document(template_name: str, context: Dict[str, Any],
-                             output_path: Optional[Path] = None) -> str:
+                              output_path: Optional[Path] = None, *, template_dir: Path) -> str:
     """
     Render scientific document with optimal settings.
 
@@ -622,5 +588,5 @@ def render_scientific_document(template_name: str, context: Dict[str, Any],
     Returns:
         Rendered document content
     """
-    engine = TemplateEngine()
+    engine = TemplateEngine(TemplateConfig(template_dir=template_dir))
     return engine.render_markdown_template(template_name, context, output_path)

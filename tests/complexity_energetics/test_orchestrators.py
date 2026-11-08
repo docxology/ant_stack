@@ -41,7 +41,7 @@ class TestContactDynamicsIntegration(unittest.TestCase):
     def test_solver_comparison_integration(self):
         """Test contact solver comparison using core functions."""
         contact_counts = [5, 10, 15, 20]
-        solvers = ['pgs', 'lcp', 'mlcp']
+        solvers = ['pgs', 'si', 'ldlt']
 
         results = {}
         for solver in solvers:
@@ -113,40 +113,14 @@ class TestNeuralNetworkIntegration(unittest.TestCase):
         self.coeffs = EnergyCoefficients()
 
     def test_connectivity_patterns_integration(self):
-        """Test connectivity pattern analysis using core functions."""
-        network_sizes = [1000, 5000, 10000]
-        sparsity = 0.02
-
-        # Test different connectivity patterns through sparsity calculations
-        patterns = ["random", "small_world", "scale_free", "biological"]
-
-        results = {}
-        for pattern in patterns:
-            flops_values = []
-            memory_values = []
-
-            for size in network_sizes:
-                # Use sparsity calculation as proxy for connectivity analysis
-                flops, sram_bytes, dram_bytes = calculate_sparse_neural_complexity(size, sparsity)
-                flops_values.append(flops)
-                memory_values.append(sram_bytes + dram_bytes)
-
-            # Analyze scaling
-            flops_scaling = analyze_scaling_relationship(network_sizes, flops_values)
-            memory_scaling = analyze_scaling_relationship(network_sizes, memory_values)
-
-            results[pattern] = {
-                'flops_scaling': flops_scaling.get('scaling_exponent', 0),
-                'memory_scaling': memory_scaling.get('scaling_exponent', 0),
-                'flops_values': flops_values,
-                'memory_values': memory_values
-            }
-
-        # Check all patterns analyzed
-        for pattern in patterns:
-            self.assertIn(pattern, results)
-            self.assertGreater(results[pattern]['flops_scaling'], 0)
-            self.assertEqual(len(results[pattern]['flops_values']), len(network_sizes))
+        """Supported algorithms must actually select different modeled work."""
+        random = calculate_sparse_neural_complexity(10000, 0.02, "random")
+        structured = calculate_sparse_neural_complexity(10000, 0.02, "structured")
+        self.assertNotEqual(random[:2], structured[:2])
+        self.assertEqual(random[2], structured[2])
+        for unsupported in ("biological", "small_world", "scale_free"):
+            with self.assertRaises(ValueError):
+                calculate_sparse_neural_complexity(10000, 0.02, unsupported)
 
     def test_sparsity_effects_integration(self):
         """Test sparsity effects using core neural complexity functions."""
@@ -266,35 +240,6 @@ class TestActiveInferenceIntegration(unittest.TestCase):
         # Energy should increase with branching
         self.assertGreater(energy_values[-1], energy_values[0])
 
-    def test_bounded_rationality_integration(self):
-        """Test bounded rationality concepts using core functions."""
-        # Test different horizon/branching combinations
-        test_cases = [
-            {'horizon': 5, 'branching': 2, 'name': 'Conservative'},
-            {'horizon': 8, 'branching': 3, 'name': 'Moderate'},
-            {'horizon': 12, 'branching': 4, 'name': 'Aggressive'}
-        ]
-
-        results = {}
-        for case in test_cases:
-            flops, memory = calculate_active_inference_complexity(
-                case['horizon'], case['branching'], 8, 4
-            )
-
-            # Consider tractable if flops < 10^10
-            tractable = flops < 10**10
-
-            results[case['name']] = {
-                'flops': flops,
-                'memory': memory,
-                'tractable': tractable
-            }
-
-        # More conservative strategies should be more tractable
-        self.assertTrue(results['Conservative']['tractable'])
-        if results['Moderate']['flops'] < 10**10:
-            self.assertTrue(results['Moderate']['tractable'])
-
 
 class TestOrchestrationIntegration(unittest.TestCase):
     """Test integration across different analysis components."""
@@ -307,12 +252,12 @@ class TestOrchestrationIntegration(unittest.TestCase):
         """Test that analysis outputs are compatible for integration."""
         # Test cross-component integration
         contact_flops, contact_memory, _ = calculate_contact_complexity(10, 12, "pgs")
-        neural_flops, neural_sram, neural_dram = calculate_sparse_neural_complexity(10000, 0.02)
+        neural_flops, neural_memory, neural_spikes = calculate_sparse_neural_complexity(10000, 0.02)
         ai_flops, ai_memory = calculate_active_inference_complexity(8, 3, 8, 4)
 
         # Create loads and estimate energies
         contact_load = ComputeLoad(flops=contact_flops, sram_bytes=contact_memory, dram_bytes=contact_memory*0.1)
-        neural_load = ComputeLoad(flops=neural_flops, sram_bytes=neural_sram, dram_bytes=neural_dram)
+        neural_load = ComputeLoad(flops=neural_flops, sram_bytes=neural_memory, spikes=neural_spikes)
         ai_load = ComputeLoad(flops=ai_flops, sram_bytes=ai_memory, dram_bytes=ai_memory*0.1)
 
         loads = [contact_load, neural_load, ai_load]

@@ -1,8 +1,8 @@
-# AntBrain
+# AntBrain: Proposed Insect-Inspired Neural Abstractions {#antbrain}
 
-`AntBrain` is a functional abstraction of an ant's neural architecture. It models key circuits and principles sufficient for adaptive behavior, initially at the circuit level and eventually at the cellular (neuron and glia) and synaptic level.
+`AntBrain` is a proposed functional abstraction inspired by insect neural architecture. Circuit-, cell-, and synapse-level descriptions below specify design choices, not an implemented ant connectome or demonstrated adaptive behavior. The package implements analytical sparse-processing workload counters; independent neural dynamics, learning, and navigation implementations and their validation remain necessary.
 
-The architecture is templated from mapped insect brains (e.g., *Drosophila* hemibrain; *Apis* models) to remain biologically plausible and computationally tractable. Future ant-specific neuroanatomy can be mapped onto this template. Where available, species-level differences (e.g., glomerular counts, CX architecture) parameterize modules.
+The proposed architecture draws inspiration from mapped insect brains, with functional AL/MB/CX abstractions. It does not supply an ant-specific connectome or validate cross-species mappings. Neuron populations, rates, and sparse activity below are configurable engineering assumptions/targets, not measured biological parameter estimates.
 
 ```mermaid
 graph TD
@@ -22,7 +22,7 @@ graph TD
         D --> G["Central Complex<br/>(Navigation/Motor Control)"]
 
         C --> H{Core Principles}
-        H --> I["Neural Sparsity<br/>(~250k Neurons)"]
+        H --> I["Sparse population<br/>Assumed size target"]
         H --> J["Low-Energy Computation"]
         H --> K["Stochastic Spiking Dynamics"]
     end
@@ -36,7 +36,7 @@ graph TD
 ## Scope and Assumptions
 
 - Functional, not synapse-accurate; modules align to conserved circuits (AL, MB, CX)
-- Sparse, low-power operation at $100\,\mathrm{Hz}$ closed loop; ~1e5--2.5e5 neurons (configurable)
+- Proposed 100 Hz closed loop and population range of $10^5$–$2.5\times10^5$ modeled neurons are engineering targets; no timing, energy, or species fidelity is demonstrated by those choices
 - Local learning (e.g., STDP) with simple modulatory signals; no global backprop
 - Noise is a feature: stochasticity aids exploration and regularization; parameters expose variance at module boundaries
 
@@ -44,7 +44,7 @@ graph TD
 
 [Virtual Fly Brain (About)](https://www.virtualflybrain.org/about/) is an interactive resource for exploring the neuroanatomy, neuron connectivity, and gene expression of Drosophila melanogaster. It integrates curated literature and image datasets onto a common brain template, enabling cross-search, similarity queries, and 3D comparison of neurons and regions.
 
-We use VFB to align region nomenclature, ground functional abstractions of AL/MB/CX in mapped fly circuits, and inform parameters where ant-specific data are sparse. Where ant data exist, we override defaults via species presets.
+VFB can guide region nomenclature and source discovery. Any transfer of its fly data to ant parameters needs an explicit biological justification; no validated ant species override is demonstrated here.
 
 ## Design Principles
 
@@ -52,9 +52,9 @@ We use VFB to align region nomenclature, ground functional abstractions of AL/MB
 
 Simulate functional roles of key structures rather than replicate every neuron. Favor minimal sufficient mechanisms with measurable interfaces.
 
-### 2. Neural Sparsity and Efficiency
+### 2. Neural Sparsity and Energy-Efficiency Targets {#neural-sparsity-and-efficiency}
 
-- **Neuron count:** ~250k target; biologically plausible and tractable
+- **Population size:** About 250,000 is an illustrative design target, not a measured or universal ant neuron count
 - **Optimization:** Low-energy computation and sparse representations
 - **Dynamics:** Stochastic spiking and local learning (Hebbian, STDP)
 - **Neuromodulation:** Reward/aversive signals (dopamine, octopamine, other biogenic amines) gate plasticity and policy bias
@@ -65,31 +65,31 @@ Simulate functional roles of key structures rather than replicate every neuron. 
 - **Sensorimotor loops:** Tight closed loop with `AntBody`
 - **Behavioral modules:** Substrate for higher-level programs orchestrated by `AntMind`
 - **Multi-modal fusion:** AL/MB olfaction with visual/vestibular cues into CX heading and action channels
-  with explicit timing constraints to maintain closed-loop stability at $100\,\mathrm{Hz}$
+  with a proposed 100 Hz closed-loop target whose stability/latency must be evaluated
 
-## Implementation Notes
+## Proposed Implementation Choices and Timing Targets {#implementation-notes}
 
 - Engine: spiking (Brian2 / Nengo / SpikingJelly) or hybrid rate-based
 - I/O: map `AntBody` observations to AL$\to$MB$\to$CX; policy head drives CX motor channel
-- Interfaces are stable and testable: each module exposes a minimal API with typed tensors and unit metadata.
-- **Cross-module timing:** AL/MB update at $100\,\mathrm{Hz}$; CX policy head 50--$100\,\mathrm{Hz}$ depending on task
+- Proposed interfaces should expose typed values and unit metadata; end-to-end compatibility requires evaluation.
+- **Cross-module timing targets:** AL/MB at 100 Hz and CX at 50–100 Hz are proposed rates, not measured throughput.
 - Learning:
   - MB: sparse coding (Kenyon cells); local plasticity with reward/punishment gating
   - CX: ring-attractor heading; soft WTA for action selection
-- Targets: neurons ~1e5--2.5e5; sparse activity; $100\,\mathrm{Hz}$ closed-loop
+- Targets: configured populations of $10^5$–$2.5\times10^5$, sparse activity, and nominal 100 Hz closed loop; none is a measured performance result
 - **Memory:** short-term eligibility traces; long-term synaptic consolidation checkpoints for reproducibility; model cards documenting learning rules and seeds
  - Neuromodulation API: dopamine/octopamine gating channels exposed via a minimal interface for reproducible learning schedules
  - Footprint reporting: track neuron counts, parameter sizes, and update rates per module
 
 ### Technical Pointers and References
 
-- **Antennal Lobe (AL):** Glomerular combinatorial codes and projection neuron mapping from ORNs; review in Wilson (2013) ([Annual Reviews](https://www.annualreviews.org/doi/10.1146/annurev-neuro-062111-150525)).
-- **Mushroom Bodies (MB):** Sparse coding via Kenyon cells and associative plasticity; Caron et al. (2013) ([Science](https://www.science.org/doi/10.1126/science.1235452)).
-- **Central Complex (CX):** Ring attractor for heading; Seelig & Jayaraman (2015) ([Nature](https://www.nature.com/articles/nature14581)).
+- **Antennal Lobe (AL):** Fly early olfactory processing; Wilson (2013), [Early Olfactory Processing in Drosophila: Mechanisms and Principles](https://doi.org/10.1146/annurev-neuro-062111-150533).
+- **Mushroom Bodies (MB):** Fly connectivity context; Caron et al. (2013), [Random convergence of olfactory inputs in the Drosophila mushroom body](https://doi.org/10.1038/nature12063).
+- **Central Complex (CX):** Fly heading context; Seelig and Jayaraman (2015), [Neural dynamics for landmark orientation and angular path integration](https://doi.org/10.1038/nature14446).
 - **Efficient Spiking Simulation:** Brian2 ([docs](https://brian2.readthedocs.io/)), Nengo ([site](https://www.nengo.ai/)), SpikingJelly ([GitHub](https://github.com/fangwei123456/spikingjelly)).
 - **Virtual Fly Brain (VFB):** Structural templates and nomenclature ([about](https://www.virtualflybrain.org/about/)).
 
-These resources ground the AL$\to$MB$\to$CX pipeline and support sparse, energy-efficient implementations suitable for $100\,\mathrm{Hz}$ closed-loop control.
+These are anatomical and simulation resources, not evidence that this architecture meets its proposed 100 Hz loop or energy targets. The companion CE counter model supports only `random` and `structured` patterns, not a calibrated biological topology.
 
 ## Key Neural Circuits and Their Functions
 

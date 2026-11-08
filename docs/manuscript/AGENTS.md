@@ -1,6 +1,6 @@
 # AGENTS.md — `ant_stack/docs/manuscript`
 
-> Manuscript sources for the ant_stack documentation paper: currently `MANUSCRIPT_STATUS.md` (the rendered paper lands as `1_ant_stack_documentation.pdf` at the project root). Verified by direct listing (fleet doc pass, 2026-08-29).
+> Manuscript status and navigation guidance, not configured inputs of a fourth paper. The documentation paper's ordered sources live under `papers/documentation/` and are selected by its `paper_config.yaml`.
 
 ## Scope
 - Tracked repository documentation under `docs/manuscript/`; the root `.gitignore`
@@ -11,10 +11,10 @@
 Files: `AGENTS.md`, `MANUSCRIPT_STATUS.md`, `README.md`
 
 ## Kind
-- Category: **src**. Manuscript/documentation sources of the parent project.
+- Category: documentation/status guidance. Do not substitute these pages for configured manuscript sources.
 
 ## Agent notes
-- Author-facing sources. Edit these, not the rendered copies under `output/`.
+- Edit status guidance here; edit authoritative paper sources under `papers/`. Record render/release observations only when actually exercised.
 
 ## Gotchas
 - None.

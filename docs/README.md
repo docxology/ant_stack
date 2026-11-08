@@ -1,59 +1,45 @@
-# Documentation
+# Ant Stack Documentation: Setup, Models, Outputs, and Publishing
 
-This directory contains the curated documentation for setup, architecture, API contracts, validation, reproducibility, benchmarking, theory, troubleshooting, publishing, and empirical ant-data integration.
+These guides describe the Ant Stack 3.0.0 package and its research repository. A version in source metadata is not evidence of a published release or a successful current render. Use the [root overview](../README.md) for project status.
 
-## Guide Map
+## Choose a Guide by Task
+
+| Task | Guide |
+| --- | --- |
+| Install dependencies and run an explicit first workflow | [Getting started](getting_started.md) |
+| Understand package layers, project inputs, and artifact ownership | [Architecture](architecture.md) |
+| Find Python modules and distinguish model families | [API reference](api_reference.md) |
+| Look up authoritative exports, CLI options, and input contracts | [Public API contracts](public_api_contracts.md) |
+| Select software acceptance checks and understand their scope | [Validation](validation.md) |
+| Preserve input snapshots, source state, and output identities | [Reproducibility](reproducibility.md) |
+| Design source- and runtime-bound performance measurements | [Benchmarking](benchmarking.md) |
+| Develop without overstating numerical or artifact evidence | [Best practices](best_practices.md) |
+| Diagnose dependency, browser, rendering, and ownership failures | [Troubleshooting](troubleshooting.md) |
+| Review scientific assumptions and evidence requirements | [Theory](theory.md), [scientific validation](scientific_validation.md) |
+| Introduce external ant observations with provenance | [External ant data integration](external_ant_data_integration.md) |
 
 ```mermaid
 flowchart TD
-    Start["README.md"] --> Setup["getting_started.md"]
-    Start --> Architecture["architecture.md"]
-    Start --> API["public_api_contracts.md\napi_reference.md"]
-    Start --> Validation["validation.md\nscientific_validation.md"]
-    Start --> Repro["reproducibility.md"]
-    Start --> Bench["benchmarking.md"]
-    Start --> Theory["theory.md"]
-    Start --> Data["external_ant_data_integration.md"]
-    Start --> Practice["best_practices.md"]
-    Start --> Trouble["troubleshooting.md"]
-    Architecture --> Package["antstack_core"]
-    API --> Package
-    Validation --> Tests["uv run pytest -q"]
-    Repro --> Outputs["outputs/<run_id>/provenance"]
-    Data --> Claims["source-backed manuscript claims"]
+    Start["Documentation index"] --> Setup["Getting started"]
+    Start --> Architecture["Architecture and API reference"]
+    Start --> Science["Theory and scientific validation"]
+    Setup --> Contracts["Public API contracts"]
+    Setup --> Trouble["Troubleshooting"]
+    Contracts --> Validation["Software validation"]
+    Contracts --> Repro["Reproducibility and provenance"]
+    Science --> Data["External ant data integration"]
 ```
 
-## Guides
+## Keep the Three Workflow Contracts Separate
 
-| File | Purpose |
-| --- | --- |
-| `getting_started.md` | Setup, first validation, and first canonical output run. |
-| `architecture.md` | Executable architecture contract, modular layers, and fractal repository rules. |
-| `api_reference.md` | High-level API reference for package modules. |
-| `public_api_contracts.md` | Current exported methods, CLI contracts, and validation commands. |
-| `validation.md` | Required validation commands and acceptance gates. |
-| `scientific_validation.md` | Scientific validation expectations for numerical and empirical claims. |
-| `reproducibility.md` | Provenance, determinism, dependency, and artifact rules. |
-| `benchmarking.md` | Benchmarking expectations and artifact locations. |
-| `theory.md` | Conceptual model for body, brain, mind, energy, and complexity. |
-| `best_practices.md` | Local development, documentation, visualization, and data practices. |
-| `troubleshooting.md` | Common command, build, rendering, and data problems. |
-| `external_ant_data_integration.md` | Schema, provenance, and validation contract for empirical ant datasets. |
+- **`antstack-ce`** validates a caller-supplied manifest or generates one analytical/synthetic workload result into an explicitly chosen fresh artifact root.
+- **`run-all-antstack`** stages and publishes a canonical `outputs/<run_id>/` generation, with optional paper projections and configured historical PDF copies. Its artifact validation is not scientific validation.
+- **`antstack-build`** validates or renders configured papers in a caller-owned project selected with `--project-root`. An installed package does not supply that project's manuscripts, configs, bibliography, assets, scripts, or tests.
 
-## Folder-Docs Gate
+Validation-only, actual document rendering, the canonical generated-results PDF, and retained historical manuscript PDFs are different operations. See [getting started](getting_started.md) before choosing one; use [validation](validation.md), [reproducibility](reproducibility.md), and [public API contracts](public_api_contracts.md) as the shared authorities rather than copying gate recipes into each guide.
 
-`uv run python tools/ensure_folder_docs.py --check` passes: the checker reads
-`.gitignore` directory patterns and skips registry entries they exclude (currently the
-gitignored `papers/*/assets/tmp_images/` render-staging directories). Any other
-missing-directory report is real documentation debt and should be fixed, not ignored.
+## Interpret Scientific and Publication Status Conservatively
 
-## Local Commands
+Current workload producers calculate analytical or synthetic results. Repeated deterministic outputs do not establish empirical precision; fitted curves do not establish biological laws. Base canonical and enhanced legacy models are separate families, not interchangeable implementations. No implemented MuJoCo/FlyBody robot, whole active-inference agent, or closed colony loop is implied by the conceptual framework.
 
-```bash
-uv run python tools/ensure_folder_docs.py --check
-uv run pytest -q
-uv run ruff check .
-uv run run-all-antstack --config configs/run_all_antstack.example.yaml --validate-only
-```
-
-Keep documentation claims aligned with source code, tests, and generated artifacts. Scientific prose should cite authoritative sources or explicitly mark assumptions and hypotheses.
+Folder documentation describes responsibilities; its presence does not prove that a check passed. A stored PDF, diagram, benchmark sample, or prepared CI workflow does not prove a current successful producer invocation. Native Mermaid rendering remains subject to real browser/sandbox availability; do not disable browser security to turn a failed render into a claimed success.

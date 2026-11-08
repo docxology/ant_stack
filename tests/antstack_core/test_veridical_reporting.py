@@ -276,15 +276,10 @@ class TestVeridicalReporter(unittest.TestCase):
         self.assertIn("efficiency_metrics", case.primary_results)
         self.assertIn("statistical_significance", case.primary_results)
 
-        # Check reproducibility metrics
-        self.assertIn("data_availability", case.reproducibility_metrics)
-        self.assertIn("methodology_clarity", case.reproducibility_metrics)
-
         # Check limitations and implications
         self.assertIsInstance(case.limitations, list)
         self.assertIsInstance(case.implications, list)
         self.assertGreater(len(case.limitations), 0)
-        self.assertGreater(len(case.implications), 0)
 
     def test_generate_comprehensive_report(self):
         """Test comprehensive report generation."""
@@ -314,7 +309,6 @@ class TestVeridicalReporter(unittest.TestCase):
         self.assertIn("# Comprehensive Complexity Energetics Analysis Report", content)
         self.assertIn(evidence.experiment_id, content)
         self.assertIn("Executive Summary", content)
-        self.assertIn("Key Empirical Findings", content)
         self.assertIn("Data Quality Assessment", content)
         self.assertIn("Detailed Analysis Results", content)
         self.assertIn("Case Study 1: Primary Analysis", content)
@@ -431,20 +425,6 @@ class TestVeridicalReporter(unittest.TestCase):
         self.assertEqual(summary["experiment_metadata"]["number_of_case_studies"], 0)
         self.assertEqual(len(summary["key_findings"]), 0)
 
-    @patch('antstack_core.analysis.statistical_analysis.bootstrap_mean_ci')
-    def test_generate_empirical_evidence_bootstrap_failure(self, mock_bootstrap):
-        """Test empirical evidence generation when bootstrap fails."""
-        mock_bootstrap.side_effect = Exception("Bootstrap failed")
-
-        evidence = self.reporter.generate_empirical_evidence(
-            self.experimental_data, self.analysis_results
-        )
-
-        # Should still generate evidence but with fallback values
-        self.assertIsInstance(evidence, EmpiricalEvidence)
-        self.assertIn("energy_consumption_mean", evidence.statistical_metrics)
-        # The statistical analyzer now handles bootstrap failures gracefully
-        self.assertIn("energy_consumption_95ci", evidence.confidence_intervals)
 
     def test_generate_comprehensive_report_with_multiple_cases(self):
         """Test comprehensive report with multiple case studies."""
@@ -478,8 +458,8 @@ class TestVeridicalReporter(unittest.TestCase):
             single_value_data = {"single_param": [5.0]}
             evidence = self.reporter.generate_empirical_evidence(single_value_data, {})
 
-            # For single values, should use fallback calculation
-            self.assertIn("single_param", evidence.measurement_uncertainty)
+            self.assertNotIn("single_param", evidence.measurement_uncertainty)
+            self.assertIsNone(evidence.statistical_metrics["single_param_std"])
 
         # Test with multiple values
         multi_value_data = {"multi_param": [1.0, 2.0, 3.0, 4.0, 5.0]}
@@ -505,14 +485,14 @@ class TestVeridicalReporter(unittest.TestCase):
         evidence = self.reporter.generate_empirical_evidence(sufficient_data, {})
 
         self.assertTrue(evidence.validation_checks["sufficient_data_points"])
-        self.assertTrue(evidence.validation_checks["statistical_power"])
+        self.assertIsNone(evidence.validation_checks["statistical_power"])
 
         # Test with insufficient data
         insufficient_data = {"param1": [1.0, 2.0]}  # Only 2 points
         evidence = self.reporter.generate_empirical_evidence(insufficient_data, {})
 
         self.assertFalse(evidence.validation_checks["sufficient_data_points"])
-        self.assertFalse(evidence.validation_checks["statistical_power"])
+        self.assertIsNone(evidence.validation_checks["statistical_power"])
 
     def test_quality_metrics_calculation(self):
         """Test quality metrics calculation."""
@@ -534,6 +514,90 @@ class TestVeridicalReporter(unittest.TestCase):
         for metric_name, value in evidence.quality_metrics.items():
             self.assertGreaterEqual(value, 0.0)
             self.assertLessEqual(value, 1.0)
+
+
+class TestHonestEvidenceReporting(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.reporter = VeridicalReporter(Path(self.directory.name))
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def test_no_data_never_establishes_validation_or_replication(self):
+        case = self.reporter.create_case_study("empty", "Empty", {}, {}, "none")
+        evidence = self.reporter.generate_empirical_evidence({}, {})
+        self.assertFalse(case.is_validated())
+        self.assertFalse(evidence.is_valid())
+        self.assertTrue(all(value is None for value in case.validation_results.values()))
+        self.assertEqual(case.reproducibility_metrics, {})
+        self.assertIsNone(case.get_reproducibility_score())
+        summary = self.reporter.generate_data_driven_summary(evidence, [case])
+        self.assertIsNone(summary["reproducibility"]["replication_success_rate"])
+        self.assertEqual(summary["reproducibility"]["supplied_case_replication_rates"], [])
+        from dataclasses import replace
+        self.assertFalse(replace(case, validation_results={}).is_validated())
+        self.assertFalse(replace(evidence, validation_checks={}).is_valid())
+
+    def test_only_supplied_validation_and_replication_scores_are_preserved(self):
+        supplied = {
+            "validation_results": {"external_validation": False, "internal_consistency": True},
+            "reproducibility_metrics": {"replication_success": 0.6},
+            "independent_validation": {"attempts": 5, "successes": 3},
+        }
+        case = self.reporter.create_case_study("supplied", "Supplied", {"x": [1, 2]}, supplied, "stated")
+        self.assertEqual(case.reproducibility_metrics, {"replication_success": 0.6})
+        self.assertFalse(case.validation_results["external_validation"])
+        self.assertIsNone(case.validation_results["statistical_robustness"])
+        self.assertFalse(case.is_validated())
+        self.assertEqual(case.cross_validation["independent_validation"], supplied["independent_validation"])
+        for invalid in [float("nan"), float("inf"), -0.1, 1.1]:
+            with self.subTest(score=invalid), self.assertRaises(ValueError):
+                self.reporter.create_case_study("bad", "Bad", {}, {"reproducibility_metrics": {"replication_success": invalid}}, "stated")
+
+    def test_narrow_interval_is_not_a_hypothesis_test(self):
+        evidence = self.reporter.generate_empirical_evidence({"x": [100] * 20}, {})
+        self.assertEqual(evidence.confidence_intervals["x_95ci"], (100, 100))
+        self.assertEqual(self.reporter.report_generator._extract_significant_findings(evidence), [])
+        record = {"p_value": 0.001, "alpha": 0.05, "testable": True, "method": "one_sample_student_t"}
+        no_null = self.reporter.generate_empirical_evidence({"x": [1, 2, 3]}, {"hypothesis_tests": {"x": record}})
+        self.assertEqual(self.reporter.report_generator._extract_significant_findings(no_null), [])
+        record["null_hypothesis"] = "population mean equals zero"
+        stated = self.reporter.generate_empirical_evidence({"x": [1, 2, 3]}, {"hypothesis_tests": {"x": record}})
+        self.assertEqual(stated.hypothesis_tests["x"]["p_value"], 0.001)
+        self.assertEqual(len(self.reporter.report_generator._extract_significant_findings(stated)), 1)
+
+    def test_singleton_and_mixed_reports_preserve_missing_statistics(self):
+        for values in [{"x": [5.0]}, {"x": [5.0], "y": [1.0, 2.0, 3.0]}]:
+            with self.subTest(values=values):
+                evidence = self.reporter.generate_empirical_evidence(values, {})
+                path = self.reporter.generate_comprehensive_report(evidence, [], {})
+                text = path.read_text()
+                self.assertIn("| x | 1 | 5 | N/A | N/A |", text)
+                summary_path = self.reporter.report_generator.generate_summary_report(evidence, [])
+                self.assertIn("| x | 5 | N/A | N/A |", summary_path.read_text())
+                exported = json.loads((Path(self.directory.name) / "analysis/statistical_analysis.json").read_text())
+                self.assertIsNone(exported["statistical_metrics"]["x_std"])
+                self.assertNotIn("x_95ci", exported["confidence_intervals"])
+
+    def test_actual_method_metadata_and_source_provenance(self):
+        from antstack_core.analysis.statistical_analysis import StatisticalAnalyzer
+        import platform
+        self.reporter.statistical_analyzer = StatisticalAnalyzer(100, 0.5, 7)
+        evidence = self.reporter.generate_empirical_evidence(
+            {"x": [1, 2, 3, 4]},
+            {"source_kind": "model", "data_source": "closed_form_sweep", "hardware_specifications": {"device": "supplied"}},
+        )
+        self.assertEqual(evidence.source_kind, "model")
+        self.assertEqual(evidence.data_source, "closed_form_sweep")
+        self.assertEqual(evidence.software_versions["python"], platform.python_version())
+        self.assertEqual(evidence.hardware_specifications, {"device": "supplied"})
+        self.assertEqual(evidence.analysis_parameters["statistics"]["bootstrap_samples"], 100)
+        self.assertEqual(evidence.get_parameter_summary("x")["confidence_interval"], evidence.confidence_intervals["x_50ci"])
+        summary = self.reporter.generate_data_driven_summary(evidence, [])
+        self.assertEqual(summary["statistical_summary"]["confidence_level"], "50%")
+        self.assertEqual(summary["statistical_summary"]["bootstrap_samples"], 100)
+        self.assertIsNone(summary["reproducibility"]["replication_success_rate"])
 
 
 if __name__ == '__main__':

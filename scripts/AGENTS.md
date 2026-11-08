@@ -16,10 +16,8 @@ Thin operational wrappers around antstack_core and paper-runner APIs.
 | `demonstrate_improvements.py` | `antstack_core.orchestration.demo:main` |
 | `validate_rendering_system.py` | `antstack_core.publishing.rendering_validator:run` |
 | `validate_unified_config.py` | `antstack_core.analysis.config_validation:main` |
-| `common_pipeline/unified_build.py` | `antstack_core.orchestration.unified_build:run` |
 | `common_pipeline/update_paper_key_numbers.py` | `antstack_core.analysis.key_numbers_updater:run` |
 | `common_pipeline/comprehensive_formatting_fix.py` | `antstack_core.publishing.formatting_fixes:main` |
-| `common_pipeline/build_core.py` | loaded by `antstack_core.cli.build`; uses `antstack_core.figures` and `antstack_core.analysis` helpers |
 | `common_pipeline/run_validation_suite.py` | pytest and repo validators via subprocess |
 | `common_pipeline/test_ce_runner.py` | `antstack_core.analysis` primitives |
 | `common_pipeline/diagnose_crossref_issue.py` | `tools/render_pdf.sh` via subprocess |
@@ -30,7 +28,6 @@ Thin operational wrappers around antstack_core and paper-runner APIs.
 | `complexity_energetics/analyze_neural_networks.py` | `antstack_core.analysis.ce_neural_networks:run` |
 | `complexity_energetics/comprehensive_analysis.py` | `antstack_core.analysis.ce_comprehensive_analysis:run` |
 | `complexity_energetics/generate_comprehensive_analysis.py` | `antstack_core.analysis.ce_module_scaling_analysis:run` |
-| `complexity_energetics/generate_biomechanical_benchmarks.py` | `antstack_core.analysis.ce_biomechanical_benchmarks:run` |
 | `complexity_energetics/generate_manuscript_figures.py` | `antstack_core.analysis.ce_manuscript_figures:run` |
 | `complexity_energetics/generate_publication_figures.py` | `antstack_core.analysis.ce_publication_figures:run` |
 | `complexity_energetics/generate_results_figures.py` | `antstack_core.analysis.ce_results_figures:run` |
@@ -57,5 +54,5 @@ See `README.md` for per-script purpose and commands.
 Run:
 ```bash
 uv run antstack-build --validate-only; uv run run-all-antstack --config configs/run_all_antstack.example.yaml --validate-only; uv run pytest -q
-uv run python scripts/validate_rendering_system.py --help; uv run python scripts/common_pipeline/unified_build.py --help
+uv run python scripts/validate_rendering_system.py --help; uv run antstack-build --help
 ```

@@ -103,15 +103,6 @@ class TestBasicPlots(unittest.TestCase):
 
         self.assertIsNotNone(fig)
 
-    def test_bar_plot_empty_data(self):
-        """Test bar plot with empty data."""
-        fig = bar_plot(
-            categories=[],
-            values=[],
-            title="Empty Bar Plot"
-        )
-
-        self.assertIsNotNone(fig)
 
     def test_line_plot_basic(self):
         """Test basic line plot functionality."""
@@ -367,19 +358,14 @@ class TestCrossReferences(unittest.TestCase):
         self.assertIsInstance(errors, list)
         self.assertGreater(len(errors), 0)
 
-    def test_fix_figure_ids(self):
-        """Test automatic fixing of figure IDs."""
-        fixed_markdown = fix_figure_ids(self.invalid_markdown)
+    def test_reference_repair_requires_the_authors_explicit_mapping(self):
+        with self.assertRaises(ValueError):
+            fix_figure_ids(self.invalid_markdown)
+        fixed = fix_figure_ids(self.invalid_markdown, {'energy_analysis': 'energy'})
+        result = validate_cross_references(fixed)
+        self.assertTrue(result['valid'])
+        self.assertEqual(result['references'], ['fig:energy'])
 
-        # Should have fixed the reference
-        self.assertIn("{@fig:energy}", fixed_markdown)
-
-    def test_fix_figure_ids_no_changes_needed(self):
-        """Test fixing when no changes are needed."""
-        fixed_markdown = fix_figure_ids(self.valid_markdown)
-
-        # Should be unchanged
-        self.assertEqual(fixed_markdown, self.valid_markdown)
 
 
 class TestAssetManagement(unittest.TestCase):
@@ -566,11 +552,9 @@ class TestVisualizationIntegration(unittest.TestCase):
 class TestVisualizationRobustness(unittest.TestCase):
     """Test robustness of visualization functionality."""
 
-    def test_visualization_without_matplotlib(self):
-        """Test plotting fallback behavior with matplotlib deliberately disabled."""
-        with patch("antstack_core.figures.plots.plt", None):
-            result = bar_plot(['A', 'B'], [1, 2], title="Test")
-        self.assertIsNone(result)
+    def test_missing_matplotlib_is_an_explicit_dependency_failure(self):
+        with patch("antstack_core.figures.plots.plt", None), self.assertRaises(ImportError):
+            bar_plot(['A', 'B'], [1, 2], title="Test")
 
     def test_visualization_with_extreme_data(self):
         """Test visualization with extreme data values."""

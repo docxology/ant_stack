@@ -1,24 +1,166 @@
-"""Manuscript figure generation orchestrator. Moved verbatim from scripts/complexity_energetics/generate_manuscript_figures.py; thin wrapper retained for CLI compatibility."""
+"""Fresh-root manuscript figure families; direct producers default to PNG.
 
-import argparse
-import json
-import sys
+``run`` owns the complete family transaction under trusted exclusive output
+ownership. Analytical estimates are not canonical base-run or calibrated data.
+"""
+
 import os
+import stat
+import tempfile
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, Any
 
 from antstack_core.analysis import (
-    estimate_detailed_energy, analyze_scaling_relationship,
-    calculate_energy_efficiency_metrics, estimate_theoretical_limits,
-    bootstrap_mean_ci
-)
-from antstack_core.analysis import (
+    estimate_detailed_energy, estimate_theoretical_limits,
     enhanced_body_workload_closed_form, enhanced_brain_workload_closed_form,
     enhanced_mind_workload_closed_form, calculate_contact_complexity,
-    calculate_sparse_neural_complexity, calculate_active_inference_complexity
+    calculate_sparse_neural_complexity,
 )
 from antstack_core.analysis import EnergyCoefficients
-from antstack_core.figures import bar_plot, line_plot, scatter_plot
+from antstack_core.figures import bar_plot, interval_plot, line_plot, scatter_plot
+from antstack_core.publishing.provenance import (
+    atomic_json, build_run_provenance, capture_source_state, file_identity,
+    ordinary_path, publication_path, write_provenance,
+)
+
+
+def _image_path(output_dir, stem, image_format):
+    if image_format not in {"png", "svg", "pdf"}:
+        raise ValueError(f"Unsupported figure format: {image_format}")
+    return Path(output_dir) / f"{stem}.{image_format}"
+
+
+def _family_models(suite, coeffs):
+    """Record the distinct existing sweeps and energy boundaries, not reconcile them."""
+    manuscript = suite == "manuscript"
+    body = {"J": 18, "C": 12, "S": 256, "hz": 100, "P": 4096, "contact_solver": "pgs"}
+    brain = {"K": 128, "N_KC": 50000, "rho": 0.02, "H": 64, "hz": 100,
+             "connectivity_pattern": "random"}
+    mind = {"B": 4, "H_p": 12, "hz": 100, "state_dim": 16, "action_dim": 6,
+            "max_policies": 1000, "hierarchical": False}
+    energy = {"duration_s": 0.01, "energy_boundary": "compute-plus-isolated-idle; no actuation or sensing power supplied",
+              "assumed_coefficients": coeffs.to_dict(), "calibration": "not performed"}
+    body_model = dict(energy, model="enhanced_body_workload_closed_form", parameters=body,
+                      memory_fraction={"sram": 0.75, "dram": 0.25})
+    brain_model = dict(energy, model="enhanced_brain_workload_closed_form", parameters=brain,
+                       memory_fraction={"sram": 0.85, "dram": 0.15},
+                       components=["AL", "sparse MB", "CX", "plasticity"])
+    mind_model = dict(energy, model="enhanced_mind_workload_closed_form", parameters=mind,
+                      memory_fraction={"sram": 0.8, "dram": 0.2})
+    body_sweep = dict(body_model, sweep={"parameter": "J", "values": [6, 12, 18, 24, 36] if manuscript else [6, 12, 18, 24, 30, 36]})
+    brain_sweep = dict(brain_model, sweep={"parameter": "K", "values": [64, 128, 256, 512, 1024]})
+    mind_sweep = dict(mind_model,
+                      parameters=dict(mind, B=3, state_dim=12, action_dim=4) if manuscript else mind,
+                      sweep={"parameter": "H_p", "values": [5, 7, 9, 11, 13] if manuscript else [5, 8, 10, 12, 15, 18, 20]})
+    sparse = {"model": "calculate_sparse_neural_complexity", "parameters": {"N_total": 50000, "sparsity": 0.02},
+              "patterns": ["random", "structured"], "energy_boundary": "counters only; isolated sparse network, not full Brain"}
+    sparsity_sweep = {"parameter": "rho", "values": [0.005, 0.01, 0.02, 0.05, 0.1] if manuscript else [0.005, 0.01, 0.02, 0.05, 0.1, 0.2]}
+    if manuscript:
+        sparse_energy = dict(brain_model, sweep=sparsity_sweep)
+    else:
+        sparse_energy = dict(energy, model="calculate_sparse_neural_complexity",
+                             parameters={"N_total": 50000, "connectivity_pattern": "random"},
+                             sweep=sparsity_sweep, memory_fraction={"sram": 1.0, "dram": 0.0},
+                             components=["isolated sparse network only; no AL, CX or plasticity"])
+    reference = {"modules": {"AntBody": body_model, "AntBrain": brain_model,
+                             "AntMind": dict(mind_model, parameters=dict(mind, H_p=8)) if manuscript else mind_model},
+                 "reference": {"bits_erased_per_flop": 1, "temperature_k": 300,
+                               "interpretation": "conditional erasure reference, not physical efficiency"},
+                 "idle_accounting": "each module modeled in isolation with one baseline charge"}
+    contacts = {"model": "calculate_contact_complexity", "parameters": {"J": 18},
+                "sweep": {"parameter": "C", "values": [5, 10, 15, 20, 25, 30]},
+                "solvers": ["pgs", "si", "ldlt"], "energy_boundary": "solver counters only; no energy model"}
+    models = {
+        "body_joint_energy_scaling": body_sweep, "body_energy_complexity": body_sweep,
+        "brain_channel_energy_scaling": brain_sweep, "brain_channel_spikes_scaling": brain_sweep,
+        "mind_horizon_energy_scaling": mind_sweep, "mind_horizon_flops_scaling": mind_sweep,
+        "connectivity_patterns_flops": sparse, "connectivity_patterns_spikes": sparse,
+        "sparsity_energy_scaling": sparse_energy,
+        "theoretical_limits_comparison": reference, "efficiency_ratios": reference,
+        "contact_solver_flops_comparison": contacts, "contact_solver_memory_comparison": contacts,
+    }
+    if manuscript:
+        modules = {"AntBody": body_model, "AntBrain": brain_model, "AntMind": mind_model}
+        models["module_energy_comparison"] = {"modules": modules, "idle_accounting": "one independent baseline per module"}
+        models["energy_component_breakdown"] = {"modules": modules,
+                                               "idle_accounting": "sum of three independent module baselines, not one shared system baseline"}
+    return models
+
+
+def _fresh_family_path(output):
+    if output is None:
+        raise ValueError("An explicit fresh family output directory is required")
+    destination = publication_path(output, tree=True)
+    if destination.exists() and (not destination.is_dir() or any(destination.iterdir())):
+        raise ValueError(f"Figure family output must be absent or empty: {destination}")
+    return destination
+
+
+def _publish_family(output, suite, manifest_name, image_format, coeffs, produce, *, supplementary=()):
+    """Stage a complete family and atomically rename it into a fresh namespace.
+
+    The shared provenance record and relative output inventory follow the existing
+    publishing contract. Stable links and collisions are rejected, not hostile
+    same-UID replacement races: callers exclusively own this output namespace.
+    """
+    destination = _fresh_family_path(output)
+    source_state = capture_source_state()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=f".{destination.name}.stage-", dir=destination.parent) as directory:
+        stage = Path(directory)
+        manifest = produce(stage)
+        models = manifest.pop("model_definitions", None)
+        if models is None:
+            models = _family_models(suite, coeffs)
+        if not models:
+            raise ValueError("A figure family must declare actual produced models")
+        figures = {key: ordinary_path(path).relative_to(stage).as_posix()
+                   for key, path in manifest["figures"].items()}
+        expected = {f"{stem}.{image_format}" for stem in models}
+        if set(figures.values()) != expected or len(figures) != len(expected):
+            raise ValueError("Figure family is missing products or contains duplicate/unexpected products")
+        extras = set(supplementary)
+        if any(Path(name).name != name for name in extras) or extras & expected:
+            raise ValueError("Invalid supplementary figure product")
+        if {path.name for path in stage.iterdir()} != expected | extras:
+            raise ValueError("Figure family staging contains unregistered products")
+        for name in expected | extras:
+            path = stage / name
+            identity = file_identity(path)
+            if not identity["bytes"] or path.stat().st_nlink != 1:
+                raise ValueError(f"Figure product must be a nonempty exclusive file: {name}")
+        manifest.update({"schema_version": 1, "complete": True, "family": suite,
+                         "artifact_path_base": "family_root", "figures": figures,
+                         "figure_models": {f"{stem}.{image_format}": model for stem, model in models.items()},
+                         "model_provenance": "deterministic analytical estimates; not canonical base-run evidence; no empirical validation or calibration",
+                         "generation_info": {"output_directory": str(destination), "format": image_format,
+                                             "total_figures": len(figures)}})
+        atomic_json(stage / manifest_name, manifest)
+        provenance_name = "provenance/provenance.json"
+        inventory_name = "provenance/output_inventory.json"
+        products = sorted(expected | extras) + [manifest_name, provenance_name]
+        provenance = build_run_provenance(
+            project=f"ant-stack-{suite}-figures", output_paths=products + [inventory_name],
+            parameters={"family": suite, "output_path_base": "family_root", "format": image_format,
+                        "figure_models": manifest["figure_models"]}, source_state=source_state)
+        write_provenance(stage / provenance_name, provenance)
+        artifacts = []
+        for name in products:
+            identity = file_identity(stage / name)
+            kind = "image" if name in expected else "markdown" if name.endswith(".md") else "latex" if name.endswith(".tex") else "provenance"
+            artifacts.append({"path": name, "artifact_type": kind,
+                              "producing_task": f"{suite}.figures", "source_config": manifest_name,
+                              "checksum": identity["sha256"], "bytes": identity["bytes"]})
+        atomic_json(stage / inventory_name, {"artifact_path_base": "family_root", "artifacts": artifacts})
+        for artifact in artifacts:
+            if file_identity(stage / artifact["path"]) != {"sha256": artifact["checksum"], "bytes": artifact["bytes"]}:
+                raise RuntimeError(f"Figure family changed before publication: {artifact['path']}")
+        _fresh_family_path(destination)
+        if destination.exists():
+            os.chmod(stage, stat.S_IMODE(destination.stat().st_mode))
+        os.replace(stage, destination)
+    print(f"Published {len(expected)} {image_format.upper()} figures: {destination}")
+    return destination / manifest_name
 
 
 def generate_complexity_overview_data() -> Dict[str, Any]:
@@ -26,9 +168,11 @@ def generate_complexity_overview_data() -> Dict[str, Any]:
     print("Generating complexity overview data...")
     
     # Standard parameters
-    body_params = {'J': 18, 'C': 12, 'S': 256, 'hz': 100, 'contact_solver': 'pgs'}
-    brain_params = {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100}
-    mind_params = {'B': 4, 'H_p': 15, 'hz': 100, 'state_dim': 16, 'action_dim': 6}
+    body_params = {'J': 18, 'C': 12, 'S': 256, 'hz': 100, 'P': 4096, 'contact_solver': 'pgs'}
+    brain_params = {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100,
+                    'connectivity_pattern': 'random'}
+    mind_params = {'B': 4, 'H_p': 15, 'hz': 100, 'state_dim': 16, 'action_dim': 6,
+                   'max_policies': 1000, 'hierarchical': False}
     
     # Calculate workloads
     body_load = enhanced_body_workload_closed_form(0.01, body_params)
@@ -57,7 +201,7 @@ def generate_complexity_overview_data() -> Dict[str, Any]:
     }
 
 
-def generate_energy_breakdown_figures(output_dir: Path) -> Dict[str, str]:
+def generate_energy_breakdown_figures(output_dir: Path, image_format: str = "png") -> Dict[str, str]:
     """Generate detailed energy breakdown figures."""
     print("Generating energy breakdown figures...")
     
@@ -83,7 +227,7 @@ def generate_energy_breakdown_figures(output_dir: Path) -> Dict[str, str]:
     modules = ['AntBody', 'AntBrain', 'AntMind']
     total_energies = [body_breakdown.total, brain_breakdown.total, mind_breakdown.total]
     
-    module_comparison_plot = output_dir / "module_energy_comparison.png"
+    module_comparison_plot = _image_path(output_dir, "module_energy_comparison", image_format)
     bar_plot(
         modules, [e * 1000 for e in total_energies],  # Convert to mJ
         "Energy Consumption by Module",
@@ -101,11 +245,11 @@ def generate_energy_breakdown_figures(output_dir: Path) -> Dict[str, str]:
     
     component_energies = [flops_energy, memory_energy, spikes_energy, baseline_energy]
     
-    component_breakdown_plot = output_dir / "energy_component_breakdown.png"
+    component_breakdown_plot = _image_path(output_dir, "energy_component_breakdown", image_format)
     bar_plot(
-        components, [e * 1e6 for e in component_energies],  # Convert to μJ
-        "Energy Breakdown by Component Type",
-        str(component_breakdown_plot), ylabel="Energy per Decision (μJ)"
+        components, [e * 1000 for e in component_energies],  # Convert J to mJ once
+        "Enhanced Compute-plus-Idle Components (Assumed Coefficients, No Mechanics)",
+        str(component_breakdown_plot), ylabel="Energy per Decision (mJ)"
     )
     
     return {
@@ -114,7 +258,7 @@ def generate_energy_breakdown_figures(output_dir: Path) -> Dict[str, str]:
     }
 
 
-def generate_scaling_analysis_figures(output_dir: Path) -> Dict[str, str]:
+def generate_scaling_analysis_figures(output_dir: Path, image_format: str = "png") -> Dict[str, str]:
     """Generate comprehensive scaling analysis figures."""
     print("Generating scaling analysis figures...")
     
@@ -134,7 +278,7 @@ def generate_scaling_analysis_figures(output_dir: Path) -> Dict[str, str]:
         body_flops.append(load.flops)
     
     # Body energy scaling
-    body_energy_plot = output_dir / "body_joint_energy_scaling.png"
+    body_energy_plot = _image_path(output_dir, "body_joint_energy_scaling", image_format)
     line_plot(
         J_values, [body_energies], ["Body Energy"],
         "AntBody: Energy Scaling vs Joint Count",
@@ -144,7 +288,7 @@ def generate_scaling_analysis_figures(output_dir: Path) -> Dict[str, str]:
     figures['body_energy_scaling'] = str(body_energy_plot)
     
     # Body energy vs complexity
-    body_complexity_plot = output_dir / "body_energy_complexity.png"
+    body_complexity_plot = _image_path(output_dir, "body_energy_complexity", image_format)
     scatter_plot(
         body_flops, body_energies,
         "AntBody: Energy vs Computational Complexity",
@@ -166,7 +310,7 @@ def generate_scaling_analysis_figures(output_dir: Path) -> Dict[str, str]:
         brain_spikes.append(load.spikes)
     
     # Brain energy scaling
-    brain_energy_plot = output_dir / "brain_channel_energy_scaling.png"
+    brain_energy_plot = _image_path(output_dir, "brain_channel_energy_scaling", image_format)
     line_plot(
         K_values, [brain_energies], ["Brain Energy"],
         "AntBrain: Energy Scaling vs AL Channels",
@@ -176,7 +320,7 @@ def generate_scaling_analysis_figures(output_dir: Path) -> Dict[str, str]:
     figures['brain_energy_scaling'] = str(brain_energy_plot)
     
     # Brain spikes scaling
-    brain_spikes_plot = output_dir / "brain_channel_spikes_scaling.png"
+    brain_spikes_plot = _image_path(output_dir, "brain_channel_spikes_scaling", image_format)
     line_plot(
         K_values, [brain_spikes], ["Spike Count"],
         "AntBrain: Spike Generation vs AL Channels",
@@ -198,7 +342,7 @@ def generate_scaling_analysis_figures(output_dir: Path) -> Dict[str, str]:
         mind_flops.append(load.flops)
     
     # Mind energy scaling
-    mind_energy_plot = output_dir / "mind_horizon_energy_scaling.png"
+    mind_energy_plot = _image_path(output_dir, "mind_horizon_energy_scaling", image_format)
     line_plot(
         H_p_values, [mind_energies], ["Mind Energy"],
         "AntMind: Energy Scaling vs Policy Horizon",
@@ -208,10 +352,10 @@ def generate_scaling_analysis_figures(output_dir: Path) -> Dict[str, str]:
     figures['mind_energy_scaling'] = str(mind_energy_plot)
     
     # Mind computational explosion
-    mind_flops_plot = output_dir / "mind_horizon_flops_scaling.png"
+    mind_flops_plot = _image_path(output_dir, "mind_horizon_flops_scaling", image_format)
     line_plot(
         H_p_values, [mind_flops], ["Mind FLOPs"],
-        "AntMind: Computational Explosion vs Policy Horizon",
+        "AntMind: Modeled FLOPs vs Policy Horizon (1000-policy cap)",
         "Policy Horizon (steps)", "FLOPs per Decision",
         str(mind_flops_plot)
     )
@@ -220,13 +364,13 @@ def generate_scaling_analysis_figures(output_dir: Path) -> Dict[str, str]:
     return figures
 
 
-def generate_connectivity_analysis_figures(output_dir: Path) -> Dict[str, str]:
+def generate_connectivity_analysis_figures(output_dir: Path, image_format: str = "png") -> Dict[str, str]:
     """Generate neural connectivity pattern analysis figures."""
     print("Generating connectivity analysis figures...")
     
     network_size = 50000
     sparsity = 0.02
-    patterns = ["random", "small_world", "scale_free", "biological"]
+    patterns = ["random", "structured"]
     
     # Analyze different connectivity patterns
     pattern_flops = []
@@ -240,14 +384,14 @@ def generate_connectivity_analysis_figures(output_dir: Path) -> Dict[str, str]:
         pattern_spikes.append(spikes)
     
     # Connectivity pattern comparison
-    connectivity_flops_plot = output_dir / "connectivity_patterns_flops.png"
+    connectivity_flops_plot = _image_path(output_dir, "connectivity_patterns_flops", image_format)
     bar_plot(
         [p.replace('_', ' ').title() for p in patterns], pattern_flops,
         "Neural Connectivity Patterns: Computational Cost",
         str(connectivity_flops_plot), ylabel="FLOPs per Decision"
     )
     
-    connectivity_spikes_plot = output_dir / "connectivity_patterns_spikes.png"
+    connectivity_spikes_plot = _image_path(output_dir, "connectivity_patterns_spikes", image_format)
     bar_plot(
         [p.replace('_', ' ').title() for p in patterns], pattern_spikes,
         "Neural Connectivity Patterns: Spike Generation",
@@ -268,10 +412,10 @@ def generate_connectivity_analysis_figures(output_dir: Path) -> Dict[str, str]:
         sparsity_energies.append(breakdown.total)
         sparsity_spikes.append(load.spikes)
     
-    sparsity_energy_plot = output_dir / "sparsity_energy_scaling.png"
+    sparsity_energy_plot = _image_path(output_dir, "sparsity_energy_scaling", image_format)
     line_plot(
         sparsity_levels, [sparsity_energies], ["Energy"],
-        "Neural Sparsity Effects on Energy Consumption",
+        "Full Enhanced Brain: Sparsity Effects on Energy",
         "Sparsity Level (ρ)", "Energy per Decision (J)",
         str(sparsity_energy_plot)
     )
@@ -283,7 +427,7 @@ def generate_connectivity_analysis_figures(output_dir: Path) -> Dict[str, str]:
     }
 
 
-def generate_theoretical_limits_figures(output_dir: Path) -> Dict[str, str]:
+def generate_theoretical_limits_figures(output_dir: Path, image_format: str = "png") -> Dict[str, str]:
     """Generate theoretical limits comparison figures."""
     print("Generating theoretical limits figures...")
     
@@ -302,7 +446,7 @@ def generate_theoretical_limits_figures(output_dir: Path) -> Dict[str, str]:
     body_energy = estimate_detailed_energy(body_load, coeffs, 0.01).total
     body_limits = estimate_theoretical_limits({
         'flops': body_load.flops,
-        'mechanical_work_j': 0.001
+        'bits_erased': body_load.flops
     })
     
     actual_energies.append(body_energy)
@@ -316,7 +460,7 @@ def generate_theoretical_limits_figures(output_dir: Path) -> Dict[str, str]:
     brain_energy = estimate_detailed_energy(brain_load, coeffs, 0.01).total
     brain_limits = estimate_theoretical_limits({
         'flops': brain_load.flops,
-        'mechanical_work_j': 0.0
+        'bits_erased': brain_load.flops
     })
     
     actual_energies.append(brain_energy)
@@ -330,7 +474,7 @@ def generate_theoretical_limits_figures(output_dir: Path) -> Dict[str, str]:
     mind_energy = estimate_detailed_energy(mind_load, coeffs, 0.01).total
     mind_limits = estimate_theoretical_limits({
         'flops': mind_load.flops,
-        'mechanical_work_j': 0.0
+        'bits_erased': mind_load.flops
     })
     
     actual_energies.append(mind_energy)
@@ -339,21 +483,21 @@ def generate_theoretical_limits_figures(output_dir: Path) -> Dict[str, str]:
     
     # Theoretical limits comparison
     all_energies = actual_energies + theoretical_energies
-    all_labels = [f"{m} (Actual)" for m in modules] + [f"{m} (Theoretical)" for m in modules]
+    all_labels = [f"{m} (Model)" for m in modules] + [f"{m} (1 erased bit/FLOP, 300 K)" for m in modules]
     
-    limits_plot = output_dir / "theoretical_limits_comparison.png"
-    bar_plot(
+    limits_plot = _image_path(output_dir, "theoretical_limits_comparison", image_format)
+    interval_plot(
         all_labels, all_energies,
-        "Actual vs Theoretical Energy Limits",
-        str(limits_plot), ylabel="Energy per Decision (J)"
+        "Modeled Energy vs Conditional Erasure Reference (No Mechanics)",
+        str(limits_plot), xlabel="Energy per Decision (J)"
     )
     
     # Efficiency ratios
-    efficiency_plot = output_dir / "efficiency_ratios.png"
+    efficiency_plot = _image_path(output_dir, "efficiency_ratios", image_format)
     bar_plot(
         modules, efficiency_ratios,
-        "Energy Efficiency Ratios (Actual/Theoretical)",
-        str(efficiency_plot), ylabel="Efficiency Ratio"
+        "Modeled Energy / Conditional Erasure Reference",
+        str(efficiency_plot), ylabel="Energy / Reference (Not Physical Efficiency)"
     )
     
     return {
@@ -362,12 +506,12 @@ def generate_theoretical_limits_figures(output_dir: Path) -> Dict[str, str]:
     }
 
 
-def generate_contact_solver_figures(output_dir: Path) -> Dict[str, str]:
+def generate_contact_solver_figures(output_dir: Path, image_format: str = "png") -> Dict[str, str]:
     """Generate contact solver comparison figures."""
     print("Generating contact solver comparison figures...")
     
     contact_counts = [5, 10, 15, 20, 25, 30]
-    solvers = ["pgs", "lcp", "mlcp"]
+    solvers = ["pgs", "si", "ldlt"]
     
     solver_data = {}
     for solver in solvers:
@@ -385,7 +529,7 @@ def generate_contact_solver_figures(output_dir: Path) -> Dict[str, str]:
     flops_series = [solver_data[solver]['flops'] for solver in solvers]
     solver_labels = [solver.upper() for solver in solvers]
     
-    solver_flops_plot = output_dir / "contact_solver_flops_comparison.png"
+    solver_flops_plot = _image_path(output_dir, "contact_solver_flops_comparison", image_format)
     line_plot(
         contact_counts, flops_series, solver_labels,
         "Contact Solver Computational Complexity",
@@ -396,7 +540,7 @@ def generate_contact_solver_figures(output_dir: Path) -> Dict[str, str]:
     # Memory comparison
     memory_series = [solver_data[solver]['memory'] for solver in solvers]
     
-    solver_memory_plot = output_dir / "contact_solver_memory_comparison.png"
+    solver_memory_plot = _image_path(output_dir, "contact_solver_memory_comparison", image_format)
     line_plot(
         contact_counts, memory_series, solver_labels,
         "Contact Solver Memory Requirements",
@@ -411,69 +555,18 @@ def generate_contact_solver_figures(output_dir: Path) -> Dict[str, str]:
 
 
 def run(args):
-    # Create output directory
-    output_dir = Path(args.output)
-    output_dir.mkdir(exist_ok=True)
-    
-    print("=" * 60)
-    print("Manuscript Figure Generation Orchestrator")
-    print("=" * 60)
-    
-    # Generate all figure sets
-    all_figures = {}
-    
-    # Energy breakdown figures
-    energy_figures = generate_energy_breakdown_figures(output_dir)
-    all_figures.update(energy_figures)
-    
-    # Scaling analysis figures
-    scaling_figures = generate_scaling_analysis_figures(output_dir)
-    all_figures.update(scaling_figures)
-    
-    # Connectivity analysis figures
-    connectivity_figures = generate_connectivity_analysis_figures(output_dir)
-    all_figures.update(connectivity_figures)
-    
-    # Theoretical limits figures
-    limits_figures = generate_theoretical_limits_figures(output_dir)
-    all_figures.update(limits_figures)
-    
-    # Contact solver figures
-    solver_figures = generate_contact_solver_figures(output_dir)
-    all_figures.update(solver_figures)
-    
-    # Generate complexity overview data for Mermaid diagrams
-    complexity_data = generate_complexity_overview_data()
-    
-    # Save figure manifest
-    figure_manifest = {
-        'figures': all_figures,
-        'complexity_data': complexity_data,
-        'generation_info': {
-            'output_directory': str(output_dir),
-            'format': args.format,
-            'total_figures': len(all_figures)
-        }
-    }
-    
-    manifest_path = output_dir / "figure_manifest.json"
-    with open(manifest_path, 'w') as f:
-        json.dump(figure_manifest, f, indent=2, default=str)
-    
-    print(f"\nFigure generation complete!")
-    print(f"Generated {len(all_figures)} figures in: {output_dir}")
-    print(f"Figure manifest: {manifest_path}")
-    
-    # Print figure summary
-    print(f"\nGenerated Figures:")
-    for category, figures in [
-        ("Energy Analysis", energy_figures),
-        ("Scaling Analysis", scaling_figures), 
-        ("Connectivity Analysis", connectivity_figures),
-        ("Theoretical Limits", limits_figures),
-        ("Contact Solvers", solver_figures)
-    ]:
-        print(f"  {category}: {len(figures)} figures")
-        for name, path in figures.items():
-            print(f"    - {name}: {Path(path).name}")
+    """Publish all fifteen figures and strict metadata together, never in place."""
+    image_format = args.format
+    _image_path(Path("."), "format-validation", image_format)
+
+    def produce(stage):
+        figures = {}
+        for producer in (generate_energy_breakdown_figures, generate_scaling_analysis_figures,
+                         generate_connectivity_analysis_figures, generate_theoretical_limits_figures,
+                         generate_contact_solver_figures):
+            figures.update(producer(stage, image_format=image_format))
+        return {"figures": figures, "complexity_data": generate_complexity_overview_data()}
+
+    return _publish_family(args.output, "manuscript", "figure_manifest.json", image_format,
+                           EnergyCoefficients(), produce)
 

@@ -29,12 +29,64 @@ from antstack_core.analysis.enhanced_estimators import (
     EnhancedEnergyEstimator
 )
 from antstack_core.analysis.energy import EnergyCoefficients
+import math
 
 try:
     import numpy as np
     HAS_NUMPY_REAL = True
 except ImportError:
     HAS_NUMPY_REAL = False
+
+class TestScientificEstimatorAccounting(unittest.TestCase):
+    def test_mind_baseline_integrates_the_actual_decision_duration(self):
+        coeffs = EnergyCoefficients(flops_pj=0, sram_pj_per_byte=0, dram_pj_per_byte=0, spike_aj=0, baseline_w=2)
+        estimator = EnhancedEnergyEstimator(coeffs)
+        result = estimator.analyze_mind_scaling([1, 2], {'dt': 1, 'hz': 1})
+        self.assertEqual(result.energy_values, [2.0, 2.0])
+
+    def test_body_mechanical_work_is_independent_of_compute_prices(self):
+        params = {'dt': .01, 'hz': 100, 'v': 2, 'm': .001, 'L': .01, 'g': 9.81}
+        zero = EnergyCoefficients(flops_pj=0, sram_pj_per_byte=0, dram_pj_per_byte=0, spike_aj=0, baseline_w=0)
+        estimator = EnhancedEnergyEstimator(zero)
+        result = estimator.analyze_body_scaling([2, 4], params)
+        for joints, energy in zip([2, 4], result.energy_values):
+            self.assertAlmostEqual(energy, joints * .001 * (9.81 * .01 + .5 * 2 ** 2), places=14)
+        limits = estimator.calculate_theoretical_limits(result)
+        self.assertAlmostEqual(limits['mechanical_work_j'], sum(result.energy_values) / 2, places=14)
+
+    def test_landauer_ratio_does_not_substitute_a_mechanical_reference(self):
+        data = ModuleScalingData('AntBody', 'J', [1], [1], [1], [0], mechanical_work_values=[.25], duration_s=1)
+        comparison = EnhancedEnergyEstimator(EnergyCoefficients()).compare_with_theoretical_limits(data)
+        expected = 1.380649e-23 * 300 * math.log(2)
+        self.assertTrue(math.isclose(comparison['landauer_efficiency'], expected, rel_tol=1e-14))
+        self.assertEqual(comparison['thermodynamic_efficiency'], .25)
+        self.assertTrue(math.isclose(comparison['landauer_overhead_ratio'], 1 / expected, rel_tol=1e-14))
+
+    def test_system_fraction_uses_matched_energy_sums_not_overhead_harmonic_mean(self):
+        modules = [ModuleScalingData(name, 'p', [1], [energy], [100], [0],
+                                     mechanical_work_values=[work], duration_s=1)
+                   for name, energy, work in [('body', 2, .25), ('brain', 3, 0), ('mind', 5, 0)]]
+        estimator = EnhancedEnergyEstimator(EnergyCoefficients())
+        result = estimator.calculate_efficiency_metrics(*modules)
+        expected_bound = .25 + 300 * 1.380649e-23 * math.log(2) * 300
+        self.assertTrue(math.isclose(result['system_efficiency'], expected_bound / 10, rel_tol=1e-14))
+        self.assertTrue(result['valid'])
+        modules[0].duration_s = 2
+        with self.assertRaises(ValueError):
+            estimator.calculate_efficiency_metrics(*modules)
+
+    def test_invalid_mechanical_inputs_do_not_get_clamped_to_zero(self):
+        estimator = EnhancedEnergyEstimator(EnergyCoefficients())
+        for field in ('m', 'L', 'g', 'v'):
+            for bad in (-1, float('nan'), float('inf')):
+                with self.subTest(field=field, bad=bad), self.assertRaises(ValueError):
+                    estimator.analyze_body_scaling([1], {field: bad})
+
+    def test_nonfinite_observations_are_not_comparison_data(self):
+        for bad in (-1, float('nan'), float('inf')):
+            with self.assertRaises(ValueError):
+                ModuleScalingData('body', 'J', [1], [bad], [1], [0])
+
 
 
 class TestModuleScalingData(unittest.TestCase):
@@ -164,7 +216,7 @@ class TestComprehensiveEnergyAnalysis(unittest.TestCase):
             mind_analysis=self.mind_data
         )
 
-        self.assertEqual(analysis.system_efficiency, 0.0)
+        self.assertIsNone(analysis.system_efficiency)
         self.assertEqual(analysis.total_energy_per_decision_j, 0.0)
         self.assertEqual(analysis.cost_of_transport, 0.0)
         self.assertEqual(analysis.key_numbers, {})
@@ -217,13 +269,13 @@ class TestEnhancedEnergyEstimator(unittest.TestCase):
         }
 
         self.brain_base_params = {
-            'C': 100,      # channels
-            'sparsity': 0.1,  # connection sparsity
+            'K': 100,      # AL channels
+            'rho': 0.1,    # Active neuron fraction
             'dt': 0.01     # decision time s
         }
 
         self.mind_base_params = {
-            'H': 5,        # planning horizon
+            'H_p': 5,      # Planning horizon
             'B': 3,        # branching factor
             'dt': 0.01     # decision time s
         }
@@ -391,10 +443,10 @@ class TestEnhancedEstimatorsIntegration(unittest.TestCase):
             'v': 1.0, 'm': 0.001, 'L': 0.01, 'dt': 0.01, 'g': 9.81
         }
         brain_params = {
-            'C': 100, 'sparsity': 0.1, 'dt': 0.01
+            'K': 100, 'rho': 0.1, 'dt': 0.01
         }
         mind_params = {
-            'H': 5, 'B': 3, 'dt': 0.01
+            'H_p': 5, 'B': 3, 'dt': 0.01
         }
 
         # Perform comprehensive analysis
@@ -415,8 +467,8 @@ class TestEnhancedEstimatorsIntegration(unittest.TestCase):
     def test_cross_module_energy_analysis(self):
         """Test energy analysis across different modules."""
         body_data = self.estimator.analyze_body_scaling([1, 2, 4], {'v': 1.0, 'm': 0.001, 'L': 0.01, 'dt': 0.01, 'g': 9.81})
-        brain_data = self.estimator.analyze_brain_scaling([10, 20, 40], {'C': 100, 'sparsity': 0.1, 'dt': 0.01})
-        mind_data = self.estimator.analyze_mind_scaling([1, 2, 4], {'H': 5, 'B': 3, 'dt': 0.01})
+        brain_data = self.estimator.analyze_brain_scaling([10, 20, 40], {'K': 100, 'rho': 0.1, 'dt': 0.01})
+        mind_data = self.estimator.analyze_mind_scaling([1, 2, 4], {'H_p': 5, 'B': 3, 'dt': 0.01})
 
         # Calculate system-level metrics
         total_energy = (body_data.energy_values[-1] +
@@ -489,8 +541,8 @@ class TestEnhancedEstimatorsRobustness(unittest.TestCase):
 
         result = zero_estimator.analyze_body_scaling([4], {'v': 1.0, 'm': 0.001, 'L': 0.01, 'dt': 0.01, 'g': 9.81})
         self.assertIsInstance(result, ModuleScalingData)
-        # Energy should be zero or very small
-        self.assertLessEqual(result.energy_values[0], 1e-10)
+        expected_work = 4 * .001 * (9.81 * .01 + .5 * 1.0 ** 2)
+        self.assertAlmostEqual(result.energy_values[0], expected_work, places=14)
 
     def test_estimator_error_handling(self):
         """Test error handling in estimator methods."""

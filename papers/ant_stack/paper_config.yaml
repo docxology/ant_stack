@@ -4,11 +4,12 @@
 paper:
   name: "ant_stack"
   title: "The Ant Stack"
-  subtitle: "Hierarchical Architecture for Embodied Cognitive Systems"
+  subtitle: "Conceptual Architecture for Embodied Cognitive Systems"
   author: "Daniel Ari Friedman"
   email: "daniel@activeinference.institute"
   orcid: "0000-0001-6232-9096"
   output_filename: "1_ant_stack.pdf"
+  study_type: "conceptual architecture and proposed evaluation protocols"
 
 # Markdown files in build order
 content:

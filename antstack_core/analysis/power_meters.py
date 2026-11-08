@@ -20,6 +20,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Optional, Union
 from abc import ABC, abstractmethod
+from pathlib import Path
+from .energy import _require_nonnegative, _require_positive
+
+
+class PowerMeasurementUnavailable(RuntimeError):
+    """The requested hardware measurement could not be obtained."""
 
 try:
     import pynvml  # type: ignore
@@ -36,7 +42,15 @@ class PowerSample:
         watts: Power consumption in watts
     """
     timestamp: float
-    watts: float
+    watts: Optional[float]
+    available: bool = True
+    error: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if self.available:
+            _require_nonnegative("watts", self.watts)
+        elif self.watts is not None:
+            raise ValueError("Unavailable samples must not carry a power value")
 
 
 class PowerMeter(ABC):
@@ -49,15 +63,11 @@ class PowerMeter(ABC):
         Returns:
             PowerSample with current power reading
         """
-        return PowerSample(timestamp=time.time(), watts=0.0)
+        raise NotImplementedError
 
 
 class NullPowerMeter(PowerMeter):
-    """Fallback power meter returning 0 W. Useful for CI and offline estimation.
-    
-    This meter is used when no hardware power measurement is available
-    or when running in environments where power measurement is not possible.
-    """
+    """Explicitly disabled meter, not a hardware fallback or empirical zero."""
     
     def read(self) -> PowerSample:
         """Return zero power reading.
@@ -82,7 +92,7 @@ class RaplPowerMeter(PowerMeter):
         - RAPL accuracy analysis: https://doi.org/10.1145/2485922.2485949
     """
     
-    def __init__(self, energy_uj_path: Optional[str] = None) -> None:
+    def __init__(self, energy_uj_path: Optional[str] = None, *, max_energy_range_uj: Optional[float] = None) -> None:
         """Initialize RAPL power meter.
         
         Args:
@@ -92,6 +102,9 @@ class RaplPowerMeter(PowerMeter):
         self.energy_uj_path = energy_uj_path or default_path
         self._last_energy_uj: Optional[float] = None
         self._last_timestamp: Optional[float] = None
+        if max_energy_range_uj is not None:
+            _require_positive("max_energy_range_uj", max_energy_range_uj)
+        self.max_energy_range_uj = max_energy_range_uj
     
     def read(self) -> PowerSample:
         """Read current power consumption.
@@ -99,21 +112,40 @@ class RaplPowerMeter(PowerMeter):
         Returns:
             PowerSample with estimated watts from cumulative energy deltas.
         """
-        now = time.time()
+        now = time.monotonic()
         energy_uj = self.read_energy_uj()
-        if energy_uj <= 0 or self._last_energy_uj is None or self._last_timestamp is None:
+        if self._last_energy_uj is None or self._last_timestamp is None:
             self._last_energy_uj = energy_uj
             self._last_timestamp = now
-            return PowerSample(timestamp=now, watts=0.0)
-
-        elapsed = max(now - self._last_timestamp, 1e-12)
-        delta_uj = energy_uj - self._last_energy_uj
-        if delta_uj <= 0 and energy_uj > 0:
-            delta_uj = 1.0
-        watts = max(0.0, delta_uj * 1e-6 / elapsed)
+            return PowerSample(time.time(), None, available=False, error="Two counter readings are required")
+        elapsed = now - self._last_timestamp
+        if elapsed <= 0:
+            raise PowerMeasurementUnavailable("RAPL elapsed time must be positive")
+        delta_uj = self.energy_delta_uj(self._last_energy_uj, energy_uj)
+        watts = delta_uj * 1e-6 / elapsed
         self._last_energy_uj = energy_uj
         self._last_timestamp = now
-        return PowerSample(timestamp=now, watts=watts)
+        return PowerSample(timestamp=time.time(), watts=watts)
+
+    def energy_delta_uj(self, start: float, end: float) -> float:
+        """Counter difference, allowing at most one wrap with a known range.
+
+        Endpoints alone cannot detect multiple complete wraps; callers must
+        choose a measurement interval shorter than the counter wrap period.
+        """
+        _require_nonnegative("start counter", start)
+        _require_nonnegative("end counter", end)
+        counter_range = self.max_energy_range_uj
+        if end < start and counter_range is None:
+            range_path = Path(self.energy_uj_path).with_name("max_energy_range_uj")
+            try:
+                counter_range = float(range_path.read_text(encoding="utf-8").strip())
+                _require_positive("max_energy_range_uj", counter_range)
+            except (OSError, ValueError) as exc:
+                raise PowerMeasurementUnavailable("RAPL counter decreased without a known wrap range") from exc
+        if counter_range is not None and (start >= counter_range or end >= counter_range):
+            raise PowerMeasurementUnavailable("RAPL counter is outside its declared range")
+        return end - start if end >= start else counter_range - start + end
     
     def read_energy_uj(self) -> float:
         """Read cumulative energy consumption in microjoules.
@@ -124,9 +156,11 @@ class RaplPowerMeter(PowerMeter):
         try:
             with open(self.energy_uj_path, "r", encoding="utf-8") as f:
                 txt = f.read().strip()
-            return float(int(txt))
-        except Exception:
-            return 0.0
+            value = float(int(txt))
+            _require_nonnegative("RAPL counter", value)
+            return value
+        except (OSError, ValueError) as exc:
+            raise PowerMeasurementUnavailable(f"Cannot read RAPL counter: {self.energy_uj_path}") from exc
 
 
 class NvmlPowerMeter(PowerMeter):
@@ -161,7 +195,11 @@ class NvmlPowerMeter(PowerMeter):
     def _ensure_initialized(self) -> None:
         """Initialize NVML lazily."""
         backend = self._backend()
-        if backend is None or self._initialized:
+        if backend is None:
+            raise PowerMeasurementUnavailable("NVML backend is unavailable")
+        if self._initialized:
+            if not self._available:
+                raise PowerMeasurementUnavailable("NVML initialization failed")
             return
         try:
             backend.nvmlInit()
@@ -169,10 +207,11 @@ class NvmlPowerMeter(PowerMeter):
             self.pynvml = backend
             self._initialized = True
             self._available = True
-        except Exception:
+        except Exception as exc:
             self.handle = None
             self._initialized = True
             self._available = False
+            raise PowerMeasurementUnavailable("NVML initialization failed") from exc
     
     def read(self) -> PowerSample:
         """Read current GPU power consumption.
@@ -180,16 +219,13 @@ class NvmlPowerMeter(PowerMeter):
         Returns:
             PowerSample with current GPU power in watts
         """
-        watts = 0.0
         self._ensure_initialized()
         backend = self._backend()
-        if backend is not None and self._initialized and self._available:
-            try:
-                mw = backend.nvmlDeviceGetPowerUsage(self.handle)
-                watts = max(0.0, float(mw) / 1000.0)  # Convert mW to W
-            except Exception:
-                watts = 0.0
-        return PowerSample(timestamp=time.time(), watts=watts)
+        try:
+            watts = float(backend.nvmlDeviceGetPowerUsage(self.handle)) / 1000.0
+            return PowerSample(timestamp=time.time(), watts=watts)
+        except Exception as exc:
+            raise PowerMeasurementUnavailable("NVML power reading failed") from exc
 
 
 @contextmanager
@@ -203,7 +239,7 @@ def measure_energy(meter: Optional[PowerMeter] = None):
         meter: Power meter to use. Defaults to NullPowerMeter.
         
     Yields:
-        None
+        Measurement dictionary with explicit status and measured flag.
         
     Example:
         >>> with measure_energy(RaplPowerMeter()) as m:
@@ -212,70 +248,55 @@ def measure_energy(meter: Optional[PowerMeter] = None):
         >>> # Energy measurement is automatically logged
     """
     meter = meter or NullPowerMeter()
+    disabled = isinstance(meter, NullPowerMeter)
     measurement = {
-        "energy_joules": 0.0,
-        "duration_seconds": 0.0,
-        "average_power_watts": 0.0,
+        "energy_joules": None,
+        "duration_seconds": None,
+        "average_power_watts": None,
         "samples": [],
+        "status": "disabled" if disabled else "pending",
+        "measured": False,
     }
-    t0 = time.time()
-    p0 = 0.0
-    
-    # Check if meter supports direct energy reading
-    energy_mode = hasattr(meter, "read_energy_uj")
-    
-    if not energy_mode:
-        # Use instantaneous power measurement
-        try:
-            sample0 = meter.read()
-            p0 = sample0.watts
-            measurement["samples"].append(sample0)
-        except Exception:
-            p0 = 0.0
-    else:
-        # Use cumulative energy measurement
-        try:
-            e0_uj = float(getattr(meter, "read_energy_uj")())
-        except Exception:
-            e0_uj = 0.0
-    
+    t0 = time.monotonic()
+    energy_mode = isinstance(meter, RaplPowerMeter)
+    if energy_mode:
+        e0_uj = meter.read_energy_uj()
+    elif not disabled:
+        sample0 = meter.read()
+        if not sample0.available:
+            raise PowerMeasurementUnavailable(sample0.error or "Initial power sample unavailable")
+        measurement["samples"].append(sample0)
+        p0 = sample0.watts
     try:
         yield measurement
     finally:
-        t1 = time.time()
-        duration = max(0.0, t1 - t0)
-        
-        if energy_mode:
-            # Calculate energy from cumulative readings
-            try:
-                e1_uj = float(getattr(meter, "read_energy_uj")())
-            except Exception:
-                e1_uj = e0_uj
-            
-            energy_j = max(0.0, (e1_uj - e0_uj) * 1e-6)  # Convert μJ to J
-            avg_p = (energy_j / duration) if duration > 0 else 0.0
+        duration = time.monotonic() - t0
+        _require_nonnegative("measurement duration", duration)
+        if disabled:
+            energy_j = avg_p = 0.0  # Explicitly disabled, never an observed zero.
+        elif energy_mode:
+            energy_j = meter.energy_delta_uj(e0_uj, meter.read_energy_uj()) * 1e-6
+            if duration == 0 and energy_j > 0:
+                raise PowerMeasurementUnavailable("Positive energy with zero elapsed time")
+            avg_p = energy_j / duration if duration > 0 else 0.0
         else:
-            # Calculate energy from power integration
-            try:
-                sample1 = meter.read()
-                measurement["samples"].append(sample1)
-                p1 = sample1.watts
-            except Exception:
-                p1 = p0
-            # Trapezoidal integration with two samples (best-effort)
-            avg_p = max(0.0, (p0 + p1) / 2.0)
+            sample1 = meter.read()
+            if not sample1.available:
+                raise PowerMeasurementUnavailable(sample1.error or "Final power sample unavailable")
+            measurement["samples"].append(sample1)
+            avg_p = (p0 + sample1.watts) / 2.0
             energy_j = avg_p * duration
-
+        _require_nonnegative("measured energy", energy_j)
+        _require_nonnegative("average power", avg_p)
         measurement.update({
             "energy_joules": energy_j,
             "duration_seconds": duration,
             "average_power_watts": avg_p,
+            "status": "disabled" if disabled else "measured",
+            "measured": not disabled,
         })
-        
-        # Log measurement if enabled
         if str(os.environ.get("CE_METER_LOG", "0")) == "1":
-            src = meter.__class__.__name__
-            print(f"meter={src} energy_j={energy_j:.6f} duration_s={duration:.6f} avg_w={avg_p:.3f}")
+            print(f"meter={meter.__class__.__name__} status={measurement['status']} energy_j={energy_j:.6f} duration_s={duration:.6f} avg_w={avg_p:.3f}")
 
 
 def create_power_meter(meter_type: str = "null", **kwargs) -> PowerMeter:

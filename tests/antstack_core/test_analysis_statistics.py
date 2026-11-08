@@ -324,13 +324,9 @@ class TestStatisticalEdgeCases(unittest.TestCase):
         result = analyze_scaling_relationship(x, y)
         self.assertAlmostEqual(result["scaling_exponent"], 4.0, places=1)
 
-    def test_efficiency_with_negative_values(self):
-        """Test efficiency calculation with negative values."""
-        # Should handle negative energy gracefully
+    def test_efficiency_rejects_negative_values(self):
         result = calculate_energy_efficiency_metrics([-1.0, 1.0], [1.0, 2.0])
-
-        # Implementation should handle this case
-        self.assertIn("average_energy_j", result)
+        self.assertIn("error", result)
 
     def test_theoretical_limits_with_invalid_temperature(self):
         """Test theoretical limits with invalid temperature."""
@@ -367,6 +363,52 @@ class TestStatisticalReproducibility(unittest.TestCase):
         result2 = analyze_scaling_relationship(x, y)
 
         self.assertEqual(result1, result2)
+
+
+class TestScientificStatisticalContracts(unittest.TestCase):
+    def test_constant_bootstrap_is_exact_and_rng_is_local(self):
+        state = random.getstate()
+        self.assertEqual(bootstrap_mean_ci([0.0, 0.0], seed=1), (0.0, 0.0, 0.0))
+        self.assertEqual(bootstrap_mean_ci([5.0] * 4, seed=1), (5.0, 5.0, 5.0))
+        bootstrap_mean_ci([1, 2, 3, 4], seed=3)
+        self.assertEqual(random.getstate(), state)
+
+    def test_bootstrap_count_confidence_and_finite_domains(self):
+        for count in [0, -1, 1.5, True]:
+            with self.subTest(count=count), self.assertRaises(ValueError):
+                bootstrap_mean_ci([1, 2], num_samples=count)
+        for alpha in [0, 1, -0.1, float("nan"), float("inf")]:
+            with self.subTest(alpha=alpha), self.assertRaises(ValueError):
+                bootstrap_mean_ci([1, 2], alpha=alpha)
+        for invalid in [float("nan"), float("inf"), -float("inf")]:
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                bootstrap_mean_ci([1, invalid])
+
+    def test_fit_valid_contract_and_undefined_constant_r_squared(self):
+        result = analyze_scaling_relationship([1, 2, 4, 8], [1, 4, 16, 64])
+        self.assertIs(result["valid"], True)
+        self.assertAlmostEqual(result["scaling_exponent"], 2)
+        self.assertAlmostEqual(result["intercept"], 1)
+        constant = analyze_scaling_relationship([1, 2, 4], [3, 3, 3])
+        self.assertIs(constant["valid"], True)
+        self.assertEqual(constant["scaling_exponent"], 0)
+        self.assertEqual(constant["scaling_regime"], "constant")
+        self.assertIsNone(constant["r_squared"])
+        for x, y in [([1, 1, 1], [1, 2, 3]), ([1, 2], [1, 2]),
+                     ([1, 2, float("nan")], [1, 2, 3]),
+                     ([1, 2, 3], [1, float("inf"), 3])]:
+            with self.subTest(x=x, y=y):
+                invalid = analyze_scaling_relationship(x, y)
+                self.assertIs(invalid["valid"], False)
+                self.assertIn("error", invalid)
+
+    def test_reference_domain_rejections(self):
+        for temperature in [0, -1, float("nan"), float("inf")]:
+            with self.subTest(temperature=temperature), self.assertRaises(ValueError):
+                estimate_theoretical_limits({"bits_erased": 1}, temperature)
+        for value in [-1, float("nan"), float("inf")]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                estimate_theoretical_limits({"bits_erased": value})
 
 
 if __name__ == '__main__':

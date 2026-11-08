@@ -72,10 +72,8 @@ def analyze_module_scaling(module_name: str, param_name: str, param_values: List
     memory_scaling = analyze_scaling_relationship(param_values, memory_values)
     
     # Calculate efficiency metrics
-    performance_proxy = [1.0 / p for p in param_values]  # Inverse relationship
-    efficiency_metrics = calculate_energy_efficiency_metrics(
-        energy_values, performance_proxy
-    )
+    # FLOPs are the explicitly declared operation-count proxy, not locomotion performance.
+    efficiency_metrics = calculate_energy_efficiency_metrics(energy_values, flops_values)
     
     # Generate plots
     plot_dir = output_dir / "plots"
@@ -162,8 +160,7 @@ def compare_theoretical_limits(analysis_results: List[Dict[str, Any]],
         # Calculate theoretical limits
         limits = estimate_theoretical_limits({
             'flops': avg_flops,
-            'bits_processed': avg_flops * 64,  # Assume 64-bit operations
-            'mechanical_work_j': 0.001 if module == 'body' else 0.0
+            'bits_erased': avg_flops  # Conditional assumption: one erased bit/FLOP, 300 K; no mechanics.
         })
         
         theoretical_data.append(limits['total_theoretical_j'])
@@ -178,9 +175,9 @@ def compare_theoretical_limits(analysis_results: List[Dict[str, Any]],
     comparison_plot_path = plot_dir / "theoretical_limits_comparison.png"
     
     bar_plot(
-        module_labels + [f"{label} (Theoretical)" for label in module_labels],
+        [f"{label} (Model)" for label in module_labels] + [f"{label} (Erasure Reference)" for label in module_labels],
         actual_data + theoretical_data,
-        "Actual vs Theoretical Energy Limits",
+        "Modeled Energy vs 1 Erased Bit/FLOP at 300 K (No Mechanics)",
         str(comparison_plot_path),
         ylabel="Energy per Decision (J)"
     )
@@ -218,8 +215,8 @@ def generate_comprehensive_report(all_results: Dict[str, Any], output_dir: Path)
         f.write("This report presents a comprehensive analysis of computational complexity ")
         f.write("and energy consumption across the Ant Stack architecture, including ")
         f.write("AntBody (physical dynamics), AntBrain (neural processing), and AntMind ")
-        f.write("(cognitive inference). The analysis incorporates realistic complexity ")
-        f.write("models, theoretical limit comparisons, and scaling law identification.\n\n")
+        f.write("(cognitive inference). This is a separate enhanced-model analytical sweep, not canonical base-run evidence. ")
+        f.write("Energy is compute-plus-idle with assumed manifest coefficients, no modeled mechanics or device calibration. Mind uses at most 1000 policies. Fits are descriptive, not empirical validation.\n\n")
         
         # Key Findings
         f.write("### Key Findings\n\n")
@@ -232,11 +229,11 @@ def generate_comprehensive_report(all_results: Dict[str, Any], output_dir: Path)
             
             if 'scaling_exponent' in scaling:
                 exponent = scaling['scaling_exponent']
-                regime = scaling.get('regime', 'unknown')
-                r_squared = scaling.get('r_squared', 0)
+                regime = scaling.get('scaling_regime', 'unknown')
+                r_squared = 'undefined' if scaling['r_squared'] is None else format(scaling['r_squared'], '.3f')
                 
                 f.write(f"- **{module.title()} Module**: Energy scales as {param}^{exponent:.2f} ")
-                f.write(f"({regime} regime, R² = {r_squared:.3f})\n")
+                f.write(f"({regime} descriptive regime, log-log R² = {r_squared})\n")
         
         f.write("\n")
         
@@ -246,8 +243,8 @@ def generate_comprehensive_report(all_results: Dict[str, Any], output_dir: Path)
             f.write("### Theoretical Efficiency Analysis\n\n")
             
             for i, (module, ratio) in enumerate(zip(limits['modules'], limits['efficiency_ratios'])):
-                f.write(f"- **{module}**: Operating at {ratio:.1f}× theoretical minimum ")
-                f.write(f"(efficiency = {100/ratio:.1f}%)\n")
+                f.write(f"- **{module}**: Model energy / conditional erasure reference = {ratio:.6g}. ")
+                f.write("Assumes one erased bit/FLOP at 300 K; no mechanical work. Not a physical efficiency or achievable improvement factor.\n")
             
             f.write("\n")
         
@@ -267,19 +264,20 @@ def generate_comprehensive_report(all_results: Dict[str, Any], output_dir: Path)
             f.write("#### Scaling Relationships\n\n")
             if 'scaling_exponent' in energy_scaling:
                 f.write(f"- **Energy Scaling**: E ∝ {param}^{energy_scaling['scaling_exponent']:.3f} ")
-                f.write(f"(R² = {energy_scaling.get('r_squared', 0):.3f})\n")
+                r_squared = 'undefined' if energy_scaling['r_squared'] is None else format(energy_scaling['r_squared'], '.3f')
+                f.write(f"(log-log R² = {r_squared})\n")
             
             if 'scaling_exponent' in flops_scaling:
                 f.write(f"- **Computational Scaling**: FLOPs ∝ {param}^{flops_scaling['scaling_exponent']:.3f} ")
-                f.write(f"(R² = {flops_scaling.get('r_squared', 0):.3f})\n")
+                r_squared = 'undefined' if flops_scaling['r_squared'] is None else format(flops_scaling['r_squared'], '.3f')
+                f.write(f"(log-log R² = {r_squared})\n")
             
             # Efficiency metrics
             efficiency = result.get('efficiency_metrics', {})
             if efficiency:
                 f.write("\n#### Efficiency Metrics\n\n")
-                f.write(f"- **Cost of Transport**: {efficiency.get('cost_of_transport', 0):.4f}\n")
-                f.write(f"- **Performance per Joule**: {efficiency.get('performance_per_joule', 0):.2e}\n")
-                f.write(f"- **Energy Variance**: {efficiency.get('efficiency_variance', 0):.2e}\n")
+                f.write(f"- **FLOPs per Joule (operation-count proxy)**: {efficiency['performance_per_joule']:.2e}\n")
+                f.write(f"- **Average Model Energy (J)**: {efficiency['average_energy_j']:.2e}\n")
             
             # Figures
             plots = result.get('plots', {})
@@ -299,9 +297,7 @@ def generate_comprehensive_report(all_results: Dict[str, Any], output_dir: Path)
         f.write("showing super-linear scaling (exponent > 1.5) as these will dominate ")
         f.write("energy consumption at scale.\n\n")
         
-        f.write("2. **Parameter Tuning**: For modules operating significantly above ")
-        f.write("theoretical limits (>10× minimum), investigate algorithmic improvements ")
-        f.write("or hardware acceleration opportunities.\n\n")
+        f.write("2. **Reference Assumptions**: The conditional one-bit-per-FLOP erasure reference does not establish physical device efficiency or achievable improvement.\n\n")
         
         f.write("3. **Scaling Considerations**: Design systems to operate in linear or ")
         f.write("sub-linear scaling regimes where possible, using techniques like ")
@@ -323,31 +319,12 @@ def run(args):
     output_dir = Path(args.output)
     output_dir.mkdir(exist_ok=True)
     
-    # Load configuration
-    try:
-        manifest = ExperimentManifest.load(args.manifest)
-    except Exception as e:
-        print(f"Error loading manifest: {e}")
-        print("Using default configuration...")
-        manifest = ExperimentManifest(
-            seed=42,
-            coefficients={
-                'e_flop_pj': 1.0,
-                'e_sram_pj_per_byte': 0.1,
-                'e_dram_pj_per_byte': 20.0,
-                'e_spike_aj': 1.0,
-                'baseline_w': 0.05
-            }
-        )
-    
-    # Create energy coefficients
-    coeffs = EnergyCoefficients(
-        flops_pj=float(manifest.coefficients.get("e_flop_pj", 1.0)),
-        sram_pj_per_byte=float(manifest.coefficients.get("e_sram_pj_per_byte", 0.1)),
-        dram_pj_per_byte=float(manifest.coefficients.get("e_dram_pj_per_byte", 20.0)),
-        spike_aj=float(manifest.coefficients.get("e_spike_aj", 1.0)),
-        baseline_w=float(manifest.coefficients.get("baseline_w", 0.05))
-    )
+    # Manifest failure is fatal: never silently fabricate replacement parameters.
+    manifest = ExperimentManifest.load(args.manifest)
+    valid, errors = manifest.validate()
+    if not valid:
+        raise ValueError("Invalid manifest: " + "; ".join(errors))
+    coeffs = manifest.coefficients.to_energy_coefficients()
     
     # Define analysis configurations
     analysis_configs = {
@@ -359,7 +336,7 @@ def run(args):
         'brain': {
             'param': 'K',
             'values': [64, 128, 256, 512, 1024],
-            'base_params': {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100, 'connectivity_pattern': 'biological'}
+            'base_params': {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100, 'connectivity_pattern': 'random'}
         },
         'mind': {
             'param': 'H_p',
@@ -384,11 +361,12 @@ def run(args):
     
     # Compile all results
     all_results = {
+        'provenance': 'enhanced analytical compute-plus-idle model; assumed manifest coefficients; Mind max_policies=1000; no mechanics, calibration or empirical measurements; not canonical base-run evidence',
         'scaling_analyses': scaling_results,
         'theoretical_limits': theoretical_analysis,
         'configuration': {
             'manifest_path': args.manifest,
-            'coefficients': manifest.coefficients,
+            'coefficients': manifest.coefficients.to_dict(),
             'modules_analyzed': args.modules
         }
     }

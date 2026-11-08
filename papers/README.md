@@ -6,7 +6,7 @@ Paper source roots, paper configs, manuscript sections, references, assets, and 
 ## Local commands
 ```bash
 uv run antstack-build --validate-only
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out
+uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
 ```
 
 ## Notes

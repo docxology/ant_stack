@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Iterable
+import math
+from statistics import NormalDist
 
 import numpy as np
 
@@ -71,13 +73,13 @@ class StatisticalAnalyzer:
     """Statistical tests and effect-size helpers for response-time data."""
 
     def __init__(self, alpha: float = 0.05):
-        if not 0 < alpha < 1:
+        if not np.isfinite(alpha) or not 0 < alpha < 1:
             raise ValueError("alpha must be between 0 and 1")
         self.alpha = float(alpha)
 
     def perform_t_test(self, data: BehavioralData) -> dict[str, float]:
         if not data.can_perform_statistics:
-            return {"t_statistic": np.nan, "p_value": np.nan, "degrees_of_freedom": np.nan}
+            return {"t_statistic": np.nan, "p_value": np.nan, "degrees_of_freedom": np.nan, "testable": False, "status": "insufficient_data"}
         degenerate = self._degenerate_t_test(data)
         if degenerate is not None:
             return degenerate
@@ -93,10 +95,12 @@ class StatisticalAnalyzer:
                 "t_statistic": float(result.statistic),
                 "p_value": float(result.pvalue),
                 "degrees_of_freedom": float(df),
+                "testable": True,
+                "status": "ok",
             }
 
         t_stat, df = self._welch_t_statistic(data)
-        return {"t_statistic": float(t_stat), "p_value": np.nan, "degrees_of_freedom": float(df)}
+        return {"t_statistic": float(t_stat), "p_value": np.nan, "degrees_of_freedom": float(df), "testable": False, "status": "distribution_backend_unavailable"}
 
     def calculate_cohens_d(self, data: BehavioralData) -> float:
         n1 = data.treatment_times.size
@@ -109,7 +113,7 @@ class StatisticalAnalyzer:
         )
         pooled_std = float(np.sqrt(pooled_var))
         if pooled_std == 0:
-            return 0.0
+            return math.copysign(float("inf"), data.difference) if data.difference else float("nan")
         return float(data.difference / pooled_std)
 
     def calculate_confidence_interval(self, data: BehavioralData) -> dict[str, float]:
@@ -120,12 +124,12 @@ class StatisticalAnalyzer:
             + np.var(data.control_times, ddof=1) / data.control_times.size
         )
         df = self._welch_degrees_of_freedom(data)
-        critical = (
-            float(scipy_stats.t.ppf(1 - self.alpha / 2, df))
-            if scipy_stats is not None and np.isfinite(df) and df > 0
-            else 1.96
-        )
-        margin = critical * se
+        if se == 0:
+            margin = 0.0
+        elif scipy_stats is None:
+            margin = float("nan")  # A normal quantile is not a small-sample Welch interval.
+        else:
+            margin = float(scipy_stats.t.isf(self.alpha / 2, df) * se)
         return {
             "lower_bound": float(data.difference - margin),
             "upper_bound": float(data.difference + margin),
@@ -138,7 +142,8 @@ class StatisticalAnalyzer:
             + np.var(data.control_times, ddof=1) / data.control_times.size
         )
         if variance == 0:
-            return 0.0, self._welch_degrees_of_freedom(data)
+            statistic = math.copysign(float("inf"), data.difference) if data.difference else 0.0
+            return statistic, float("nan")
         return float(data.difference / np.sqrt(variance)), self._welch_degrees_of_freedom(data)
 
     @staticmethod
@@ -150,16 +155,11 @@ class StatisticalAnalyzer:
         numerator = (s1 / n1 + s2 / n2) ** 2
         denominator = (s1**2 / (n1**2 * max(n1 - 1, 1))) + (s2**2 / (n2**2 * max(n2 - 1, 1)))
         if denominator == 0:
-            return float(n1 + n2 - 2)
+            return float("nan")  # Welch degrees of freedom are undefined at zero variance.
         return float(numerator / denominator)
 
     def _degenerate_t_test(self, data: BehavioralData) -> dict[str, float] | None:
-        """Return deterministic Welch-test results for zero-variance samples.
-
-        SciPy correctly warns that identical samples lose floating-point
-        precision. For validated behavioral pipelines that warning is expected
-        edge-case behavior, so the public API handles it explicitly.
-        """
+        """Explicit limiting results for constant samples, not a finite-df t test."""
         treatment_var = float(np.var(data.treatment_times, ddof=1))
         control_var = float(np.var(data.control_times, ddof=1))
         if treatment_var != 0.0 or control_var != 0.0:
@@ -167,13 +167,15 @@ class StatisticalAnalyzer:
 
         df = self._welch_degrees_of_freedom(data)
         if data.difference == 0:
-            return {"t_statistic": 0.0, "p_value": 1.0, "degrees_of_freedom": float(df)}
+            return {"t_statistic": 0.0, "p_value": 1.0, "degrees_of_freedom": float(df), "testable": True, "status": "degenerate_zero_variance"}
 
         direction = -1.0 if data.difference < 0 else 1.0
         return {
             "t_statistic": float(direction * np.inf),
             "p_value": 0.0,
             "degrees_of_freedom": float(df),
+            "testable": True,
+            "status": "degenerate_zero_variance",
         }
 
 
@@ -223,21 +225,30 @@ def calculate_response_statistics(response_data: Iterable[float]) -> dict[str, f
     }
 
 
-def calculate_power_analysis(treatment_times: Iterable[float], control_times: Iterable[float]) -> dict[str, float]:
-    """Estimate observed effect and approximate two-sample power."""
+def calculate_power_analysis(treatment_times: Iterable[float], control_times: Iterable[float],
+                             alpha: float = 0.05) -> dict[str, float]:
+    """Two-sided normal-approximation power from observed pooled d.
+
+    This descriptive, observed-effect calculation is not prospective validation.
+    Identical constants have undefined standardized effect and power; separated
+    constants have infinite standardized effect and limiting power one.
+    """
+    analyzer = StatisticalAnalyzer(alpha=alpha)
     data = BehavioralData(treatment_times, control_times)
-    effect = abs(StatisticalAnalyzer().calculate_cohens_d(data))
+    effect = abs(analyzer.calculate_cohens_d(data))
     harmonic_n = 2 / (1 / data.treatment_times.size + 1 / data.control_times.size)
     noncentrality = effect * np.sqrt(harmonic_n / 2)
-    if scipy_stats is not None:
-        z_alpha = float(scipy_stats.norm.ppf(0.975))
-        power = float(1 - scipy_stats.norm.cdf(z_alpha - noncentrality))
-    else:
-        power = float(min(max(noncentrality / 2.8, 0.0), 1.0))
+    critical = NormalDist().inv_cdf(1 - alpha / 2)
+    power = (
+        0.5 * math.erfc((critical - noncentrality) / math.sqrt(2))
+        + 0.5 * math.erfc((critical + noncentrality) / math.sqrt(2))
+    )
     return {
         "effect_size": float(effect),
         "harmonic_sample_size": float(harmonic_n),
-        "estimated_power": float(np.clip(power, 0.0, 1.0)),
+        "estimated_power": float(power),
+        "alpha": alpha,
+        "method": "two_sided_normal_approximation_observed_effect",
     }
 
 

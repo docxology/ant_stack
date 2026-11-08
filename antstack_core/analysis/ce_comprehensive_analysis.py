@@ -15,7 +15,6 @@ from antstack_core.analysis.complexity_analysis import (
     AgentBasedModel, NetworkComplexityAnalyzer, ThermodynamicComplexityAnalyzer,
     ComplexityEntropyAnalyzer, EnhancedBootstrapAnalyzer, comprehensive_complexity_analysis
 )
-from antstack_core.analysis.veridical_reporting import VeridicalReporter, EmpiricalEvidence, CaseStudy
 from antstack_core.figures.advanced_plots import (
     complexity_entropy_diagram, network_visualization, thermodynamic_phase_diagram,
     multi_scale_visualization
@@ -37,7 +36,7 @@ def analyze_module_with_advanced_methods(module_name: str,
     - Network complexity analysis
     - Thermodynamic efficiency analysis
     - Complexity-entropy analysis
-    - Bootstrap validation with bias correction
+    - Resampling sensitivity of deterministic model points (not empirical validation)
     
     Args:
         module_name: Name of module ('body', 'brain', 'mind')
@@ -99,8 +98,8 @@ def analyze_module_with_advanced_methods(module_name: str,
         
         network_data.append(adjacency_matrix)
         
-        # Generate time series data (energy over time)
-        time_series_data.extend([breakdown.total] * 10)  # 10 time points per parameter
+        # Ordered parameter sweep, not repeated time observations or independent samples.
+        time_series_data.append(breakdown.total)
     
     # Perform comprehensive complexity analysis
     complexity_results = comprehensive_complexity_analysis(
@@ -115,7 +114,7 @@ def analyze_module_with_advanced_methods(module_name: str,
         time_steps=100
     )
     
-    emergent_metrics = agent_model.simulate(seed=42)
+    emergent_metrics = agent_model.simulate()
     
     # Network complexity analysis
     network_analyzer = NetworkComplexityAnalyzer()
@@ -152,26 +151,15 @@ def analyze_module_with_advanced_methods(module_name: str,
         str(ce_plot_path)
     )
     
-    # Network visualization
+    # The constructed graph is illustrative, not biological topology evidence.
     network_plot_path = plot_dir / f"{module_name}_{param_name}_network.png"
     network_visualization(
         network_data[0],
         [f"Node {i}" for i in range(len(network_data[0]))],
-        f"{module_name.title()} Network Structure",
+        f"{module_name.title()} Illustrative Constructed Network",
         str(network_plot_path)
     )
     
-    # Thermodynamic phase diagram
-    temp_values = [300.0] * len(param_values)  # Constant temperature
-    pressure_values = [101325.0 + i * 1000 for i in range(len(param_values))]  # Varying pressure
-    efficiency_values = [thermo.thermodynamic_efficiency for thermo in thermo_results]
-    
-    phase_plot_path = plot_dir / f"{module_name}_{param_name}_phase_diagram.png"
-    thermodynamic_phase_diagram(
-        temp_values, pressure_values, efficiency_values,
-        f"{module_name.title()} Thermodynamic Phase Diagram",
-        str(phase_plot_path)
-    )
     
     # Multi-scale visualization
     multi_scale_data = {
@@ -197,6 +185,11 @@ def analyze_module_with_advanced_methods(module_name: str,
     )
     
     return {
+        'provenance': {'energy': 'deterministic analytical estimates',
+                       'network': 'illustrative constructed graph, not module topology',
+                       'agent_simulation': 'illustrative model, not independent validation',
+                       'sequence': 'ordered parameter sweep, not measured time series',
+                       'bootstrap': 'resampling sensitivity of model sweep, not empirical uncertainty'},
         'module': module_name,
         'parameter': param_name,
         'parameter_values': param_values,
@@ -211,87 +204,44 @@ def analyze_module_with_advanced_methods(module_name: str,
         'visualizations': {
             'complexity_entropy': str(ce_plot_path),
             'network': str(network_plot_path),
-            'phase_diagram': str(phase_plot_path),
             'multi_scale': str(multi_scale_plot_path)
         }
     }
 
 
 def generate_veridical_report(all_results: Dict[str, Any], output_dir: Path) -> None:
-    """Generate comprehensive veridical report with complete empirical evidence.
-    
-    Args:
-        all_results: Complete analysis results
-        output_dir: Output directory for report
+    """Report analytical sweeps without manufacturing empirical evidence.
+
+    Model points at different parameters and illustrative simulations are not
+    independent physical measurements, replication or calibration evidence.
     """
-    print("Generating comprehensive veridical report...")
-    
-    # Initialize veridical reporter
-    reporter = VeridicalReporter(output_dir)
-    
-    # Extract experimental data
-    experimental_data = {}
+    description = ('Enhanced analytical compute-plus-idle workload model with assumed manifest coefficients. '
+                   'Mind uses at most 1000 policies. No mechanical power, independent measurements, '
+                   'device calibration or external validation is supplied. This separate model family '
+                   'does not validate canonical base-run manuscript numbers.')
+    summary = {'provenance': description, 'configuration': all_results.get('configuration', {}), 'modules': []}
+    lines = ['# Enhanced Analytical Model Report', '', description, '']
     for result in all_results.get('module_analyses', []):
-        module = result['module']
-        param_name = result['parameter']
-        energy_values = [comp_data['energy'] for comp_data in result['computational_data']]
-        experimental_data[f"{module}_{param_name}"] = energy_values
-    
-    # Generate empirical evidence
-    evidence = reporter.generate_empirical_evidence(experimental_data, all_results)
-    
-    # Create case studies
-    case_studies = []
-    
-    # Case Study 1: Body Module Analysis
-    body_result = next((r for r in all_results.get('module_analyses', []) if r['module'] == 'body'), None)
-    if body_result:
-        case_study_1 = reporter.create_case_study(
-            "body_analysis",
-            "AntBody Mechanical Efficiency Analysis",
-            {f"joint_count_{v}": [v] for v in body_result['parameter_values']},
-            body_result,
-            "Comprehensive analysis of mechanical efficiency in AntBody module using contact dynamics simulation and energy modeling."
-        )
-        case_studies.append(case_study_1)
-    
-    # Case Study 2: Brain Module Analysis
-    brain_result = next((r for r in all_results.get('module_analyses', []) if r['module'] == 'brain'), None)
-    if brain_result:
-        case_study_2 = reporter.create_case_study(
-            "brain_analysis",
-            "AntBrain Neural Processing Efficiency Analysis",
-            {f"channels_{v}": [v] for v in brain_result['parameter_values']},
-            brain_result,
-            "Advanced analysis of neural processing efficiency using sparse neural networks and biological connectivity patterns."
-        )
-        case_studies.append(case_study_2)
-    
-    # Case Study 3: Mind Module Analysis
-    mind_result = next((r for r in all_results.get('module_analyses', []) if r['module'] == 'mind'), None)
-    if mind_result:
-        case_study_3 = reporter.create_case_study(
-            "mind_analysis",
-            "AntMind Cognitive Inference Analysis",
-            {f"horizon_{v}": [v] for v in mind_result['parameter_values']},
-            mind_result,
-            "Comprehensive analysis of cognitive inference efficiency using active inference and bounded rationality frameworks."
-        )
-        case_studies.append(case_study_3)
-    
-    # Generate comprehensive report
-    report_path = reporter.generate_comprehensive_report(evidence, case_studies, all_results)
-    
-    # Generate data-driven summary
-    summary = reporter.generate_data_driven_summary(evidence, case_studies)
-    
-    # Save summary
-    summary_path = output_dir / "data_driven_summary.json"
-    with open(summary_path, 'w') as f:
-        json.dump(summary, f, indent=2, default=str)
-    
-    print(f"Comprehensive veridical report generated: {report_path}")
-    print(f"Data-driven summary saved: {summary_path}")
+        points = result['computational_data']
+        x = [point['parameter_value'] for point in points]
+        energies = [point['energy'] for point in points]
+        fit = analyze_scaling_relationship(x, energies)
+        summary['modules'].append({'module': result['module'], 'parameter': result['parameter'],
+                                   'points': points, 'descriptive_power_fit': fit})
+        lines.extend([f"## {result['module'].title()}: {result['parameter']}", '',
+                      '| Parameter | Modeled Energy (J/Decision) | FLOPs/Decision |',
+                      '|-----------|-----------------------------|----------------|'])
+        lines.extend(f"| {point['parameter_value']} | {point['energy']:.9g} | {point['flops']:.9g} |" for point in points)
+        if fit.get('valid', False):
+            r_squared = 'undefined (constant response)' if fit['r_squared'] is None else format(fit['r_squared'], '.6g')
+            lines.extend(['', f"Descriptive log-log fit: exponent {fit['scaling_exponent']:.6g}, R² {r_squared}."])
+        else:
+            lines.extend(['', 'Power-law fit unavailable for these model points.'])
+        lines.extend(['', 'No sampling confidence, significance, structural phase or replication claim is inferred.', ''])
+    report_dir = output_dir / 'reports'
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (report_dir / 'comprehensive_analysis_report.md').write_text('\n'.join(lines), encoding='utf-8')
+    (output_dir / 'data_driven_summary.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
 
 
 def run(args):
@@ -306,32 +256,12 @@ def run(args):
     print(f"Modules to analyze: {args.modules}")
     print()
     
-    # Load configuration
-    try:
-        manifest = ExperimentManifest.load(args.manifest)
-        print(f"Loaded manifest: {args.manifest}")
-    except Exception as e:
-        print(f"Error loading manifest: {e}")
-        print("Using default configuration...")
-        manifest = ExperimentManifest(
-            seed=42,
-            coefficients={
-                'e_flop_pj': 1.0,
-                'e_sram_pj_per_byte': 0.1,
-                'e_dram_pj_per_byte': 20.0,
-                'e_spike_aj': 1.0,
-                'baseline_w': 0.05
-            }
-        )
-    
-    # Create energy coefficients
-    coeffs = EnergyCoefficients(
-        flops_pj=float(manifest.coefficients.get("e_flop_pj", 1.0)),
-        sram_pj_per_byte=float(manifest.coefficients.get("e_sram_pj_per_byte", 0.1)),
-        dram_pj_per_byte=float(manifest.coefficients.get("e_dram_pj_per_byte", 20.0)),
-        spike_aj=float(manifest.coefficients.get("e_spike_aj", 1.0)),
-        baseline_w=float(manifest.coefficients.get("baseline_w", 0.05))
-    )
+    # Manifest failure is fatal: do not silently substitute unrelated parameters.
+    manifest = ExperimentManifest.load(args.manifest)
+    valid, errors = manifest.validate()
+    if not valid:
+        raise ValueError("Invalid manifest: " + "; ".join(errors))
+    coeffs = manifest.coefficients.to_energy_coefficients()
     
     # Define analysis configurations
     analysis_configs = {
@@ -343,7 +273,7 @@ def run(args):
         'brain': {
             'param': 'K',
             'values': [64, 128, 256, 512, 1024],
-            'base_params': {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100, 'connectivity_pattern': 'biological'}
+            'base_params': {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100, 'connectivity_pattern': 'random'}
         },
         'mind': {
             'param': 'H_p',
@@ -372,17 +302,18 @@ def run(args):
             print(f"  Completed in {module_time:.2f} seconds")
             print(f"  Generated {len(result['visualizations'])} visualizations")
         else:
-            print(f"Warning: Unknown module '{module}', skipping...")
+            raise ValueError(f"Unknown module: {module}")
     
     total_analysis_time = time.time() - start_time
     print(f"\nTotal analysis time: {total_analysis_time:.2f} seconds")
     
     # Compile all results
     all_results = {
+        'provenance': 'enhanced analytical compute-plus-idle model; assumed manifest coefficients; Mind max_policies=1000; no mechanics, device calibration or independent empirical validation; not canonical base-run evidence',
         'module_analyses': module_analyses,
         'configuration': {
             'manifest_path': args.manifest,
-            'coefficients': manifest.coefficients,
+            'coefficients': manifest.coefficients.to_dict(),
             'modules_analyzed': args.modules,
             'analysis_time': total_analysis_time
         },

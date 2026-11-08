@@ -1,13 +1,9 @@
-### Table: Parameter Ranges and Default Values {#tab:param_ranges}
+### Table: Enhanced Model Sweep Configuration {#tab:param_ranges}
 
-| Symbol | Meaning | Typical Range | Default | Physical Basis |
-|--------|---------|---------------|---------|----------------|
-| J | Joint DOF | 6–36 | 18 | Hexapod: 3 DOF × 6 legs |
-| C | Active contacts | 4–30 | 12 | 4 legs × 3 contact points |
-| S | Sensor channels | 64–1024 | 256 | IMU + vision + chemosensors |
-| K | AL input channels | 32–1024 | 128 | Olfactory glomeruli |
-| N_KC | Kenyon cells | 10⁴–10⁵ | 50,000 | Insect mushroom body |
-| ρ | Active sparsity | 0.005–0.1 | 0.02 | Biological cortical activity |
-| H | Heading bins | 16–256 | 64 | Compass resolution |
-| H_p | Policy horizon | 5–20 | 15 | Bounded rationality limit |
-| B | Branching factor | 2–8 | 4 | Action space complexity |
+| Module | Varied Parameter | Evaluated Values | Fixed Parameters |
+|--------|------------------|------------------|------------------|
+| AntBody | J | [6, 12, 18, 24, 36] | {'C': 12, 'S': 256, 'hz': 100, 'contact_solver': 'pgs'} |
+| AntBrain | K | [64, 128, 256, 512, 1024] | {'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100} |
+| AntMind | H_p | [5, 7, 9, 11, 13] | {'B': 3, 'hz': 100, 'state_dim': 12, 'action_dim': 4, 'max_policies': 1000} |
+
+These are selected model inputs, not measured biological ranges.

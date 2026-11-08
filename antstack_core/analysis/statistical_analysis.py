@@ -25,7 +25,9 @@ except Exception:
     np = None
     HAS_NUMPY = False
 
-from .statistics import bootstrap_mean_ci
+from scipy import stats
+
+from .statistics import bootstrap_mean_ci, _finite_values, _validate_resampling
 
 
 class StatisticalAnalyzer:
@@ -54,12 +56,10 @@ class StatisticalAnalyzer:
             confidence_level: Confidence level for intervals
             random_seed: Random seed for reproducibility
         """
+        _validate_resampling(bootstrap_samples, 1 - confidence_level)
         self.bootstrap_samples = bootstrap_samples
         self.confidence_level = confidence_level
         self.random_seed = random_seed
-
-        if HAS_NUMPY:
-            np.random.seed(random_seed)
 
     def calculate_measurement_uncertainty(self,
                                         values: List[float],
@@ -76,32 +76,23 @@ class StatisticalAnalyzer:
         Raises:
             ValueError: If invalid method or insufficient data
         """
-        if not values:
-            raise ValueError("Cannot calculate uncertainty for empty data")
-
+        values = _finite_values(values)
+        if method not in ("standard_error", "std_dev"):
+            raise ValueError(f"Unknown uncertainty method: {method}")
         n = len(values)
         if n < 2:
-            return abs(float(values[0])) * 0.01 if values[0] != 0 else 0.01
-
+            return float("nan")  # A sample variance cannot be estimated from one observation.
+        scale = max(abs(value) for value in values)
+        if scale == 0:
+            return 0.0
+        scaled_mean = math.fsum(value / scale for value in values) / n
+        deviation = math.hypot(*(value / scale - scaled_mean for value in values)) / math.sqrt(n - 1)
+        result = scale * deviation
         if method == "standard_error":
-            if HAS_NUMPY:
-                return float(np.std(values, ddof=1) / math.sqrt(n))
-            else:
-                # Manual calculation
-                mean_val = sum(values) / n
-                variance = sum((x - mean_val) ** 2 for x in values) / (n - 1)
-                return math.sqrt(variance) / math.sqrt(n)
-
-        elif method == "std_dev":
-            if HAS_NUMPY:
-                return float(np.std(values, ddof=1))
-            else:
-                mean_val = sum(values) / n
-                variance = sum((x - mean_val) ** 2 for x in values) / (n - 1)
-                return math.sqrt(variance)
-
-        else:
-            raise ValueError(f"Unknown uncertainty method: {method}")
+            result /= math.sqrt(n)
+        if not math.isfinite(result):
+            raise ValueError("Sample uncertainty exceeds the finite numeric range")
+        return result
 
     def calculate_statistical_metrics(self,
                                     measurements: Dict[str, List[float]]) -> Dict[str, Any]:
@@ -118,13 +109,16 @@ class StatisticalAnalyzer:
         for param, values in measurements.items():
             if not values:
                 continue
+            values = _finite_values(values)
 
             n = len(values)
 
             # Basic statistics
-            mean_val = sum(values) / n
+            mean_val = math.fsum(value / n for value in values)
             metrics[f"{param}_mean"] = mean_val
             metrics[f"{param}_n"] = n
+            metrics[f"{param}_std"] = None
+            metrics[f"{param}_se"] = None
 
             if n > 1:
                 # Standard deviation
@@ -164,65 +158,36 @@ class StatisticalAnalyzer:
     def calculate_confidence_intervals(self,
                                      measurements,
                                      metrics: Optional[Dict[str, Any]] = None):
-        """Calculate bootstrap confidence intervals for measurements.
+        """Percentile-bootstrap intervals using identical local-RNG paths for both shapes.
 
-        Args:
-            measurements: Dictionary mapping parameter names to value lists
-            metrics: Pre-calculated statistical metrics
-
-        Returns:
-            Dictionary of confidence intervals
+        A singleton's resampling distribution is degenerate; it cannot estimate
+        population uncertainty. Evidence reports suppress that interval explicitly.
+        Dictionary keys encode the actual confidence percentage, e.g. ``x_99ci``.
         """
-        if isinstance(measurements, list):
-            if not measurements:
-                raise ValueError("Cannot calculate confidence interval for empty data")
-            mean_val = float(sum(measurements) / len(measurements))
-            if len(measurements) == 1:
-                return mean_val, mean_val, mean_val
-            if HAS_NUMPY:
-                rng = np.random.default_rng(self.random_seed)
-                arr = np.array(measurements, dtype=float)
-                means = [float(np.mean(rng.choice(arr, size=len(arr), replace=True))) for _ in range(self.bootstrap_samples)]
-                alpha = 1 - self.confidence_level
-                lower, upper = np.percentile(means, [100 * alpha / 2, 100 * (1 - alpha / 2)])
-                return mean_val, float(lower), float(upper)
-            se = self.calculate_measurement_uncertainty(measurements)
-            return mean_val, mean_val - 1.96 * se, mean_val + 1.96 * se
+        def interval(values):
+            return bootstrap_mean_ci(
+                values, num_samples=self.bootstrap_samples,
+                alpha=1 - self.confidence_level, seed=self.random_seed,
+            )
 
-        confidence_intervals = {}
-        metrics = metrics or {}
-
-        for param, values in measurements.items():
-            if len(values) < 3:  # Need minimum data for meaningful CI
-                confidence_intervals[f"{param}_95ci"] = (float('nan'), float('nan'))
-                continue
-
-            try:
-                # Use bootstrap for confidence intervals
-                mean_val, ci_low, ci_high = bootstrap_mean_ci(
-                    values, num_samples=self.bootstrap_samples
-                )
-                confidence_intervals[f"{param}_95ci"] = (ci_low, ci_high)
-            except Exception:
-                # Fallback to simple calculation
-                mean_val = metrics.get(f"{param}_mean", sum(values) / len(values))
-                se = metrics.get(f"{param}_se", self.calculate_measurement_uncertainty(values))
-                ci_width = 1.96 * se  # Approximate 95% CI
-                confidence_intervals[f"{param}_95ci"] = (mean_val - ci_width, mean_val + ci_width)
-
-        return confidence_intervals
+        if not isinstance(measurements, dict):
+            return interval(measurements)
+        label = f"{100 * self.confidence_level:g}"
+        return {
+            f"{param}_{label}ci": interval(values)[1:]
+            for param, values in measurements.items() if len(values) > 0
+        }
 
     def assess_measurement_quality(self, values: List[float]) -> Dict[str, Any]:
         """Assess quality metrics for a single measurement vector."""
-        if not values:
-            raise ValueError("Cannot assess empty measurement data")
-        mean_val = float(sum(values) / len(values))
-        std_dev = self.calculate_measurement_uncertainty(values, "std_dev")
-        cv = abs(std_dev / mean_val) if mean_val else 0.0
-        ci = self.calculate_confidence_intervals(values)
+        values = _finite_values(values)
+        mean_val = math.fsum(value / len(values) for value in values)
+        std_dev = self.calculate_measurement_uncertainty(values, "std_dev") if len(values) > 1 else None
+        cv = abs(std_dev / mean_val) if std_dev is not None and mean_val else None
+        ci = self.calculate_confidence_intervals(values) if len(values) > 1 else None
         sample_score = min(1.0, len(values) / 10.0)
-        consistency_score = 1.0 / (1.0 + cv)
-        quality_score = max(0.0, min(1.0, 0.5 * sample_score + 0.5 * consistency_score))
+        consistency_score = 1.0 / (1.0 + cv) if cv is not None else 0.0
+        quality_score = 0.5 * sample_score + 0.5 * consistency_score
         return {
             "sample_size": len(values),
             "mean": mean_val,
@@ -234,6 +199,9 @@ class StatisticalAnalyzer:
 
     def detect_outliers(self, values: List[float], threshold: float = 1.5) -> List[float]:
         """Detect outliers using the IQR rule."""
+        values = _finite_values(values)
+        if not math.isfinite(threshold) or threshold < 0:
+            raise ValueError("threshold must be finite and nonnegative")
         if len(values) < 4:
             return []
         sorted_values = sorted(values)
@@ -250,80 +218,61 @@ class StatisticalAnalyzer:
         return [value for value in values if value < lower or value > upper]
 
     def calculate_effect_size(self, group1: List[float], group2: List[float]) -> float:
-        """Calculate Cohen's d effect size."""
-        if not group1 or not group2:
-            return 0.0
+        """Cohen's d (group2 minus group1); zero variance is explicit, not no effect."""
+        group1 = _finite_values(group1)
+        group2 = _finite_values(group2)
+        if len(group1) < 2 or len(group2) < 2:
+            return float("nan")
         mean1 = sum(group1) / len(group1)
         mean2 = sum(group2) / len(group2)
-        if len(group1) < 2 or len(group2) < 2:
-            return 0.0
         var1 = sum((x - mean1) ** 2 for x in group1) / (len(group1) - 1)
         var2 = sum((x - mean2) ** 2 for x in group2) / (len(group2) - 1)
         pooled = math.sqrt(((len(group1) - 1) * var1 + (len(group2) - 1) * var2) / (len(group1) + len(group2) - 2))
-        return 0.0 if pooled == 0 else (mean2 - mean1) / pooled
+        difference = mean2 - mean1
+        if pooled == 0:
+            return math.copysign(float("inf"), difference) if difference else float("nan")
+        return difference / pooled
 
     def calculate_statistical_power(self, group1: List[float], group2: List[float], alpha: float = 0.05) -> float:
-        """Approximate two-sample statistical power from effect size and sample size."""
+        """Two-sided normal-approximation power using observed pooled effect size.
+
+        This is not an independent validation or a prospective power design.
+        """
+        _validate_resampling(1, alpha)
         effect = abs(self.calculate_effect_size(group1, group2))
-        if effect == 0:
-            return 0.05
-        n_eff = min(len(group1), len(group2))
-        z_alpha = 1.96 if alpha <= 0.05 else 1.64
-        signal = effect * math.sqrt(n_eff / 2)
-        return max(0.0, min(1.0, self._normal_cdf(signal - z_alpha)))
+        if math.isnan(effect):
+            return float("nan")
+        signal = effect * math.sqrt(len(group1) * len(group2) / (len(group1) + len(group2)))
+        critical = stats.norm.isf(alpha / 2)
+        return float(stats.norm.sf(critical - signal) + stats.norm.cdf(-critical - signal))
 
     def perform_validation_checks(self,
-                                measurements: Dict[str, List[float]],
-                                uncertainty: Dict[str, float]) -> Dict[str, bool]:
-        """Perform comprehensive validation checks on measurements.
-
-        Args:
-            measurements: Dictionary of measurement data
-            uncertainty: Dictionary of measurement uncertainties
-
-        Returns:
-            Dictionary of validation check results
-        """
-        checks = {}
-
-        # Sufficient data points check
-        checks["sufficient_data_points"] = all(
-            len(values) >= 3 for values in measurements.values()
-        )
-
-        # Statistical power check (minimum 10 points for reasonable power)
-        checks["statistical_power"] = all(
-            len(values) >= 10 for values in measurements.values()
-        )
-
-        # Measurement precision check
-        checks["measurement_precision"] = True
-        for param, values in measurements.items():
-            if param in uncertainty and values:
-                mean_val = sum(values) / len(values)
-                unc = uncertainty[param]
-                # Check if uncertainty is reasonable (< 10% of mean)
-                if abs(mean_val) > 0 and unc > 0.1 * abs(mean_val):
-                    checks["measurement_precision"] = False
-                    break
-
-        # Reproducibility check (some variation in data)
-        checks["reproducibility"] = len(set(
-            str(values) for values in measurements.values()
-        )) > 1
-
-        # Data consistency check
-        checks["data_consistency"] = all(
-            all(isinstance(x, (int, float)) and not math.isnan(x) and not math.isinf(x)
-                for x in values)
+                                  measurements: Dict[str, List[float]],
+                                  uncertainty: Dict[str, float]) -> Dict[str, Optional[bool]]:
+        """Descriptive data checks; power and independent replication are unperformed."""
+        nonempty = bool(measurements) and all(len(values) > 0 for values in measurements.values())
+        finite = nonempty and all(
+            all(math.isfinite(value) for value in values)
             for values in measurements.values()
         )
-
-        return checks
+        precision = None
+        if nonempty and all(name in uncertainty for name in measurements):
+            precision = all(
+                math.isfinite(uncertainty[name])
+                and uncertainty[name] <= 0.1 * abs(sum(values) / len(values))
+                for name, values in measurements.items()
+            )
+        return {
+            "sufficient_data_points": nonempty and all(len(values) >= 3 for values in measurements.values()),
+            "statistical_power": None,
+            "measurement_precision": precision,
+            "reproducibility": None,
+            "data_consistency": bool(finite),
+        }
 
     def calculate_quality_metrics(self,
                                 measurements: Dict[str, List[float]],
-                                checks: Dict[str, bool]) -> Dict[str, float]:
+                                checks: Dict[str, Optional[bool]]) -> Dict[str, float]:
         """Calculate quality metrics for the analysis.
 
         Args:
@@ -356,10 +305,9 @@ class StatisticalAnalyzer:
         else:
             metrics["measurement_consistency"] = 0.5  # Neutral score
 
-        # Statistical robustness (based on validation checks)
-        passed_checks = sum(checks.values())
-        total_checks = len(checks)
-        metrics["statistical_robustness"] = passed_checks / total_checks if total_checks > 0 else 0.0
+        # A descriptive check-pass fraction, not an inferential robustness estimate.
+        performed = [value for value in checks.values() if value is not None]
+        metrics["statistical_robustness"] = sum(value is True for value in performed) / len(performed) if performed else 0.0
 
         # Data quality score (weighted combination)
         weights = {
@@ -396,25 +344,31 @@ class StatisticalAnalyzer:
                 "confidence_intervals": {},
                 "validation_checks": {
                     "sufficient_data_points": False,
-                    "statistical_power": False,
-                    "measurement_precision": False,
-                    "reproducibility": False,
-                    "data_consistency": True,
+                    "statistical_power": None,
+                    "measurement_precision": None,
+                    "reproducibility": None,
+                    "data_consistency": False,
                 },
                 "quality_metrics": {"overall_quality": 0.0},
             }
+        measurements = {
+            name: _finite_values(values) if len(values) else []
+            for name, values in measurements.items()
+        }
 
         # Calculate uncertainties
         uncertainty = {}
         for param, values in measurements.items():
-            if values:
+            if len(values) > 1:
                 uncertainty[param] = self.calculate_measurement_uncertainty(values)
 
         # Calculate statistical metrics
         metrics = self.calculate_statistical_metrics(measurements)
 
         # Calculate confidence intervals
-        confidence_intervals = self.calculate_confidence_intervals(measurements, metrics)
+        confidence_intervals = self.calculate_confidence_intervals(
+            {name: values for name, values in measurements.items() if len(values) > 1}, metrics
+        )
 
         # Perform validation checks
         validation_checks = self.perform_validation_checks(measurements, uncertainty)
@@ -445,133 +399,79 @@ class StatisticalAnalyzer:
     def perform_k_fold_cross_validation(self,
                                        measurements: Dict[str, List[float]],
                                        k_folds: int = 5) -> Dict[str, Any]:
-        """Perform k-fold cross-validation on measurement datasets.
-
-        Args:
-            measurements: Dictionary of measurement data
-            k_folds: Number of folds for cross-validation
-
-        Returns:
-            Dictionary with cross-validation results
-        """
+        """Balanced, nonshuffled folds; every observation is held out exactly once."""
+        if isinstance(k_folds, bool) or not isinstance(k_folds, int) or k_folds < 2:
+            raise ValueError("k_folds must be an integer of at least 2")
         results = {}
-
         for param, values in measurements.items():
-            if len(values) < k_folds:
-                results[param] = {"error": "Insufficient data for k-fold validation"}
-                continue
-
-            fold_size = len(values) // k_folds
-            cv_scores = []
-
+            values = _finite_values(values)
+            n = len(values)
+            if n < k_folds:
+                raise ValueError("k_folds cannot exceed the number of observations")
+            base, remainder = divmod(n, k_folds)
+            scores = []
+            test_indices = []
+            start = 0
             for fold in range(k_folds):
-                # Create train/test split
-                test_start = fold * fold_size
-                test_end = (fold + 1) * fold_size
-
-                test_data = values[test_start:test_end]
-                train_data = values[:test_start] + values[test_end:]
-
-                if len(train_data) >= 3 and len(test_data) >= 1:
-                    # Calculate statistics on training data
-                    train_mean = sum(train_data) / len(train_data)
-                    train_std = self.calculate_measurement_uncertainty(train_data, "std_dev")
-
-                    # Test against held-out data
-                    test_mean = sum(test_data) / len(test_data)
-
-                    # Calculate prediction error
-                    error = abs(test_mean - train_mean)
-                    cv_scores.append(error)
-
-            if cv_scores:
-                results[param] = {
-                    "mean_cv_error": sum(cv_scores) / len(cv_scores),
-                    "std_cv_error": self.calculate_measurement_uncertainty(cv_scores, "std_dev") if len(cv_scores) > 1 else 0,
-                    "cv_scores": cv_scores
-                }
-            else:
-                results[param] = {"error": "Cross-validation failed"}
-
+                end = start + base + (fold < remainder)
+                test = values[start:end]
+                train = values[:start] + values[end:]
+                scores.append(abs(sum(test) / len(test) - sum(train) / len(train)))
+                test_indices.append(list(range(start, end)))
+                start = end
+            results[param] = {
+                "mean_cv_error": sum(scores) / len(scores),
+                "std_cv_error": self.calculate_measurement_uncertainty(scores, "std_dev"),
+                "cv_scores": scores,
+                "test_indices": test_indices,
+                "shuffle": False,
+            }
         return results
 
     def detect_statistical_significance(self,
                                       measurements: Dict[str, List[float]],
                                       baseline: Optional[float] = None,
                                       alpha: float = 0.05) -> Dict[str, Any]:
-        """Detect statistically significant deviations from baseline.
-
-        Args:
-            measurements: Dictionary of measurement data
-            baseline: Baseline value for comparison (if None, uses mean)
-            alpha: Significance level
-
-        Returns:
-            Dictionary of significance test results
-        """
+        """Two-sided one-sample Student t tests against baseline (default zero)."""
+        _validate_resampling(1, alpha)
+        test_baseline = 0.0 if baseline is None else baseline
+        if not math.isfinite(test_baseline):
+            raise ValueError("baseline must be finite")
         results = {}
-
         for param, values in measurements.items():
-            if len(values) < 3:
-                results[param] = {"testable": False, "reason": "insufficient_data"}
+            if len(values) < 2:
+                if values:
+                    _finite_values(values)
+                results[param] = {"testable": False, "reason": "insufficient_data", "significant": False, "p_value": None}
                 continue
-
-            # Calculate test statistic
+            values = _finite_values(values)
             mean_val = sum(values) / len(values)
-            se = self.calculate_measurement_uncertainty(values, "standard_error")
-
+            se = self.calculate_measurement_uncertainty(values)
+            difference = mean_val - test_baseline
             if se == 0:
-                results[param] = {"testable": False, "reason": "zero_variance"}
-                continue
-
-            # Compare to baseline
-            test_baseline = baseline if baseline is not None else 0.0
-            t_statistic = (mean_val - test_baseline) / se
-
-            # Approximate p-value (two-tailed)
-            # For large samples, t-distribution approaches normal
-            if HAS_NUMPY:
-                p_value = 2 * (1 - 0.5 * (1 + math.erf(abs(t_statistic) / math.sqrt(2))))
+                t_statistic = math.copysign(float("inf"), difference) if difference else 0.0
+                p_value = 0.0 if difference else 1.0
+                df = None
+                margin = 0.0
             else:
-                # Simplified approximation
-                p_value = 2 * (1 - self._normal_cdf(abs(t_statistic)))
-
-            # Determine significance
-            significant = p_value < alpha
-
+                df = len(values) - 1
+                t_statistic = difference / se
+                p_value = float(2 * stats.t.sf(abs(t_statistic), df))
+                margin = float(stats.t.isf(alpha / 2, df) * se)
             results[param] = {
                 "testable": True,
+                "status": "degenerate_zero_variance" if se == 0 else "ok",
                 "mean": mean_val,
                 "baseline": test_baseline,
                 "t_statistic": t_statistic,
+                "degrees_of_freedom": df,
                 "p_value": p_value,
-                "significant": significant,
+                "significant": p_value < alpha,
                 "alpha": alpha,
-                "confidence_interval": (
-                    mean_val - 1.96 * se,
-                    mean_val + 1.96 * se
-                )
+                "confidence_interval": (mean_val - margin, mean_val + margin),
+                "method": "one_sample_student_t",
             }
-
         return results
-
-    def _normal_cdf(self, x: float) -> float:
-        """Approximate normal cumulative distribution function."""
-        # Abramowitz & Stegun approximation
-        a1 =  0.254829592
-        a2 = -0.284496736
-        a3 =  1.421413741
-        a4 = -1.453152027
-        a5 =  1.061405429
-        p  =  0.3275911
-
-        sign = 1 if x >= 0 else -1
-        x = abs(x) / math.sqrt(2.0)
-
-        t = 1.0 / (1.0 + p * x)
-        y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * math.exp(-x * x)
-
-        return 0.5 * (1.0 + sign * y)
 
 
 def analyze_measurement_quality(measurements: Dict[str, List[float]],
@@ -603,6 +503,10 @@ def detect_significance(measurements: Dict[str, List[float]],
         Significance test results
     """
     analyzer = StatisticalAnalyzer()
+    _validate_resampling(1, alpha)
+    for values in measurements.values():
+        if values:
+            _finite_values(values)
     names = list(measurements)
     significant_differences: Dict[str, Dict[str, Any]] = {}
     effect_sizes: Dict[str, float] = {}
@@ -618,26 +522,41 @@ def detect_significance(measurements: Dict[str, List[float]],
             group1 = measurements.get(left, [])
             group2 = measurements.get(right, [])
             key = f"{left}_vs_{right}"
-            effect = analyzer.calculate_effect_size(group1, group2)
-            power = analyzer.calculate_statistical_power(group1, group2, alpha=alpha)
-            if len(group1) >= 2 and len(group2) >= 2:
+            if len(group1) < 2 or len(group2) < 2:
+                effect = float("nan")
+                power = float("nan")
+                result = {"testable": False, "reason": "insufficient_data", "p_value": None, "significant": False, "alpha": alpha}
+            else:
+                effect = analyzer.calculate_effect_size(group1, group2)
+                power = analyzer.calculate_statistical_power(group1, group2, alpha=alpha)
                 mean1 = sum(group1) / len(group1)
                 mean2 = sum(group2) / len(group2)
-                se = math.sqrt(
-                    analyzer.calculate_measurement_uncertainty(group1, "standard_error") ** 2
-                    + analyzer.calculate_measurement_uncertainty(group2, "standard_error") ** 2
-                )
-                t_stat = (mean2 - mean1) / se if se > 0 else 0.0
-                p_value = 2 * (1 - analyzer._normal_cdf(abs(t_stat)))
-                significant = p_value < alpha
-            else:
-                p_value = 1.0
-                significant = False
-            significant_differences[key] = {
-                "p_value": p_value,
-                "significant": significant,
-                "alpha": alpha,
-            }
+                v1 = analyzer.calculate_measurement_uncertainty(group1) ** 2
+                v2 = analyzer.calculate_measurement_uncertainty(group2) ** 2
+                se = math.sqrt(v1 + v2)
+                difference = mean2 - mean1
+                if se == 0:
+                    t_stat = math.copysign(float("inf"), difference) if difference else 0.0
+                    p_value = 0.0 if difference else 1.0
+                    df = None
+                    margin = 0.0
+                else:
+                    df = (v1 + v2) ** 2 / (v1 ** 2 / (len(group1) - 1) + v2 ** 2 / (len(group2) - 1))
+                    t_stat = difference / se
+                    p_value = float(2 * stats.t.sf(abs(t_stat), df))
+                    margin = float(stats.t.isf(alpha / 2, df) * se)
+                result = {
+                    "testable": True,
+                    "status": "degenerate_zero_variance" if se == 0 else "ok",
+                    "method": "welch_t",
+                    "t_statistic": t_stat,
+                    "degrees_of_freedom": df,
+                    "p_value": p_value,
+                    "significant": p_value < alpha,
+                    "alpha": alpha,
+                    "confidence_interval": (difference - margin, difference + margin),
+                }
+            significant_differences[key] = result
             effect_sizes[key] = effect
             power_analysis[key] = power
 

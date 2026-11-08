@@ -1,13 +1,13 @@
-# Discussion
+# Research Implications, Limits, and Evaluation Priorities {#discussion}
 
-## Significance for Myrmecology
+## Proposed Uses in Myrmecology {#significance-for-myrmecology}
 
 - **Empiricism $\to$ executable theory**: Trail dynamics, polarized-light navigation, and associative olfaction become testable modules (pheromone field, ring-attractor CX, AL$\to$MB learning), enabling hypothesis tests and cross-species comparisons
 - **Individuals $\to$ superorganisms**: Stigmergic composition supports division of labor, trail reinforcement, and resilience with field-measurable levers (diffusion, decay, deposit)
 - **Experiment $\leftrightarrow$ field loop**: Parameters map to measurable field quantities, enabling calibration and out-of-sample prediction
 - **Data leverage**: Bibliometrics and curated datasets guide species/trait prioritization and parameter ranges
 
-## Relation to Recent Findings
+## Ecological Questions for Future Evaluation {#relation-to-recent-findings}
 
 - **Urgency-tuned trails**: Context-dependent deposition/following to study exploration--exploitation shifts
 - **Environmental stability**: Species-parameterized noise, energy costs, terrain for robustness under heat/drought/fragmentation
@@ -17,8 +17,8 @@
 
 ## Limitations
 
-- No ant connectome is currently available; template from fly/bee with functional abstractions
-- Real-time embedded operation is future work; scope is simulation-first reproducibility
+- No ant connectome is supplied as input here; fly/bee abstractions require justified cross-species mapping, not a claim that no external ant connectomic work exists
+- Real-time embedded operation and proposed task outcomes are not validated by this conceptual manuscript or by the companion analytical counter sweeps
 - Field validation requires collaboration and standardized data collection protocols
  - Chemical ecology is complex; microclimate and substrate effects can shift pheromone dynamics and sensing
 

@@ -1,65 +1,44 @@
-# Contributing
+# Contributing: Package Behavior, Scientific Claims and Release Evidence
 
-Contributions should preserve the current Ant Stack contracts: `uv` for Python execution, `bun` for Node/Mermaid tooling, package-owned logic in `antstack_core`, thin scripts and CLIs, documented outputs, and source-backed scientific prose.
+Use `uv` for Python and Bun for the pinned JavaScript tooling. Reusable behavior belongs in `antstack_core`; console scripts and research wrappers delegate to it. Installed consumers supply their own project inputs, not this checkout's scripts or tests.
 
-```mermaid
-flowchart TD
-    Change["Prepare change"] --> Read["Read local README.md and AGENTS.md"]
-    Read --> Implement["Implement in antstack_core or thin wrapper"]
-    Implement --> Docs["Update docs and Mermaid if contracts changed"]
-    Docs --> Tests["Run focused tests"]
-    Tests --> Gates["pytest, ruff, docs check, build validate"]
-    Gates --> Review["Review diff for generated artifacts and caches"]
-```
+## Preserve the Scientific and Filesystem Boundaries
 
-## Development Rules
+- Name the selected base or enhanced model, units, window, coefficients and evidence class. Analytical counters, synthetic timing loops and measurements are different products.
+- Reproduce a defect when feasible; add deterministic behavioral coverage for meaningful boundaries. Do not pin source wording, incidental defaults, mock echoes or pre-created-file existence.
+- Migrate affected callers when contracts change; remove obsolete implementations instead of maintaining compatibility shims.
+- Preserve unrelated branches, files and prior outputs. New CE invocations require a fresh explicit destination; canonical replacements require recorded ownership/completion and retain their prior generation.
+- Use source-backed or explicitly prospective manuscript prose. Concepts and proposed experiments do not demonstrate a robot, biological validation, calibration or publication readiness.
 
-- Use `uv run` for Python commands and dependency-managed execution.
-- Use `bun` for Mermaid and Node-backed document tooling.
-- Keep business logic in `antstack_core`; keep `scripts/` and `antstack_core/cli/` as thin wrappers. Known exception: the paper build pipeline still lives in `scripts/common_pipeline/build_core.py`, which `antstack_core.cli.build` loads at runtime for `antstack-build`.
-- Keep public APIs exported through module `__all__` when they are intended for users.
-- Preserve generated artifacts only when they are intentional, reproducible, and documented by a command.
-- Do not edit manuscript scientific claims unless they are source-backed or explicitly softened.
-
-## Setup
+## Install the Pinned Development Environment
 
 ```bash
 uv sync --extra dev
 bun install
 ```
 
-## Validation Before Review
+Keep environments and caches project-local; do not change host configuration or dependency checkouts. Native rendering also needs the tools described in [PDF rendering](PDF_RENDERING_GUIDE.md). Repository-specific ancestor admission requirements still apply in a governed checkout.
 
-Run the focused tests for the changed area, then run:
+## Verify Behavior, Not Merely Source Readiness
 
-```bash
-uv run pytest --collect-only -q
-uv run pytest -q
-uv run ruff check .
-uv run python tools/ensure_folder_docs.py --check
-uv run antstack-build --validate-only
-uv run run-all-antstack --config configs/run_all_antstack.example.yaml --validate-only
-```
+The authoritative checklist and its side effects are in [validation](docs/validation.md). Run focused regressions, then the full suite, Ruff and folder-documentation gate. Exercise changed real CLI/API paths, build a new sdist/wheel, and use the isolated installed-consumer gate when packaging or entrypoints change. Render and inspect affected documents; validation-only is not a render.
 
-When changing canonical output generation, also run:
+For analytical generation choose a fresh root, for example:
 
 ```bash
-uv run run-all-antstack --config configs/run_all_antstack.example.yaml
+uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/ce-review-run
 ```
 
-When changing complexity energetics compatibility outputs, also run:
+Do not direct standalone generation into the occupied retained paper `out/` directory. Use the explicit projection contract in [reproducibility](docs/reproducibility.md), or the configured canonical workflow when intentionally updating a paper projection. The example run-all configuration enables that publication; inspect it before running.
 
-```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out
-```
+## Keep Documentation Modular and Artifact Provenance Coherent
 
-## Documentation Expectations
+Use [the documentation index](docs/README.md) to place changes in the owning guide rather than duplicating recipes. Update API contracts, examples, source-owned folder guidance and release notes with changed behavior. Source headings must explain their actual content and retain intentional reference targets.
 
-- Keep `README.md` and `docs/README.md` aligned with current commands, output roots, and test status.
-- Add or update Mermaid diagrams in substantive guides when workflow, architecture, or data flow changes.
-- Keep folder-level README/AGENTS signposts short and accurate.
-- Validate documentation coverage with `uv run python tools/ensure_folder_docs.py --check`.
+Keep a numerical result family together: input snapshot, CSV, summary, figures, generated Markdown and provenance from one completed generation. Conceptual graphical abstracts use `tools/generate_graphical_abstracts.py`; inspect their actual exports and retain their source/output receipt. Never edit generated concatenations as manuscript source.
 
-## Generated Files
+Remove only task-owned temporary scaffolding after proof. Do not delete someone else's ignored environment/cache or treat historical artifacts as current results. Timestamped `build_report.md` is a regenerated local diagnostic, not versioned release evidence.
 
-Before handing off a change, remove bytecode, cache directories, OS metadata, and transient test artifacts outside `.venv`. Keep `outputs/<run_id>/` artifacts only when they are intentional outputs for the requested change.
+## Publish Only Validated Source
+
+Synchronize `pyproject.toml`, `antstack_core.__version__`, private `package.json`, locks and release notes. The private Node package is tooling, not a registry publisher. A commit, passing CI, merge, tag and repository release are distinct states: verify each claimed state against the remote. Follow actual branch protection, configured identity, admission and exact-confirmation requirements; no force pushes, tag replacement or gate bypasses.

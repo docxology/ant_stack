@@ -1,0 +1,3160 @@
+{
+  "command": [],
+  "created_at_utc": "2026-11-08T23:38:59.499078+00:00",
+  "dependencies": {
+    "jinja2": "3.1.6",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "pillow": "13.0.0",
+    "psutil": "7.2.2",
+    "pyyaml": "6.0.3",
+    "scipy": "1.18.1",
+    "seaborn": "0.13.2"
+  },
+  "git_commit": "3d3c6b994e4a8f04f8d982d1e9cc2fec5e7b11b0",
+  "git_dirty": true,
+  "input_identities": {},
+  "input_paths": [],
+  "output_paths": [
+    "complexity_table.md",
+    "contact_solvers.md",
+    "efficiency_analysis.md",
+    "energy_coefficients.md",
+    "generated_tables.md",
+    "key_numbers.json",
+    "parameter_ranges.md",
+    "scaling_results.md",
+    "provenance/provenance.json",
+    "provenance/output_inventory.json"
+  ],
+  "package_version": "3.0.0",
+  "parameters": {
+    "assumed_energy_coefficients": {
+      "baseline_w": 0.5,
+      "body_per_joint_w": 2.0,
+      "body_sensor_w_per_channel": 0.005,
+      "dram_pj_per_byte": 20.0,
+      "flops_pj": 1.0,
+      "spike_aj": 1.0,
+      "sram_pj_per_byte": 0.1
+    },
+    "evidence_class": "model estimates, not empirical validation or canonical base-run evidence",
+    "model_definition": "Fixed enhanced analytical inputs and descriptive sweeps in source generator",
+    "model_family": "enhanced_analytical",
+    "schema_version": 1
+  },
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "project": "ant-stack-enhanced-tables",
+  "python_version": "3.15.2",
+  "source_state": {
+    "generating_package": {
+      "files": {
+        "__init__.py": {
+          "bytes": 1207,
+          "sha256": "f535b9dee810ed6357591f5bb780db485c9f6c877da95fee28948342d92051b8"
+        },
+        "analysis/__init__.py": {
+          "bytes": 3831,
+          "sha256": "e94bf83946c7377975f3e8594fe066fe0d15ae3075361109c80a5011cba70c28"
+        },
+        "analysis/ce_active_inference.py": {
+          "bytes": 12856,
+          "sha256": "29e39b67f6e6599596522c4b3692061a3d6fb18331a6d83913518ab024b7a451"
+        },
+        "analysis/ce_comprehensive_analysis.py": {
+          "bytes": 14975,
+          "sha256": "57d7588215243ec4b78c79506888dec1d01dc5b20044440f7653df220fd7db46"
+        },
+        "analysis/ce_contact_dynamics.py": {
+          "bytes": 7225,
+          "sha256": "dae4553e45874ad5d9c82f2bbae0453290075c7e183bcdce904ac8852e6dc834"
+        },
+        "analysis/ce_manuscript_figures.py": {
+          "bytes": 26517,
+          "sha256": "ac9bbd76ea1123d597c7774040bf21914b90725cd6e24ee3aa39eab8e0f0998b"
+        },
+        "analysis/ce_module_scaling_analysis.py": {
+          "bytes": 16521,
+          "sha256": "fbbf497b4307068d0b66f8e4b919284beefec18823f29ae4b9f0e6c1a133545b"
+        },
+        "analysis/ce_multipanel_figures.py": {
+          "bytes": 20906,
+          "sha256": "2adcba1efcae6351c95e9e5ee8ae513479ad06cf0e07dae040d0e7231910b2a1"
+        },
+        "analysis/ce_neural_networks.py": {
+          "bytes": 10706,
+          "sha256": "e6b227c23cd8a8f874cc446052d86d30db8a99c07d8b5d329a02e9ae8532965d"
+        },
+        "analysis/ce_publication_figures.py": {
+          "bytes": 12774,
+          "sha256": "2704011be6521e46805186edacc53e32f195bb0925c57772c5dc29a1a5144c58"
+        },
+        "analysis/ce_results_figures.py": {
+          "bytes": 9215,
+          "sha256": "5d8384837881b8dba44241dc86ddfbe1dc6258c4e1763bb9a621b0f64e478ee9"
+        },
+        "analysis/ce_tables_and_numbers.py": {
+          "bytes": 11991,
+          "sha256": "2f0f1538c1bd8d5579b3a24bb0a310fb2c8593edfc5a935b3072ba5ee4a552dc"
+        },
+        "analysis/complexity_analysis.py": {
+          "bytes": 28894,
+          "sha256": "170e560c960aab589b6d8c193328278211ffc1d53a6165860ef59a9a86cf1306"
+        },
+        "analysis/config_validation.py": {
+          "bytes": 9496,
+          "sha256": "b8eab7ce158cbe8f2f0e881e418fff19edab4ffca9f951b760f53f1a49c7ba36"
+        },
+        "analysis/empirical_data.py": {
+          "bytes": 10004,
+          "sha256": "f76b8b459f87a0a62d928f99af8144ed490a7bac8931e590bfa83080617b841a"
+        },
+        "analysis/energy.py": {
+          "bytes": 17066,
+          "sha256": "ace12047bf205d14509e3809cab0ea8ffb8d3dcad181d3db16fec5d37c4535dd"
+        },
+        "analysis/enhanced_complexity_analysis.py": {
+          "bytes": 22833,
+          "sha256": "50d5e7947df90a594336e4f9aca5e66593b069a303940df3778f48623505c0d4"
+        },
+        "analysis/enhanced_estimators.py": {
+          "bytes": 21276,
+          "sha256": "3c10444fe7b9a4c87f51558d244859e6aae4e471488c18cbfe566eedbc8f6d15"
+        },
+        "analysis/experiment_config.py": {
+          "bytes": 25088,
+          "sha256": "6b09e9f0f373ce58d8d10eb73b390588d0e6bbd35eade1af11c64461f20c6fa1"
+        },
+        "analysis/key_numbers.py": {
+          "bytes": 16731,
+          "sha256": "0e454bd4faca53661be4d1fb5ef9a1bcc10fbb617b3bff5be007a5d8215a1f6b"
+        },
+        "analysis/key_numbers_updater.py": {
+          "bytes": 7223,
+          "sha256": "f1bf3986d2e59d68f7bed1e15dc0b5b37b560092dcea633274a9f3932e99a51c"
+        },
+        "analysis/power_meters.py": {
+          "bytes": 12325,
+          "sha256": "ba39d09652b0ffe6929c536d2fbaa73083fb176d5de59441e9b37af798c1eab9"
+        },
+        "analysis/report_generator.py": {
+          "bytes": 16882,
+          "sha256": "c01f99b1632edeac90cf20a2f47107919420339c1f92046e13c62f8f861037c0"
+        },
+        "analysis/scaling_analysis.py": {
+          "bytes": 15968,
+          "sha256": "63f950c6ed4378b6bda32fb4f7cd97c9a1ab81d9ed1c3af5e1b8aa53d1efb224"
+        },
+        "analysis/statistical_analysis.py": {
+          "bytes": 24564,
+          "sha256": "339ba4e7d1e081f3356b298ba2ecc488e21bc1ef07fc53f19c4354d6cbf541d7"
+        },
+        "analysis/statistics.py": {
+          "bytes": 12829,
+          "sha256": "ce316cdab5ef278f6422582f188d5ab1c654fa6b3b6693d15b26530240bfa55a"
+        },
+        "analysis/theoretical_limits.py": {
+          "bytes": 28894,
+          "sha256": "29652cc4a9a643301f8b420af96130333bc6bac82693780596ddde88c0a9a0ab"
+        },
+        "analysis/veridical_reporting.py": {
+          "bytes": 13538,
+          "sha256": "ad309b2731fb1a9fe7821064fa6114a3f81331728c591cd8dc994d74c75683a7"
+        },
+        "analysis/workloads.py": {
+          "bytes": 28785,
+          "sha256": "9fc1238d9594ebd9356fc9d91892f020baea7af3a8c418cbb11edb91df35e6e9"
+        },
+        "architecture.py": {
+          "bytes": 13989,
+          "sha256": "94855a0c645af3f6afa758bd9c5b4596bdf9fb2de58969356ca55b916e9f6695"
+        },
+        "cli/__init__.py": {
+          "bytes": 448,
+          "sha256": "69c5f31c18544541f38b4c0064ed1678318d4f106fb06f067f8b001bcd246622"
+        },
+        "cli/build.py": {
+          "bytes": 389,
+          "sha256": "ea86e1b255d913fd8fc66c795dbb6b2d94e7575b888519d9ce7143d3e9611790"
+        },
+        "cli/ce.py": {
+          "bytes": 539,
+          "sha256": "54a8f68d4573017b5ab424d6a14f768db33c675588328402ae1f5ce405f41d3a"
+        },
+        "cli/run_all.py": {
+          "bytes": 249,
+          "sha256": "3184eed192d9e805f588269056490273f7958037f129b3734ffd1aaee93cf343"
+        },
+        "cohereants/__init__.py": {
+          "bytes": 1371,
+          "sha256": "2bfeb68c4ccb3664fafd35a88744b14b126863c94f1e4e357a9c89f609980ea3"
+        },
+        "cohereants/behavioral.py": {
+          "bytes": 11229,
+          "sha256": "111d08c4f953bf57a767aeeb9f4ad847b4453289bfeb5e15c59deafd916b56f8"
+        },
+        "cohereants/core.py": {
+          "bytes": 4002,
+          "sha256": "e2e4241122d2b3b3bb249b23fee43351588ce3e69d9a76ff6096a5235f8db02a"
+        },
+        "cohereants/spectroscopy.py": {
+          "bytes": 13298,
+          "sha256": "3ebc9d87815f101ea5c121e5987e2c34af222ce8fa7effdfdfc71e8ed34ee3f7"
+        },
+        "figures/__init__.py": {
+          "bytes": 1406,
+          "sha256": "c156ed801618f449eeb4e682356cfb7cc48333252ff89d3373967a8770116e73"
+        },
+        "figures/advanced_plots.py": {
+          "bytes": 24988,
+          "sha256": "70af68da52157bf008270896d95cf3c4bce8ef8a39a9df6fe942455ea47c8e9c"
+        },
+        "figures/assets.py": {
+          "bytes": 12204,
+          "sha256": "3abde82e6b338ed3b163aa6875ec756c785798745396f59ef59da79798cc99fb"
+        },
+        "figures/mermaid.py": {
+          "bytes": 9108,
+          "sha256": "1b2abcc6af042c959b7f6a662111880e7fe45dcfae838a28f911de1953af9d71"
+        },
+        "figures/plots.py": {
+          "bytes": 23360,
+          "sha256": "013be2496570f13565487737cabdd71ddb4be7fe633205619db1b83a43af8b2d"
+        },
+        "figures/publication_plots.py": {
+          "bytes": 21515,
+          "sha256": "7b36e114c8eb6f5182b3ba182fd45caad78df576bbf8dcee6412e60168fd710d"
+        },
+        "figures/references.py": {
+          "bytes": 7676,
+          "sha256": "6d72d7502f7e05f16a4645a863eadf95f81e0d2cc1b428bc06b7f43bd9a4bd63"
+        },
+        "mathematics/__init__.py": {
+          "bytes": 4432,
+          "sha256": "1bf440f6cc691c2b6e5cb34636391fd9550082d492a6019be19f35e10863bf9b"
+        },
+        "orchestration/__init__.py": {
+          "bytes": 936,
+          "sha256": "e4abf1848fa026cc7ed76a365ce8c51eacf23be9a2b6b671c495ff36af0f4d49"
+        },
+        "orchestration/complexity_energetics.py": {
+          "bytes": 30055,
+          "sha256": "cffad68a61e4f68d4c8eaaa792bee09cd04c37121df3b10ffc7dc12f094fe358"
+        },
+        "orchestration/demo.py": {
+          "bytes": 18082,
+          "sha256": "6c9b36c68cbaf052ec05018bd69e521016107aafca77f5da381a0ef16e75a575"
+        },
+        "orchestration/run_all.py": {
+          "bytes": 38305,
+          "sha256": "7a45502fd3732b689d957d643d1b2a62595f47fa9ab7a7dd6120a6aad315e734"
+        },
+        "publishing/__init__.py": {
+          "bytes": 2716,
+          "sha256": "3ce035aa4f2e85a62d1e931dd3d2bf9a5ae317f78e30b0a84c290c7e25f2eecf"
+        },
+        "publishing/build_orchestrator.py": {
+          "bytes": 18978,
+          "sha256": "d4235948c13a8387551f7accbf7b2883ae8490676a1bb1efdc16c37e5dce624e"
+        },
+        "publishing/formatting_fixes.py": {
+          "bytes": 3752,
+          "sha256": "9b1d85dd9104931fc80c8f55e542b8fa086b9ea144ec3d7553dc314999354dcc"
+        },
+        "publishing/paper_builder.py": {
+          "bytes": 11843,
+          "sha256": "50dc49bab5ec33f4fec8bc2635793f28c6f06fb14d849b8f797d6a7a7d3d8b3b"
+        },
+        "publishing/pdf_generator.py": {
+          "bytes": 21189,
+          "sha256": "b193d18263a5462965ce88992a49f5be8d3491d38a4353e56cbdc3ea61da83fe"
+        },
+        "publishing/provenance.py": {
+          "bytes": 12097,
+          "sha256": "3146ad7a50ecbad3d1ed495b002a2b43d2554d87fd137b1e10ba9279c4271742"
+        },
+        "publishing/quality_validator.py": {
+          "bytes": 24341,
+          "sha256": "3e39b59f6c864608e26420c510b491a4f4c4587909a7c699d737c11f67946965"
+        },
+        "publishing/reference_manager.py": {
+          "bytes": 22920,
+          "sha256": "1bd76557aa7862cea11e9c04c1bedb3df25de33f2e9e91c46ebfd360b58c3c9e"
+        },
+        "publishing/rendering_validator.py": {
+          "bytes": 15870,
+          "sha256": "e363134b9ff0c063e735e3506ee7c4d0f3ef7e013ea9009f9af982288e7192f3"
+        },
+        "publishing/template_engine.py": {
+          "bytes": 17708,
+          "sha256": "6c6f186e8553959b6260168b1fc80a6cc4feffb89dde72898df2b85ea26455d7"
+        }
+      },
+      "root": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack/antstack_core",
+      "source_checkout": {
+        "changes": [
+          {
+            "bytes": 390,
+            "path": ".gitignore",
+            "sha256": "899a012cecca9c24c831debcbe6d6ab1f12857cc45446594c16b949347ee674c",
+            "status": " M"
+          },
+          {
+            "bytes": 4070,
+            "path": "CONTRIBUTING.md",
+            "sha256": "d16c2a8e96c8960bcf27bd767ad6e3cce09d07795c7a165a4f0055775b0f0ac2",
+            "status": " M"
+          },
+          {
+            "bytes": 3019,
+            "path": "PDF_RENDERING_GUIDE.md",
+            "sha256": "bbf6e1229d6e09f13cc030382fa2bb1ad04c1d0a40582d15ed5d391fee03865b",
+            "status": " M"
+          },
+          {
+            "bytes": 5686,
+            "path": "README.md",
+            "sha256": "21c55aee19e0670df4df67326fad3972147d2ecc59b4869c0b493aef85857433",
+            "status": " M"
+          },
+          {
+            "bytes": 8205,
+            "path": "RELEASE_NOTES.md",
+            "sha256": "b21d78236075a9b140dbaca00ffe5a150038ef99bc765aaaee72440b910a6988",
+            "status": " M"
+          },
+          {
+            "bytes": 2741,
+            "path": "UNIFIED_WORKFLOW_GUIDE.md",
+            "sha256": "03eacbb8d9d71dc125b48269c1aa42947581c6ff1834164948a4cdf7420d7b69",
+            "status": " M"
+          },
+          {
+            "bytes": 1174,
+            "path": "antstack_core/AGENTS.md",
+            "sha256": "bc4d095fc0e1d89219c5d95da3aa605739e1c7a7ad20acf85d4a12f444d31a51",
+            "status": " M"
+          },
+          {
+            "bytes": 1207,
+            "path": "antstack_core/__init__.py",
+            "sha256": "f535b9dee810ed6357591f5bb780db485c9f6c877da95fee28948342d92051b8",
+            "status": " M"
+          },
+          {
+            "bytes": 1053,
+            "path": "antstack_core/analysis/AGENTS.md",
+            "sha256": "4c5b736a34da20b084ae945e49ebb414c71108cd968229dcbcf0818931172ca6",
+            "status": " M"
+          },
+          {
+            "bytes": 817,
+            "path": "antstack_core/analysis/README.md",
+            "sha256": "f7b2c725cf83985ec89854d8a966169fe25a11264b81888669d35fcd9f496934",
+            "status": " M"
+          },
+          {
+            "bytes": 12856,
+            "path": "antstack_core/analysis/ce_active_inference.py",
+            "sha256": "29e39b67f6e6599596522c4b3692061a3d6fb18331a6d83913518ab024b7a451",
+            "status": " M"
+          },
+          {
+            "path": "antstack_core/analysis/ce_biomechanical_benchmarks.py",
+            "status": " D"
+          },
+          {
+            "bytes": 14975,
+            "path": "antstack_core/analysis/ce_comprehensive_analysis.py",
+            "sha256": "57d7588215243ec4b78c79506888dec1d01dc5b20044440f7653df220fd7db46",
+            "status": " M"
+          },
+          {
+            "bytes": 7225,
+            "path": "antstack_core/analysis/ce_contact_dynamics.py",
+            "sha256": "dae4553e45874ad5d9c82f2bbae0453290075c7e183bcdce904ac8852e6dc834",
+            "status": " M"
+          },
+          {
+            "bytes": 26517,
+            "path": "antstack_core/analysis/ce_manuscript_figures.py",
+            "sha256": "ac9bbd76ea1123d597c7774040bf21914b90725cd6e24ee3aa39eab8e0f0998b",
+            "status": " M"
+          },
+          {
+            "bytes": 16521,
+            "path": "antstack_core/analysis/ce_module_scaling_analysis.py",
+            "sha256": "fbbf497b4307068d0b66f8e4b919284beefec18823f29ae4b9f0e6c1a133545b",
+            "status": " M"
+          },
+          {
+            "bytes": 20906,
+            "path": "antstack_core/analysis/ce_multipanel_figures.py",
+            "sha256": "2adcba1efcae6351c95e9e5ee8ae513479ad06cf0e07dae040d0e7231910b2a1",
+            "status": " M"
+          },
+          {
+            "bytes": 10706,
+            "path": "antstack_core/analysis/ce_neural_networks.py",
+            "sha256": "e6b227c23cd8a8f874cc446052d86d30db8a99c07d8b5d329a02e9ae8532965d",
+            "status": " M"
+          },
+          {
+            "bytes": 12774,
+            "path": "antstack_core/analysis/ce_publication_figures.py",
+            "sha256": "2704011be6521e46805186edacc53e32f195bb0925c57772c5dc29a1a5144c58",
+            "status": " M"
+          },
+          {
+            "bytes": 9215,
+            "path": "antstack_core/analysis/ce_results_figures.py",
+            "sha256": "5d8384837881b8dba44241dc86ddfbe1dc6258c4e1763bb9a621b0f64e478ee9",
+            "status": " M"
+          },
+          {
+            "bytes": 11991,
+            "path": "antstack_core/analysis/ce_tables_and_numbers.py",
+            "sha256": "2f0f1538c1bd8d5579b3a24bb0a310fb2c8593edfc5a935b3072ba5ee4a552dc",
+            "status": " M"
+          },
+          {
+            "bytes": 28894,
+            "path": "antstack_core/analysis/complexity_analysis.py",
+            "sha256": "170e560c960aab589b6d8c193328278211ffc1d53a6165860ef59a9a86cf1306",
+            "status": " M"
+          },
+          {
+            "bytes": 10004,
+            "path": "antstack_core/analysis/empirical_data.py",
+            "sha256": "f76b8b459f87a0a62d928f99af8144ed490a7bac8931e590bfa83080617b841a",
+            "status": " M"
+          },
+          {
+            "bytes": 17066,
+            "path": "antstack_core/analysis/energy.py",
+            "sha256": "ace12047bf205d14509e3809cab0ea8ffb8d3dcad181d3db16fec5d37c4535dd",
+            "status": " M"
+          },
+          {
+            "bytes": 22833,
+            "path": "antstack_core/analysis/enhanced_complexity_analysis.py",
+            "sha256": "50d5e7947df90a594336e4f9aca5e66593b069a303940df3778f48623505c0d4",
+            "status": " M"
+          },
+          {
+            "bytes": 21276,
+            "path": "antstack_core/analysis/enhanced_estimators.py",
+            "sha256": "3c10444fe7b9a4c87f51558d244859e6aae4e471488c18cbfe566eedbc8f6d15",
+            "status": " M"
+          },
+          {
+            "bytes": 25088,
+            "path": "antstack_core/analysis/experiment_config.py",
+            "sha256": "6b09e9f0f373ce58d8d10eb73b390588d0e6bbd35eade1af11c64461f20c6fa1",
+            "status": " M"
+          },
+          {
+            "bytes": 16731,
+            "path": "antstack_core/analysis/key_numbers.py",
+            "sha256": "0e454bd4faca53661be4d1fb5ef9a1bcc10fbb617b3bff5be007a5d8215a1f6b",
+            "status": " M"
+          },
+          {
+            "bytes": 7223,
+            "path": "antstack_core/analysis/key_numbers_updater.py",
+            "sha256": "f1bf3986d2e59d68f7bed1e15dc0b5b37b560092dcea633274a9f3932e99a51c",
+            "status": " M"
+          },
+          {
+            "bytes": 12325,
+            "path": "antstack_core/analysis/power_meters.py",
+            "sha256": "ba39d09652b0ffe6929c536d2fbaa73083fb176d5de59441e9b37af798c1eab9",
+            "status": " M"
+          },
+          {
+            "bytes": 16882,
+            "path": "antstack_core/analysis/report_generator.py",
+            "sha256": "c01f99b1632edeac90cf20a2f47107919420339c1f92046e13c62f8f861037c0",
+            "status": " M"
+          },
+          {
+            "bytes": 15968,
+            "path": "antstack_core/analysis/scaling_analysis.py",
+            "sha256": "63f950c6ed4378b6bda32fb4f7cd97c9a1ab81d9ed1c3af5e1b8aa53d1efb224",
+            "status": " M"
+          },
+          {
+            "bytes": 24564,
+            "path": "antstack_core/analysis/statistical_analysis.py",
+            "sha256": "339ba4e7d1e081f3356b298ba2ecc488e21bc1ef07fc53f19c4354d6cbf541d7",
+            "status": " M"
+          },
+          {
+            "bytes": 12829,
+            "path": "antstack_core/analysis/statistics.py",
+            "sha256": "ce316cdab5ef278f6422582f188d5ab1c654fa6b3b6693d15b26530240bfa55a",
+            "status": " M"
+          },
+          {
+            "bytes": 28894,
+            "path": "antstack_core/analysis/theoretical_limits.py",
+            "sha256": "29652cc4a9a643301f8b420af96130333bc6bac82693780596ddde88c0a9a0ab",
+            "status": " M"
+          },
+          {
+            "bytes": 13538,
+            "path": "antstack_core/analysis/veridical_reporting.py",
+            "sha256": "ad309b2731fb1a9fe7821064fa6114a3f81331728c591cd8dc994d74c75683a7",
+            "status": " M"
+          },
+          {
+            "bytes": 28785,
+            "path": "antstack_core/analysis/workloads.py",
+            "sha256": "9fc1238d9594ebd9356fc9d91892f020baea7af3a8c418cbb11edb91df35e6e9",
+            "status": " M"
+          },
+          {
+            "bytes": 1062,
+            "path": "antstack_core/cli/AGENTS.md",
+            "sha256": "1638d1311bb2a8051c4904dec2f734ab259ce7cd9511a24c19913f49f86fc7d8",
+            "status": " M"
+          },
+          {
+            "bytes": 768,
+            "path": "antstack_core/cli/README.md",
+            "sha256": "c099ef0f00960197f35ae2d9815314dcb1728ef44f76d9e888a2978ee0c0eb17",
+            "status": " M"
+          },
+          {
+            "bytes": 448,
+            "path": "antstack_core/cli/__init__.py",
+            "sha256": "69c5f31c18544541f38b4c0064ed1678318d4f106fb06f067f8b001bcd246622",
+            "status": " M"
+          },
+          {
+            "bytes": 389,
+            "path": "antstack_core/cli/build.py",
+            "sha256": "ea86e1b255d913fd8fc66c795dbb6b2d94e7575b888519d9ce7143d3e9611790",
+            "status": " M"
+          },
+          {
+            "bytes": 539,
+            "path": "antstack_core/cli/ce.py",
+            "sha256": "54a8f68d4573017b5ab424d6a14f768db33c675588328402ae1f5ce405f41d3a",
+            "status": " M"
+          },
+          {
+            "bytes": 1030,
+            "path": "antstack_core/cohereants/AGENTS.md",
+            "sha256": "7d2a5df6b8dea2db12465c69ab45df102213d6972018795470c1229de705ef89",
+            "status": " M"
+          },
+          {
+            "bytes": 794,
+            "path": "antstack_core/cohereants/README.md",
+            "sha256": "7ab35a30b535c622c920654ae20cebe5364b9cc2cfd95b228bdd41e7a5cbeb37",
+            "status": " M"
+          },
+          {
+            "bytes": 11229,
+            "path": "antstack_core/cohereants/behavioral.py",
+            "sha256": "111d08c4f953bf57a767aeeb9f4ad847b4453289bfeb5e15c59deafd916b56f8",
+            "status": " M"
+          },
+          {
+            "bytes": 13298,
+            "path": "antstack_core/cohereants/spectroscopy.py",
+            "sha256": "3ebc9d87815f101ea5c121e5987e2c34af222ce8fa7effdfdfc71e8ed34ee3f7",
+            "status": " M"
+          },
+          {
+            "bytes": 972,
+            "path": "antstack_core/figures/AGENTS.md",
+            "sha256": "61df3b2216752c578bb7ee64f2212a3573a85ff9410bd8d77f348f26eb6afbf1",
+            "status": " M"
+          },
+          {
+            "bytes": 1406,
+            "path": "antstack_core/figures/__init__.py",
+            "sha256": "c156ed801618f449eeb4e682356cfb7cc48333252ff89d3373967a8770116e73",
+            "status": " M"
+          },
+          {
+            "bytes": 24988,
+            "path": "antstack_core/figures/advanced_plots.py",
+            "sha256": "70af68da52157bf008270896d95cf3c4bce8ef8a39a9df6fe942455ea47c8e9c",
+            "status": " M"
+          },
+          {
+            "bytes": 9108,
+            "path": "antstack_core/figures/mermaid.py",
+            "sha256": "1b2abcc6af042c959b7f6a662111880e7fe45dcfae838a28f911de1953af9d71",
+            "status": " M"
+          },
+          {
+            "bytes": 23360,
+            "path": "antstack_core/figures/plots.py",
+            "sha256": "013be2496570f13565487737cabdd71ddb4be7fe633205619db1b83a43af8b2d",
+            "status": " M"
+          },
+          {
+            "bytes": 21515,
+            "path": "antstack_core/figures/publication_plots.py",
+            "sha256": "7b36e114c8eb6f5182b3ba182fd45caad78df576bbf8dcee6412e60168fd710d",
+            "status": " M"
+          },
+          {
+            "bytes": 7676,
+            "path": "antstack_core/figures/references.py",
+            "sha256": "6d72d7502f7e05f16a4645a863eadf95f81e0d2cc1b428bc06b7f43bd9a4bd63",
+            "status": " M"
+          },
+          {
+            "bytes": 937,
+            "path": "antstack_core/mathematics/AGENTS.md",
+            "sha256": "9e29c2f7ee6a015b5028de25b97f40d36349fb338b299995881d182ea378397b",
+            "status": " M"
+          },
+          {
+            "bytes": 701,
+            "path": "antstack_core/mathematics/README.md",
+            "sha256": "a6f1cf55cb425cc63af87162b95bd3ceac6afab2e6af8d5ebcfc78902f7cc1c2",
+            "status": " M"
+          },
+          {
+            "bytes": 4432,
+            "path": "antstack_core/mathematics/__init__.py",
+            "sha256": "1bf440f6cc691c2b6e5cb34636391fd9550082d492a6019be19f35e10863bf9b",
+            "status": " M"
+          },
+          {
+            "bytes": 38305,
+            "path": "antstack_core/orchestration/run_all.py",
+            "sha256": "7a45502fd3732b689d957d643d1b2a62595f47fa9ab7a7dd6120a6aad315e734",
+            "status": " M"
+          },
+          {
+            "path": "antstack_core/orchestration/unified_build.py",
+            "status": " D"
+          },
+          {
+            "bytes": 955,
+            "path": "antstack_core/publishing/AGENTS.md",
+            "sha256": "9f8a1df007369e822814a4dc0d879c2379c91731c21b4a164cc88e23ae083531",
+            "status": " M"
+          },
+          {
+            "bytes": 738,
+            "path": "antstack_core/publishing/README.md",
+            "sha256": "51baf1f816f1a52c7134b5c44cca03fc24af897016faf5a1c5bbb346cfcd36ce",
+            "status": " M"
+          },
+          {
+            "bytes": 2716,
+            "path": "antstack_core/publishing/__init__.py",
+            "sha256": "3ce035aa4f2e85a62d1e931dd3d2bf9a5ae317f78e30b0a84c290c7e25f2eecf",
+            "status": " M"
+          },
+          {
+            "bytes": 18978,
+            "path": "antstack_core/publishing/build_orchestrator.py",
+            "sha256": "d4235948c13a8387551f7accbf7b2883ae8490676a1bb1efdc16c37e5dce624e",
+            "status": " M"
+          },
+          {
+            "bytes": 3752,
+            "path": "antstack_core/publishing/formatting_fixes.py",
+            "sha256": "9b1d85dd9104931fc80c8f55e542b8fa086b9ea144ec3d7553dc314999354dcc",
+            "status": " M"
+          },
+          {
+            "bytes": 21189,
+            "path": "antstack_core/publishing/pdf_generator.py",
+            "sha256": "b193d18263a5462965ce88992a49f5be8d3491d38a4353e56cbdc3ea61da83fe",
+            "status": " M"
+          },
+          {
+            "bytes": 12097,
+            "path": "antstack_core/publishing/provenance.py",
+            "sha256": "3146ad7a50ecbad3d1ed495b002a2b43d2554d87fd137b1e10ba9279c4271742",
+            "status": " M"
+          },
+          {
+            "bytes": 24341,
+            "path": "antstack_core/publishing/quality_validator.py",
+            "sha256": "3e39b59f6c864608e26420c510b491a4f4c4587909a7c699d737c11f67946965",
+            "status": " M"
+          },
+          {
+            "bytes": 22920,
+            "path": "antstack_core/publishing/reference_manager.py",
+            "sha256": "1bd76557aa7862cea11e9c04c1bedb3df25de33f2e9e91c46ebfd360b58c3c9e",
+            "status": " M"
+          },
+          {
+            "bytes": 15870,
+            "path": "antstack_core/publishing/rendering_validator.py",
+            "sha256": "e363134b9ff0c063e735e3506ee7c4d0f3ef7e013ea9009f9af982288e7192f3",
+            "status": " M"
+          },
+          {
+            "bytes": 17708,
+            "path": "antstack_core/publishing/template_engine.py",
+            "sha256": "6c6f186e8553959b6260168b1fc80a6cc4feffb89dde72898df2b85ea26455d7",
+            "status": " M"
+          },
+          {
+            "bytes": 933,
+            "path": "antstack_core/publishing/templates/AGENTS.md",
+            "sha256": "e1466e5fd23e9e10307b491a3d4bfb02ca17306e80b554f0085cb07197265b1b",
+            "status": " M"
+          },
+          {
+            "bytes": 697,
+            "path": "antstack_core/publishing/templates/README.md",
+            "sha256": "342386562df761dcfde00552ce09f123e2236bf7b1419d176634a77ac2bb6482",
+            "status": " M"
+          },
+          {
+            "path": "antstack_core/publishing/templates/default.latex",
+            "status": " D"
+          },
+          {
+            "path": "build_report.md",
+            "status": " D"
+          },
+          {
+            "bytes": 44605,
+            "path": "bun.lock",
+            "sha256": "55f39ff627d95e49582a66b59dde8af19888beeb91a8c900b8188a9996515ef6",
+            "status": " M"
+          },
+          {
+            "bytes": 927,
+            "path": "complexity_energetics/AGENTS.md",
+            "sha256": "5f68acb40ddc27a08f00ddfd9144830022075b2fdb8b5c3074fefe452fb60c81",
+            "status": " M"
+          },
+          {
+            "bytes": 947,
+            "path": "complexity_energetics/assets/AGENTS.md",
+            "sha256": "f0d85ead9334e61d75a40b2dad675933103825b8153d87497922f90f2ae544be",
+            "status": " M"
+          },
+          {
+            "bytes": 711,
+            "path": "complexity_energetics/assets/README.md",
+            "sha256": "fbbe31bd9987fc2c557de0d1d0fddb6d9a083b782d5b29eca8883d0471eeff35",
+            "status": " M"
+          },
+          {
+            "bytes": 965,
+            "path": "complexity_energetics/generated_content/AGENTS.md",
+            "sha256": "7c3f9302566fff5a9271715ce106d6485cf8c057dccb3dd18b80eebbf8c1aa05",
+            "status": " M"
+          },
+          {
+            "bytes": 729,
+            "path": "complexity_energetics/generated_content/README.md",
+            "sha256": "7e53de692216e95e3f1898b795effde33a6fcf122ea0324d0d3505e5694f54cd",
+            "status": " M"
+          },
+          {
+            "bytes": 1063,
+            "path": "configs/run_all_antstack.example.yaml",
+            "sha256": "a32409eb5aa58d0d92359e69fce763b918ecd656b1201d53f2071af2f90eb446",
+            "status": " M"
+          },
+          {
+            "bytes": 3930,
+            "path": "docs/README.md",
+            "sha256": "d2db4230ba66aac2d638aa3b4664ec1f46ba7a84fd9a8a84153671b8b001947a",
+            "status": " M"
+          },
+          {
+            "bytes": 7527,
+            "path": "docs/api_reference.md",
+            "sha256": "cdfc5a49392544713240bf37566dbd9bb8adf67a5cc5451304a0ca1334a5acd5",
+            "status": " M"
+          },
+          {
+            "bytes": 6211,
+            "path": "docs/architecture.md",
+            "sha256": "0b41e236cccd1899361dc104698d8a085a254352300e3284d9a02fde4c981382",
+            "status": " M"
+          },
+          {
+            "bytes": 6689,
+            "path": "docs/benchmarking.md",
+            "sha256": "75b08cbe7da5bddef879f7366b22128b9a3431f9b7dac84ed851763209c9e340",
+            "status": " M"
+          },
+          {
+            "bytes": 7353,
+            "path": "docs/best_practices.md",
+            "sha256": "3b903ccc1e86d3bd3f5b2a467531056ec6fba7fdc6108204572026bf9640be71",
+            "status": " M"
+          },
+          {
+            "bytes": 7769,
+            "path": "docs/external_ant_data_integration.md",
+            "sha256": "6f6b7024cb4fa2ba23b492f6cc5bf7b150d24e5a8eb4d14bd153d198f8e83f01",
+            "status": " M"
+          },
+          {
+            "bytes": 6871,
+            "path": "docs/getting_started.md",
+            "sha256": "8027781b02d29244962bf3d624ff24d6d96dea5a0e1aa34990aa6dfe718b088a",
+            "status": " M"
+          },
+          {
+            "bytes": 826,
+            "path": "docs/manuscript/AGENTS.md",
+            "sha256": "c9ac0f7e7bbd9bbe448323b585797093715807f23befbe6559e489809dfac6ea",
+            "status": " M"
+          },
+          {
+            "bytes": 7635,
+            "path": "docs/manuscript/MANUSCRIPT_STATUS.md",
+            "sha256": "d7cfe3bf37bb4518883ee407fed23928dedac887d82e38108db670fd89750743",
+            "status": " M"
+          },
+          {
+            "bytes": 1999,
+            "path": "docs/manuscript/README.md",
+            "sha256": "b3eff8c651e67b7c441e8acbde99862cb29fdfb7af1f0dd6ff4e422c7ac47377",
+            "status": " M"
+          },
+          {
+            "bytes": 8417,
+            "path": "docs/public_api_contracts.md",
+            "sha256": "e5976578e7155422780eb6e38cc813d2ade3ca60f7b3d0780e7f03e24f2ee325",
+            "status": " M"
+          },
+          {
+            "bytes": 6459,
+            "path": "docs/reproducibility.md",
+            "sha256": "326ac9119f2f9e4cdc13995614233ea1fe69f4f40999049ef68a2814ae906b4b",
+            "status": " M"
+          },
+          {
+            "bytes": 9002,
+            "path": "docs/scientific_validation.md",
+            "sha256": "4cee43c962ec18567e5239f4254521521ac7f30ceb42657e273ff2eada026994",
+            "status": " M"
+          },
+          {
+            "bytes": 7741,
+            "path": "docs/theory.md",
+            "sha256": "37b6864a57bc1e7c4dd577a91f0fceaf35a8004e8fea4a4e3566c7ab19942f7d",
+            "status": " M"
+          },
+          {
+            "bytes": 8077,
+            "path": "docs/troubleshooting.md",
+            "sha256": "783d187a12609b90ff25f83d899fa42e0ed321f53515ff159d57753950e29f83",
+            "status": " M"
+          },
+          {
+            "bytes": 7118,
+            "path": "docs/validation.md",
+            "sha256": "a557e5f682f184f2b3489659dff5f10c196209ada000f176215e19d4b0a80ba3",
+            "status": " M"
+          },
+          {
+            "bytes": 878,
+            "path": "examples/AGENTS.md",
+            "sha256": "acb0c7eba9b61c1ac56ff7a7580dbe1d0ddb0043a35257d5168639fa9e4f713d",
+            "status": " M"
+          },
+          {
+            "bytes": 642,
+            "path": "examples/README.md",
+            "sha256": "24f9fe31e812bc7ecb3736797855aea83b1644b3cef51e10b3e9436164add3a7",
+            "status": " M"
+          },
+          {
+            "bytes": 3402,
+            "path": "examples/proper_paper_syntax.md",
+            "sha256": "af19f47654c58528e30ba2f2150f027c7e8c3f5caaf9c11acbd90758ff60dc2e",
+            "status": " M"
+          },
+          {
+            "bytes": 790,
+            "path": "outputs/test-run/README.md",
+            "sha256": "06dc92485a97016e9d803d8797263f5caf5bf36da5cfb291003f02b513fe0ab5",
+            "status": " M"
+          },
+          {
+            "bytes": 961,
+            "path": "package.json",
+            "sha256": "88db483a0bc6819db93c5652b89b5dd9e66fe632993632ebf6826451460462a6",
+            "status": " M"
+          },
+          {
+            "bytes": 896,
+            "path": "papers/AGENTS.md",
+            "sha256": "ca376be865fb613c50928e3815677e712a1e025acc6fac7f5c9181d5c7010dc6",
+            "status": " M"
+          },
+          {
+            "bytes": 588,
+            "path": "papers/README.md",
+            "sha256": "63bc0afc9074d65dfa6c4127adf7ab128e89dd1816bce3f0bbd68af1b968eb61",
+            "status": " M"
+          },
+          {
+            "bytes": 890,
+            "path": "papers/ant_stack/AGENTS.md",
+            "sha256": "a183d07112ea2562ef4cc543334df4f4a8470c0fb7ebe645ee4cabd939c5c1aa",
+            "status": " M"
+          },
+          {
+            "bytes": 2379,
+            "path": "papers/ant_stack/Abstract.md",
+            "sha256": "fb9fbdee1114fa6db67bd91d5a021c4004dc4763a7ada59ba0a4d26039e4f354",
+            "status": " M"
+          },
+          {
+            "bytes": 6706,
+            "path": "papers/ant_stack/AntBody.md",
+            "sha256": "6d7f8d6da842923f8397a590124c74529421556278b2ba6202f8508a090fb80b",
+            "status": " M"
+          },
+          {
+            "bytes": 8105,
+            "path": "papers/ant_stack/AntBrain.md",
+            "sha256": "469ea40649f93c2623841351e569bbed60618f8927854da54b6e33da89ed9a89",
+            "status": " M"
+          },
+          {
+            "bytes": 7518,
+            "path": "papers/ant_stack/AntMind.md",
+            "sha256": "174c002c4f7624444c3b57b1ab3298af5786714eafeecf7c34f1298c607d0562",
+            "status": " M"
+          },
+          {
+            "bytes": 2620,
+            "path": "papers/ant_stack/Appendices.md",
+            "sha256": "93bbecc562ac85669f562c1857ac19c66daee1b28a47615c98e98a25d88f6b34",
+            "status": " M"
+          },
+          {
+            "bytes": 5183,
+            "path": "papers/ant_stack/Applications.md",
+            "sha256": "1e633f163c0ebb164a0a5456d0365a72c8a8499d0d1b6acdd3547f993fb508ea",
+            "status": " M"
+          },
+          {
+            "bytes": 3994,
+            "path": "papers/ant_stack/Background.md",
+            "sha256": "8b3a853971d59c0f099ff5681581bdd6ae305fe805f57bc1fe03672dc3972c4a",
+            "status": " M"
+          },
+          {
+            "bytes": 2814,
+            "path": "papers/ant_stack/Discussion.md",
+            "sha256": "6dfb38e4cc27f8b0fdd85d63ae45bef28ce909664a19b63a8a298310b3020e86",
+            "status": " M"
+          },
+          {
+            "bytes": 2430,
+            "path": "papers/ant_stack/Glossary.md",
+            "sha256": "db5da1e05320f01785aa498b4621653a68cfde532f17847dce9f8df543eb42a7",
+            "status": " M"
+          },
+          {
+            "bytes": 2715,
+            "path": "papers/ant_stack/README.md",
+            "sha256": "92953c04c9d5efd8d3ff76ea9a5e85baa0d80ed0823db5a308f52e8b05ee567a",
+            "status": " M"
+          },
+          {
+            "bytes": 5743,
+            "path": "papers/ant_stack/Resources.md",
+            "sha256": "414616aeadf152b4c8828503c1cb9c340199216f1238596c91f4a29bdbe1a776",
+            "status": " M"
+          },
+          {
+            "bytes": 882,
+            "path": "papers/ant_stack/assets/AGENTS.md",
+            "sha256": "50d9aa213a0a40e3ccf329e0f8cbb907e8d3e8b372504451fd732bd42fe7a4df",
+            "status": " M"
+          },
+          {
+            "bytes": 646,
+            "path": "papers/ant_stack/assets/README.md",
+            "sha256": "06b10c651c4ff095b4fef5398e18380ffd9f4b78cd2b6b2dd311227760c11c64",
+            "status": " M"
+          },
+          {
+            "path": "papers/ant_stack/assets/concat_after_prerender.md",
+            "status": " D"
+          },
+          {
+            "bytes": 866,
+            "path": "papers/ant_stack/assets/figures/AGENTS.md",
+            "sha256": "d4a1195f6e5a841bc51e616f2694c2027e2b320852f3463f3798597c594d2bee",
+            "status": " M"
+          },
+          {
+            "bytes": 630,
+            "path": "papers/ant_stack/assets/figures/README.md",
+            "sha256": "a9cf36c74da1966df63780856257fc4d74277f72f6b507ef06ff2b9188b73253",
+            "status": " M"
+          },
+          {
+            "bytes": 884,
+            "path": "papers/ant_stack/assets/mermaid/AGENTS.md",
+            "sha256": "530cff2040ecca307a57cfb30371144bbf207531145ed387478a028700174498",
+            "status": " M"
+          },
+          {
+            "bytes": 648,
+            "path": "papers/ant_stack/assets/mermaid/README.md",
+            "sha256": "803429c951c04b966b3f904e0958ebbd936525cec4c04f8a7375e8894d0c17ea",
+            "status": " M"
+          },
+          {
+            "path": "papers/ant_stack/concat_after_prerender.md",
+            "status": " D"
+          },
+          {
+            "bytes": 1388,
+            "path": "papers/ant_stack/paper_config.yaml",
+            "sha256": "ed75a9e42569225d5a904b5cf8dffcd75361b5fd8fa0e4592b4b15c50be8a32c",
+            "status": " M"
+          },
+          {
+            "bytes": 971,
+            "path": "papers/complexity_energetics/AGENTS.md",
+            "sha256": "5018c96d4515741a89d07825154cb2f20d732480a8bce9e24d900fbc5230eb59",
+            "status": " M"
+          },
+          {
+            "bytes": 2541,
+            "path": "papers/complexity_energetics/Abstract.md",
+            "sha256": "74c0c263e0221d227009ef017e4c90c81bdfe73ffe86adfe13f6fb6eb6ef3202",
+            "status": " M"
+          },
+          {
+            "bytes": 4281,
+            "path": "papers/complexity_energetics/Appendices.md",
+            "sha256": "2f2c2afd79ff7d3ad1cb454bc78546d9a1ab9a1b0b36036c119637e560b0922a",
+            "status": " M"
+          },
+          {
+            "bytes": 5398,
+            "path": "papers/complexity_energetics/Background.md",
+            "sha256": "9c300960f96eb739689d12dbc7c18bede99aa182e4b55bc1706ac899a9badc7e",
+            "status": " M"
+          },
+          {
+            "bytes": 9283,
+            "path": "papers/complexity_energetics/Complexity.md",
+            "sha256": "d6192e4e78b41a26e778ba27119da937df52c8f91a7a4345d587794e3fc5b906",
+            "status": " M"
+          },
+          {
+            "bytes": 5879,
+            "path": "papers/complexity_energetics/Discussion.md",
+            "sha256": "e2fddd000973f0b88181df29695d1a9f973eb38461b9c546c6af18bd324b2071",
+            "status": " M"
+          },
+          {
+            "bytes": 9422,
+            "path": "papers/complexity_energetics/Energetics.md",
+            "sha256": "5ef08f6db18a8dc02cabda81918c5892b5daf56855b085805ed21513bfca4c25",
+            "status": " M"
+          },
+          {
+            "bytes": 8572,
+            "path": "papers/complexity_energetics/Methods.md",
+            "sha256": "97e68f8bbaf7bca13a2d5715eb0ce2c965783610b1fb266c72130400053a12d4",
+            "status": " M"
+          },
+          {
+            "bytes": 3253,
+            "path": "papers/complexity_energetics/README.md",
+            "sha256": "0dbd7a360ef3ef879b174839e1e6fc54c216f56fe780869e30f487d6aff6f38a",
+            "status": " M"
+          },
+          {
+            "bytes": 2690,
+            "path": "papers/complexity_energetics/Resources.md",
+            "sha256": "953d269d95f7319492be719735a12642d7923ddb04fdd1c55988d6bb97a97fb2",
+            "status": " M"
+          },
+          {
+            "bytes": 6260,
+            "path": "papers/complexity_energetics/Results.md",
+            "sha256": "d21834b98c96641f5d61839f8958bbb3a3bdf88219d797bcbc5e8899a2f16c3b",
+            "status": " M"
+          },
+          {
+            "bytes": 4835,
+            "path": "papers/complexity_energetics/Scaling.md",
+            "sha256": "14f3f2f85e9876be9995174b0feff22cdd844c0e4d883e4df17e84c82d05fd4e",
+            "status": " M"
+          },
+          {
+            "bytes": 941,
+            "path": "papers/complexity_energetics/assets/AGENTS.md",
+            "sha256": "dfcc81577e0a8b1aee115d1f3c504a3a872b469f9a2eedeb9e972c108bf2e1a4",
+            "status": " M"
+          },
+          {
+            "bytes": 705,
+            "path": "papers/complexity_energetics/assets/README.md",
+            "sha256": "b6fe032982bdb06b032f038c809861b91cf6b7e4f1014fda7ac7099bbd870b74",
+            "status": " M"
+          },
+          {
+            "path": "papers/complexity_energetics/assets/concat_after_prerender.md",
+            "status": " D"
+          },
+          {
+            "bytes": 897,
+            "path": "papers/complexity_energetics/assets/figures/AGENTS.md",
+            "sha256": "fa6deb11d4d27bf639293d06bb6caf5d052d69d5b03c17df85b6933ba7b40680",
+            "status": " M"
+          },
+          {
+            "bytes": 661,
+            "path": "papers/complexity_energetics/assets/figures/README.md",
+            "sha256": "ee33461e8053e154181c2107c04d5f79bd880750ac21150dadfc53b114461fe7",
+            "status": " M"
+          },
+          {
+            "bytes": 902,
+            "path": "papers/complexity_energetics/assets/mermaid/AGENTS.md",
+            "sha256": "739773f9c5082a2212b3ba1932c9891d1e61ed7b22fab688129689bfe2847ea1",
+            "status": " M"
+          },
+          {
+            "bytes": 666,
+            "path": "papers/complexity_energetics/assets/mermaid/README.md",
+            "sha256": "f70de47f4eaf42014e2963875317560a5cf3ac08937d1eb024f079ffb99df4a8",
+            "status": " M"
+          },
+          {
+            "bytes": 984,
+            "path": "papers/complexity_energetics/generated_content/AGENTS.md",
+            "sha256": "637b36171965ac14a5b921187fdec281727142f20ceb8d5dd50bee1920847c81",
+            "status": " M"
+          },
+          {
+            "bytes": 748,
+            "path": "papers/complexity_energetics/generated_content/README.md",
+            "sha256": "809c4e426e9d51add78ef21b65d3bbc57154fc9df62ff602e168ee8147994f1e",
+            "status": " M"
+          },
+          {
+            "bytes": 2980,
+            "path": "papers/complexity_energetics/manifest.example.yaml",
+            "sha256": "9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a",
+            "status": " M"
+          },
+          {
+            "bytes": 794,
+            "path": "papers/complexity_energetics/out/README.md",
+            "sha256": "1f95149a5cc398164e30ff4f8e3801ad851ec1784e1228df4c13cc108df6acf7",
+            "status": " M"
+          },
+          {
+            "bytes": 1683,
+            "path": "papers/complexity_energetics/paper_config.yaml",
+            "sha256": "2731035235ace07ac049ce4667ea20a1455c9bb117c37ff58cebb502102f7806",
+            "status": " M"
+          },
+          {
+            "bytes": 2243,
+            "path": "papers/complexity_energetics/references.bib",
+            "sha256": "47cb6587c819575953b0287208a70d8ed3546b15ab853659f202e85b7722998e",
+            "status": " M"
+          },
+          {
+            "path": "papers/complexity_energetics/src/AGENTS.md",
+            "status": " D"
+          },
+          {
+            "path": "papers/complexity_energetics/src/README.md",
+            "status": " D"
+          },
+          {
+            "path": "papers/complexity_energetics/src/config_loader.py",
+            "status": " D"
+          },
+          {
+            "path": "papers/complexity_energetics/src/runner.py",
+            "status": " D"
+          },
+          {
+            "bytes": 879,
+            "path": "papers/documentation/AGENTS.md",
+            "sha256": "6b8097b924b22cc78e05f02aee8ebf42ac72180aca0a73cb1fc0e2a4d518b885",
+            "status": " M"
+          },
+          {
+            "bytes": 8661,
+            "path": "papers/documentation/PDF_RENDERING_GUIDE.md",
+            "sha256": "851e4c05722116b4303622658ad237c39ec561d79cfb60cdac4a1efe4119a6bd",
+            "status": " M"
+          },
+          {
+            "bytes": 1268,
+            "path": "papers/documentation/README.md",
+            "sha256": "8c0123e84cf383d2ff87a28f7b41894efdede45739e1e65b5df7baca6e0af16b",
+            "status": " M"
+          },
+          {
+            "bytes": 879,
+            "path": "papers/documentation/assets/AGENTS.md",
+            "sha256": "5397251abdb140019f382d043ba544b199783cd413cad78b426f9e716dcea04b",
+            "status": " M"
+          },
+          {
+            "bytes": 643,
+            "path": "papers/documentation/assets/README.md",
+            "sha256": "f1da192ad58d2e1660a129c42a06119c38a94c2b91060ef042d2c71f40031f3b",
+            "status": " M"
+          },
+          {
+            "path": "papers/documentation/assets/concat_after_prerender.md",
+            "status": " D"
+          },
+          {
+            "bytes": 869,
+            "path": "papers/documentation/assets/figures/AGENTS.md",
+            "sha256": "0986d95e9fe3840b0737c4359c9ff4afd327f21f124b81abf1e809060ee5bef1",
+            "status": " M"
+          },
+          {
+            "bytes": 633,
+            "path": "papers/documentation/assets/figures/README.md",
+            "sha256": "394dbad7219de4f10ba896d868c67254f37aac183c945a70cc0f8c96cd559a6b",
+            "status": " M"
+          },
+          {
+            "bytes": 881,
+            "path": "papers/documentation/assets/mermaid/AGENTS.md",
+            "sha256": "21bb7f4100a3b2bca36c000c74a6081c1c1a5a0c42d51721f172524177b2a5cf",
+            "status": " M"
+          },
+          {
+            "bytes": 645,
+            "path": "papers/documentation/assets/mermaid/README.md",
+            "sha256": "cab6b42a4dee182791a2ebd8e96de04ba47c3cf567b89d2e1aeab660469bbc0d",
+            "status": " M"
+          },
+          {
+            "bytes": 1116,
+            "path": "papers/documentation/paper_config.yaml",
+            "sha256": "a5d7baceb381ee59b2e02384b6402780407b2b081890278b639ced6b2e3da3db",
+            "status": " M"
+          },
+          {
+            "bytes": 1645,
+            "path": "pyproject.toml",
+            "sha256": "4e33ef49e7dc3a503583b49c570a7e1de026154e65f2aa76aa023964715bc8a2",
+            "status": " M"
+          },
+          {
+            "bytes": 3812,
+            "path": "scripts/AGENTS.md",
+            "sha256": "fc630d2f4ac583742d7a9a9aef8c3e31d375877ae2b686b8be2e6ef1a136568c",
+            "status": " M"
+          },
+          {
+            "bytes": 5858,
+            "path": "scripts/README.md",
+            "sha256": "b8283cf4d3d7f35eed6306ad143c677f9dd625f15212d7c7e211c9ab7fb3c582",
+            "status": " M"
+          },
+          {
+            "bytes": 891,
+            "path": "scripts/ant_stack/AGENTS.md",
+            "sha256": "17ca02c69e724099d9f9ad3aab1d98ad6b4a23024278c95fd995f8fb26137b27",
+            "status": " M"
+          },
+          {
+            "bytes": 893,
+            "path": "scripts/common_pipeline/AGENTS.md",
+            "sha256": "6e381bfb8e07624cf47cc49c5d22ab2260b282f7ecd1e59c33d2393210635a06",
+            "status": " M"
+          },
+          {
+            "bytes": 1884,
+            "path": "scripts/common_pipeline/README.md",
+            "sha256": "04a511128f0a02638bd211b53bda51c4188771100ece74657c33de090f913de1",
+            "status": " M"
+          },
+          {
+            "path": "scripts/common_pipeline/build_core.py",
+            "status": " D"
+          },
+          {
+            "path": "scripts/common_pipeline/unified_build.py",
+            "status": " D"
+          },
+          {
+            "bytes": 931,
+            "path": "scripts/complexity_energetics/AGENTS.md",
+            "sha256": "a6f03ee1e81ad6d4e58b0d432d733f449f54c0c5c08064ae89c8181ab3160ced",
+            "status": " M"
+          },
+          {
+            "bytes": 2318,
+            "path": "scripts/complexity_energetics/README.md",
+            "sha256": "fa6fcef003b4505c02733691308e7f1a06d56db945af137b0fcbc1171e2fa857",
+            "status": " M"
+          },
+          {
+            "path": "scripts/complexity_energetics/generate_biomechanical_benchmarks.py",
+            "status": " D"
+          },
+          {
+            "bytes": 1063,
+            "path": "scripts/complexity_energetics/generate_manuscript_figures.py",
+            "sha256": "56bf85e5b6c9547b60023cf567cfb2196ca42d80f9551e975533ee2e2a38d76f",
+            "status": " M"
+          },
+          {
+            "bytes": 1331,
+            "path": "scripts/complexity_energetics/generate_publication_figures.py",
+            "sha256": "2c3893c4ebad786284db08cd24fe01273f78dc7b11899d32e1f189c0ebeda730",
+            "status": " M"
+          },
+          {
+            "bytes": 898,
+            "path": "scripts/complexity_energetics/generate_results_figures.py",
+            "sha256": "961e23e2a5bb399461d6ace55f6d39c42f32802ec46bd5d695f18c13adfeea82",
+            "status": " M"
+          },
+          {
+            "bytes": 258,
+            "path": "scripts/complexity_energetics/run_ce.sh",
+            "sha256": "26413862ee5cfc04b02bec266f7e05b83f8c44dea9c2b3e605b6e1940a58f779",
+            "status": " M"
+          },
+          {
+            "bytes": 901,
+            "path": "tests/AGENTS.md",
+            "sha256": "400faf578d03cbccc58a1030dede00dc9b5960239e25ede7777aa8a3b02db6da",
+            "status": " M"
+          },
+          {
+            "bytes": 871,
+            "path": "tests/antstack_core/AGENTS.md",
+            "sha256": "b0db27890ac5bf84176394cb6d6740d380790abaa745050481c3bdc561af4c25",
+            "status": " M"
+          },
+          {
+            "bytes": 15884,
+            "path": "tests/antstack_core/test_analysis_energy.py",
+            "sha256": "870a874dcbec3a30b882e9121cbf727597efbb74d98babf91ba61f5a4c3a1c70",
+            "status": " M"
+          },
+          {
+            "bytes": 17556,
+            "path": "tests/antstack_core/test_analysis_statistics.py",
+            "sha256": "9bef36ca89ccea9873ea170e4467f998f10365fbfbb9780f884c385e33f2cc70",
+            "status": " M"
+          },
+          {
+            "bytes": 22159,
+            "path": "tests/antstack_core/test_analysis_workloads.py",
+            "sha256": "057667565ac4f81bc0d494db777105fb7a0171c7b82599d96cde23b245ecb9bd",
+            "status": " M"
+          },
+          {
+            "bytes": 2242,
+            "path": "tests/antstack_core/test_architecture_contract.py",
+            "sha256": "0bd4ed448d26dd19dad09e7d9ee02afeaf0d95de18abfc435dd4d8b2130a1190",
+            "status": " M"
+          },
+          {
+            "bytes": 7545,
+            "path": "tests/antstack_core/test_ce_runner_contract.py",
+            "sha256": "352caa0d1cf291a0cc6c6bc3a5b7ed59beb1038e5a9b772495f37342a4e97930",
+            "status": " M"
+          },
+          {
+            "bytes": 1983,
+            "path": "tests/antstack_core/test_cli_entrypoints.py",
+            "sha256": "d3343ec2c7abd6c92af4f1261b9bc6ca626ed7ba8f85c1a89b296f4f1f3787f3",
+            "status": " M"
+          },
+          {
+            "bytes": 1557,
+            "path": "tests/antstack_core/test_cli_entrypoints_subprocess.py",
+            "sha256": "27c52250a64cd3a9fa11ca7681b0c41b28618a642d65069bc7484da63ec8b67e",
+            "status": " M"
+          },
+          {
+            "bytes": 23939,
+            "path": "tests/antstack_core/test_cohereants_behavioral.py",
+            "sha256": "24e83b0fdafe71fb6cfeae627c2875849f6af60906ee46312d22381937aab58a",
+            "status": " M"
+          },
+          {
+            "bytes": 28156,
+            "path": "tests/antstack_core/test_complexity_analysis.py",
+            "sha256": "4743b36651c84d1042a26f1cd2370d064aa434d88a8f3d4e31c79129206f11d1",
+            "status": " M"
+          },
+          {
+            "bytes": 2897,
+            "path": "tests/antstack_core/test_docs_contract.py",
+            "sha256": "e891ea2adb8ae2779137c84b02410431a4bc481127a1cde3dd5c9ef497f0ad92",
+            "status": " M"
+          },
+          {
+            "bytes": 18887,
+            "path": "tests/antstack_core/test_enhanced_complexity_analysis.py",
+            "sha256": "1011fc763b195163c202cd7c2e0f08e68932cd89841c4989b3cde0a33c357b5a",
+            "status": " M"
+          },
+          {
+            "bytes": 24725,
+            "path": "tests/antstack_core/test_enhanced_estimators.py",
+            "sha256": "573475fd54f11c8a587bc6768968774f0610d0d8e986712343605e8d2f383b0d",
+            "status": " M"
+          },
+          {
+            "bytes": 20106,
+            "path": "tests/antstack_core/test_experiment_config.py",
+            "sha256": "bbcdd22cb915c0c0fd4f85dd1a1db59a67e6dff3a346475315cc629f6a3dcaa2",
+            "status": " M"
+          },
+          {
+            "bytes": 1875,
+            "path": "tests/antstack_core/test_figures_mermaid.py",
+            "sha256": "92f7ccc872a912751110d7515bf64582be470842206f9c96caed60e8b8ed6a36",
+            "status": " M"
+          },
+          {
+            "bytes": 2755,
+            "path": "tests/antstack_core/test_figures_plots.py",
+            "sha256": "f44275f2d9316f31440bc7b826a0fef0f2f0ec03ebb3ae322794950def4d81da",
+            "status": " M"
+          },
+          {
+            "bytes": 9714,
+            "path": "tests/antstack_core/test_integration_workflow.py",
+            "sha256": "0270e5399e5f3db1967eaed589125299e0c934dcefce865dbe3e50b25cbb6159",
+            "status": " M"
+          },
+          {
+            "bytes": 10601,
+            "path": "tests/antstack_core/test_key_numbers.py",
+            "sha256": "d3abe5bd1a455bc13abbba9819a4fa0a9ce4999bc328371286e0424b2417d918",
+            "status": " M"
+          },
+          {
+            "bytes": 3836,
+            "path": "tests/antstack_core/test_mathematics.py",
+            "sha256": "4eac8f80df4d1d3d174d86519aa29a0d0102682b7cd5260ac840d76a00193a68",
+            "status": " M"
+          },
+          {
+            "bytes": 7621,
+            "path": "tests/antstack_core/test_power_meters.py",
+            "sha256": "6c522dbc7e8f6bb7243869ecf00b102586487e55b362d99279d612c30f2a4c80",
+            "status": " M"
+          },
+          {
+            "bytes": 5712,
+            "path": "tests/antstack_core/test_publishing_provenance.py",
+            "sha256": "0d103bbcca14f9b095ab0f3b1ef4c310620ff4dfe2787dbc1e400885e27c14e6",
+            "status": " M"
+          },
+          {
+            "bytes": 19578,
+            "path": "tests/antstack_core/test_run_all_antstack.py",
+            "sha256": "61e6a96f4d70e9ba6a3d0de50c51d51cff3c9dde4d8b6235f14d4abf684f7ffc",
+            "status": " M"
+          },
+          {
+            "bytes": 19177,
+            "path": "tests/antstack_core/test_scaling_analysis.py",
+            "sha256": "5515c7b510ac7a5c2ce0bc8f86407c6d3fe2a19d3556c2cf07f22202eec665d5",
+            "status": " M"
+          },
+          {
+            "bytes": 30025,
+            "path": "tests/antstack_core/test_spectroscopy.py",
+            "sha256": "2a4770ffa84c91a73a0244f35a9df0222b5078d1e951d9d251b8fc1eee93e3b5",
+            "status": " M"
+          },
+          {
+            "bytes": 29258,
+            "path": "tests/antstack_core/test_statistical_analysis.py",
+            "sha256": "11d44144ca29e8c43f1cefed93ae65e7c4e5c4b77c55d7434fefdd21eaaec3f6",
+            "status": " M"
+          },
+          {
+            "bytes": 23593,
+            "path": "tests/antstack_core/test_theoretical_limits.py",
+            "sha256": "be64feeb5f982b2f56622d7b3bbe9b1efae9922da9e790394387637c1f3a225b",
+            "status": " M"
+          },
+          {
+            "bytes": 14095,
+            "path": "tests/antstack_core/test_theoretical_limits_deep.py",
+            "sha256": "8c6792f3535ea0ecfed9f460c0d5f4a43bb0cd05ce0dac0a40ce8f81ebe89423",
+            "status": " M"
+          },
+          {
+            "bytes": 27145,
+            "path": "tests/antstack_core/test_veridical_reporting.py",
+            "sha256": "421bd3353ffd40de7fcbf6049abcce4f7cafe63735902b9e4c9094ca74c4f231",
+            "status": " M"
+          },
+          {
+            "bytes": 21631,
+            "path": "tests/antstack_core/test_visualization.py",
+            "sha256": "521620a3db15e17662d4bbbd8625c1275e23c15a3cc254e8ed5dfac73616fa8f",
+            "status": " M"
+          },
+          {
+            "bytes": 931,
+            "path": "tests/complexity_energetics/AGENTS.md",
+            "sha256": "13e74d22f1ba5e359c83ccfe9b1e05158813170314e3ed950cfe82eed0145ba4",
+            "status": " M"
+          },
+          {
+            "bytes": 17975,
+            "path": "tests/complexity_energetics/test_enhanced_ce.py",
+            "sha256": "4c32c1fcf6c313fcf7ac0bf880c0e037086b75ff170401db3e6a614d545c0b53",
+            "status": " M"
+          },
+          {
+            "bytes": 15056,
+            "path": "tests/complexity_energetics/test_integration_workflows.py",
+            "sha256": "4b64cd6fb9d312d87ea840af0bbea7ad64913a58619d75b0b3d5ffe461e6c57e",
+            "status": " M"
+          },
+          {
+            "bytes": 3848,
+            "path": "tests/complexity_energetics/test_key_numbers.py",
+            "sha256": "b8dcc9200ebe78bf811c5e66575a0f695eb581df401796f55b0b54677f494a89",
+            "status": " M"
+          },
+          {
+            "bytes": 11830,
+            "path": "tests/complexity_energetics/test_orchestrators.py",
+            "sha256": "97a42b9ef42b09e6de6965f7db8b7ec5697995c6a7bd0290d3c33f78443d0d89",
+            "status": " M"
+          },
+          {
+            "bytes": 874,
+            "path": "tests/core_rendering/AGENTS.md",
+            "sha256": "6ca8c844298d6a1e67b73e0a5102911e975e9ffca1f0e91db7ccdfd3292046fc",
+            "status": " M"
+          },
+          {
+            "bytes": 11559,
+            "path": "tests/core_rendering/test_core_refactor.py",
+            "sha256": "5115fea3645f76da0ed5089526e584f96abbd0d76845ece34e5ff5354c7ecbd5",
+            "status": " M"
+          },
+          {
+            "bytes": 930,
+            "path": "tools/AGENTS.md",
+            "sha256": "b0eefb0dfd2fc8d8566bb90385ae72668fb39c836c6af9b8ddff61be305e30e6",
+            "status": " M"
+          },
+          {
+            "bytes": 18021,
+            "path": "tools/ensure_folder_docs.py",
+            "sha256": "99342150bfa63c90ca7d93d7b1db9fcb9bb4db27b8a3e1ca4ebf5101b4d170f3",
+            "status": " M"
+          },
+          {
+            "path": "tools/filters/AGENTS.md",
+            "status": " D"
+          },
+          {
+            "path": "tools/filters/README.md",
+            "status": " D"
+          },
+          {
+            "path": "tools/filters/auto_link_code_urls.lua",
+            "status": " D"
+          },
+          {
+            "path": "tools/filters/pandoc_crossref.lua",
+            "status": " D"
+          },
+          {
+            "path": "tools/filters/unicode_to_tex.lua",
+            "status": " D"
+          },
+          {
+            "bytes": 584,
+            "path": "tools/render_pdf.sh",
+            "sha256": "c6f4e57975a10d9aeb77baf981827c10b3fc9854652b0db0d481caa2edd13481",
+            "status": " M"
+          },
+          {
+            "bytes": 406711,
+            "path": "uv.lock",
+            "sha256": "533b626fa7145d3dccfe95a502d98e5dc2a15bd99dded6176878f5dd93bfdf1d",
+            "status": " M"
+          },
+          {
+            "bytes": 894,
+            "path": ".github/AGENTS.md",
+            "sha256": "5ea76475550c43c0191cf0e951533806befb7e483aeaf03ea269238def88b3e3",
+            "status": "??"
+          },
+          {
+            "bytes": 658,
+            "path": ".github/README.md",
+            "sha256": "ac7b0ed95c84f040eba38514457bdd3420e7b6b957efe8c25d8a399d332188a8",
+            "status": "??"
+          },
+          {
+            "bytes": 986,
+            "path": ".github/workflows/AGENTS.md",
+            "sha256": "68c96c6b5ec626fe6ffa42c3c96314766722902f58c3f5f7908a8c22be8a2c54",
+            "status": "??"
+          },
+          {
+            "bytes": 750,
+            "path": ".github/workflows/README.md",
+            "sha256": "dfe2c948afa44aaa02f9934c07251c210891b61887acab9bff4df78d938f0a3d",
+            "status": "??"
+          },
+          {
+            "bytes": 22329,
+            "path": ".github/workflows/validate.yml",
+            "sha256": "f90bbf05fae22629fd5802749ceb4bd581d7d216f7f2c215aec892eb6672bc7f",
+            "status": "??"
+          },
+          {
+            "bytes": 30055,
+            "path": "antstack_core/orchestration/complexity_energetics.py",
+            "sha256": "cffad68a61e4f68d4c8eaaa792bee09cd04c37121df3b10ffc7dc12f094fe358",
+            "status": "??"
+          },
+          {
+            "bytes": 11843,
+            "path": "antstack_core/publishing/paper_builder.py",
+            "sha256": "50dc49bab5ec33f4fec8bc2635793f28c6f06fb14d849b8f797d6a7a7d3d8b3b",
+            "status": "??"
+          },
+          {
+            "bytes": 1024,
+            "path": "papers/graphical_abstracts/AGENTS.md",
+            "sha256": "285d2906b398b25bc28d50330fb3289fac4a57057e3587b9c112924744dd232d",
+            "status": "??"
+          },
+          {
+            "bytes": 788,
+            "path": "papers/graphical_abstracts/README.md",
+            "sha256": "d5afcd4c4d4e356c56445937f1dba1330372f05f02db7c0ce25c0265123ee649",
+            "status": "??"
+          },
+          {
+            "bytes": 343756,
+            "path": "papers/graphical_abstracts/ant_stack_graphical_abstract.png",
+            "sha256": "0ed6aa1d3fbc241ca08193063fbc88c8fed505cc1405d7037ee51a0f383a9b31",
+            "status": "??"
+          },
+          {
+            "bytes": 108607,
+            "path": "papers/graphical_abstracts/ant_stack_graphical_abstract.svg",
+            "sha256": "963360e2939c4ceb78dc909a78d10fefcabec8bc35e54e357db0c8de05a57118",
+            "status": "??"
+          },
+          {
+            "bytes": 422099,
+            "path": "papers/graphical_abstracts/complexity_energetics_graphical_abstract.png",
+            "sha256": "69c617a0776e00dca50b6a919c0ac3cbd3edc0be310469ce42350d6d79965c0a",
+            "status": "??"
+          },
+          {
+            "bytes": 144746,
+            "path": "papers/graphical_abstracts/complexity_energetics_graphical_abstract.svg",
+            "sha256": "585fdbfe1d4c5a49c0cd12c34ec8c40c6bc80110221b09600eef9253e792c5e6",
+            "status": "??"
+          },
+          {
+            "bytes": 11551,
+            "path": "papers/graphical_abstracts/graphical_abstracts.provenance.json",
+            "sha256": "7d71a199ec893ae8435c9c9e8d065006638be1b7a5826116cc9622a48d8be81f",
+            "status": "??"
+          },
+          {
+            "bytes": 13002,
+            "path": "tests/antstack_core/test_ce_figure_families.py",
+            "sha256": "a39258c88ab0891a9c4d5373b50a7a2efa6d33303e3f12d4d2b3452d4e12b617",
+            "status": "??"
+          },
+          {
+            "bytes": 8616,
+            "path": "tests/antstack_core/test_figure_numerics.py",
+            "sha256": "0c4c1d41eb8a1d5f0ad12522613e7915a571bf56c058e773c1ccb1def482ad22",
+            "status": "??"
+          },
+          {
+            "bytes": 2975,
+            "path": "tests/antstack_core/test_template_custody.py",
+            "sha256": "52e7301f3204fdcbfad413e00d7008b1c816c1f59bd83805a16a8fb237ed1c0e",
+            "status": "??"
+          },
+          {
+            "bytes": 21477,
+            "path": "tools/generate_graphical_abstracts.py",
+            "sha256": "5be3d1ac6eb422f2844d7e42f86c03030507e4fd6ccc4d516e1d11b29363c90b",
+            "status": "??"
+          },
+          {
+            "bytes": 33788,
+            "path": "tools/release_smoke.py",
+            "sha256": "67f9e6ec5bc5e3385c5bb4b2895402fe4c9b516ebfb6e6c816026dbb11026457",
+            "status": "??"
+          }
+        ],
+        "commit": "3d3c6b994e4a8f04f8d982d1e9cc2fec5e7b11b0",
+        "dirty": true,
+        "root": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack"
+      },
+      "version": "3.0.0"
+    },
+    "working_project": {
+      "changes": [
+        {
+          "bytes": 390,
+          "path": ".gitignore",
+          "sha256": "899a012cecca9c24c831debcbe6d6ab1f12857cc45446594c16b949347ee674c",
+          "status": " M"
+        },
+        {
+          "bytes": 4070,
+          "path": "CONTRIBUTING.md",
+          "sha256": "d16c2a8e96c8960bcf27bd767ad6e3cce09d07795c7a165a4f0055775b0f0ac2",
+          "status": " M"
+        },
+        {
+          "bytes": 3019,
+          "path": "PDF_RENDERING_GUIDE.md",
+          "sha256": "bbf6e1229d6e09f13cc030382fa2bb1ad04c1d0a40582d15ed5d391fee03865b",
+          "status": " M"
+        },
+        {
+          "bytes": 5686,
+          "path": "README.md",
+          "sha256": "21c55aee19e0670df4df67326fad3972147d2ecc59b4869c0b493aef85857433",
+          "status": " M"
+        },
+        {
+          "bytes": 8205,
+          "path": "RELEASE_NOTES.md",
+          "sha256": "b21d78236075a9b140dbaca00ffe5a150038ef99bc765aaaee72440b910a6988",
+          "status": " M"
+        },
+        {
+          "bytes": 2741,
+          "path": "UNIFIED_WORKFLOW_GUIDE.md",
+          "sha256": "03eacbb8d9d71dc125b48269c1aa42947581c6ff1834164948a4cdf7420d7b69",
+          "status": " M"
+        },
+        {
+          "bytes": 1174,
+          "path": "antstack_core/AGENTS.md",
+          "sha256": "bc4d095fc0e1d89219c5d95da3aa605739e1c7a7ad20acf85d4a12f444d31a51",
+          "status": " M"
+        },
+        {
+          "bytes": 1207,
+          "path": "antstack_core/__init__.py",
+          "sha256": "f535b9dee810ed6357591f5bb780db485c9f6c877da95fee28948342d92051b8",
+          "status": " M"
+        },
+        {
+          "bytes": 1053,
+          "path": "antstack_core/analysis/AGENTS.md",
+          "sha256": "4c5b736a34da20b084ae945e49ebb414c71108cd968229dcbcf0818931172ca6",
+          "status": " M"
+        },
+        {
+          "bytes": 817,
+          "path": "antstack_core/analysis/README.md",
+          "sha256": "f7b2c725cf83985ec89854d8a966169fe25a11264b81888669d35fcd9f496934",
+          "status": " M"
+        },
+        {
+          "bytes": 12856,
+          "path": "antstack_core/analysis/ce_active_inference.py",
+          "sha256": "29e39b67f6e6599596522c4b3692061a3d6fb18331a6d83913518ab024b7a451",
+          "status": " M"
+        },
+        {
+          "path": "antstack_core/analysis/ce_biomechanical_benchmarks.py",
+          "status": " D"
+        },
+        {
+          "bytes": 14975,
+          "path": "antstack_core/analysis/ce_comprehensive_analysis.py",
+          "sha256": "57d7588215243ec4b78c79506888dec1d01dc5b20044440f7653df220fd7db46",
+          "status": " M"
+        },
+        {
+          "bytes": 7225,
+          "path": "antstack_core/analysis/ce_contact_dynamics.py",
+          "sha256": "dae4553e45874ad5d9c82f2bbae0453290075c7e183bcdce904ac8852e6dc834",
+          "status": " M"
+        },
+        {
+          "bytes": 26517,
+          "path": "antstack_core/analysis/ce_manuscript_figures.py",
+          "sha256": "ac9bbd76ea1123d597c7774040bf21914b90725cd6e24ee3aa39eab8e0f0998b",
+          "status": " M"
+        },
+        {
+          "bytes": 16521,
+          "path": "antstack_core/analysis/ce_module_scaling_analysis.py",
+          "sha256": "fbbf497b4307068d0b66f8e4b919284beefec18823f29ae4b9f0e6c1a133545b",
+          "status": " M"
+        },
+        {
+          "bytes": 20906,
+          "path": "antstack_core/analysis/ce_multipanel_figures.py",
+          "sha256": "2adcba1efcae6351c95e9e5ee8ae513479ad06cf0e07dae040d0e7231910b2a1",
+          "status": " M"
+        },
+        {
+          "bytes": 10706,
+          "path": "antstack_core/analysis/ce_neural_networks.py",
+          "sha256": "e6b227c23cd8a8f874cc446052d86d30db8a99c07d8b5d329a02e9ae8532965d",
+          "status": " M"
+        },
+        {
+          "bytes": 12774,
+          "path": "antstack_core/analysis/ce_publication_figures.py",
+          "sha256": "2704011be6521e46805186edacc53e32f195bb0925c57772c5dc29a1a5144c58",
+          "status": " M"
+        },
+        {
+          "bytes": 9215,
+          "path": "antstack_core/analysis/ce_results_figures.py",
+          "sha256": "5d8384837881b8dba44241dc86ddfbe1dc6258c4e1763bb9a621b0f64e478ee9",
+          "status": " M"
+        },
+        {
+          "bytes": 11991,
+          "path": "antstack_core/analysis/ce_tables_and_numbers.py",
+          "sha256": "2f0f1538c1bd8d5579b3a24bb0a310fb2c8593edfc5a935b3072ba5ee4a552dc",
+          "status": " M"
+        },
+        {
+          "bytes": 28894,
+          "path": "antstack_core/analysis/complexity_analysis.py",
+          "sha256": "170e560c960aab589b6d8c193328278211ffc1d53a6165860ef59a9a86cf1306",
+          "status": " M"
+        },
+        {
+          "bytes": 10004,
+          "path": "antstack_core/analysis/empirical_data.py",
+          "sha256": "f76b8b459f87a0a62d928f99af8144ed490a7bac8931e590bfa83080617b841a",
+          "status": " M"
+        },
+        {
+          "bytes": 17066,
+          "path": "antstack_core/analysis/energy.py",
+          "sha256": "ace12047bf205d14509e3809cab0ea8ffb8d3dcad181d3db16fec5d37c4535dd",
+          "status": " M"
+        },
+        {
+          "bytes": 22833,
+          "path": "antstack_core/analysis/enhanced_complexity_analysis.py",
+          "sha256": "50d5e7947df90a594336e4f9aca5e66593b069a303940df3778f48623505c0d4",
+          "status": " M"
+        },
+        {
+          "bytes": 21276,
+          "path": "antstack_core/analysis/enhanced_estimators.py",
+          "sha256": "3c10444fe7b9a4c87f51558d244859e6aae4e471488c18cbfe566eedbc8f6d15",
+          "status": " M"
+        },
+        {
+          "bytes": 25088,
+          "path": "antstack_core/analysis/experiment_config.py",
+          "sha256": "6b09e9f0f373ce58d8d10eb73b390588d0e6bbd35eade1af11c64461f20c6fa1",
+          "status": " M"
+        },
+        {
+          "bytes": 16731,
+          "path": "antstack_core/analysis/key_numbers.py",
+          "sha256": "0e454bd4faca53661be4d1fb5ef9a1bcc10fbb617b3bff5be007a5d8215a1f6b",
+          "status": " M"
+        },
+        {
+          "bytes": 7223,
+          "path": "antstack_core/analysis/key_numbers_updater.py",
+          "sha256": "f1bf3986d2e59d68f7bed1e15dc0b5b37b560092dcea633274a9f3932e99a51c",
+          "status": " M"
+        },
+        {
+          "bytes": 12325,
+          "path": "antstack_core/analysis/power_meters.py",
+          "sha256": "ba39d09652b0ffe6929c536d2fbaa73083fb176d5de59441e9b37af798c1eab9",
+          "status": " M"
+        },
+        {
+          "bytes": 16882,
+          "path": "antstack_core/analysis/report_generator.py",
+          "sha256": "c01f99b1632edeac90cf20a2f47107919420339c1f92046e13c62f8f861037c0",
+          "status": " M"
+        },
+        {
+          "bytes": 15968,
+          "path": "antstack_core/analysis/scaling_analysis.py",
+          "sha256": "63f950c6ed4378b6bda32fb4f7cd97c9a1ab81d9ed1c3af5e1b8aa53d1efb224",
+          "status": " M"
+        },
+        {
+          "bytes": 24564,
+          "path": "antstack_core/analysis/statistical_analysis.py",
+          "sha256": "339ba4e7d1e081f3356b298ba2ecc488e21bc1ef07fc53f19c4354d6cbf541d7",
+          "status": " M"
+        },
+        {
+          "bytes": 12829,
+          "path": "antstack_core/analysis/statistics.py",
+          "sha256": "ce316cdab5ef278f6422582f188d5ab1c654fa6b3b6693d15b26530240bfa55a",
+          "status": " M"
+        },
+        {
+          "bytes": 28894,
+          "path": "antstack_core/analysis/theoretical_limits.py",
+          "sha256": "29652cc4a9a643301f8b420af96130333bc6bac82693780596ddde88c0a9a0ab",
+          "status": " M"
+        },
+        {
+          "bytes": 13538,
+          "path": "antstack_core/analysis/veridical_reporting.py",
+          "sha256": "ad309b2731fb1a9fe7821064fa6114a3f81331728c591cd8dc994d74c75683a7",
+          "status": " M"
+        },
+        {
+          "bytes": 28785,
+          "path": "antstack_core/analysis/workloads.py",
+          "sha256": "9fc1238d9594ebd9356fc9d91892f020baea7af3a8c418cbb11edb91df35e6e9",
+          "status": " M"
+        },
+        {
+          "bytes": 1062,
+          "path": "antstack_core/cli/AGENTS.md",
+          "sha256": "1638d1311bb2a8051c4904dec2f734ab259ce7cd9511a24c19913f49f86fc7d8",
+          "status": " M"
+        },
+        {
+          "bytes": 768,
+          "path": "antstack_core/cli/README.md",
+          "sha256": "c099ef0f00960197f35ae2d9815314dcb1728ef44f76d9e888a2978ee0c0eb17",
+          "status": " M"
+        },
+        {
+          "bytes": 448,
+          "path": "antstack_core/cli/__init__.py",
+          "sha256": "69c5f31c18544541f38b4c0064ed1678318d4f106fb06f067f8b001bcd246622",
+          "status": " M"
+        },
+        {
+          "bytes": 389,
+          "path": "antstack_core/cli/build.py",
+          "sha256": "ea86e1b255d913fd8fc66c795dbb6b2d94e7575b888519d9ce7143d3e9611790",
+          "status": " M"
+        },
+        {
+          "bytes": 539,
+          "path": "antstack_core/cli/ce.py",
+          "sha256": "54a8f68d4573017b5ab424d6a14f768db33c675588328402ae1f5ce405f41d3a",
+          "status": " M"
+        },
+        {
+          "bytes": 1030,
+          "path": "antstack_core/cohereants/AGENTS.md",
+          "sha256": "7d2a5df6b8dea2db12465c69ab45df102213d6972018795470c1229de705ef89",
+          "status": " M"
+        },
+        {
+          "bytes": 794,
+          "path": "antstack_core/cohereants/README.md",
+          "sha256": "7ab35a30b535c622c920654ae20cebe5364b9cc2cfd95b228bdd41e7a5cbeb37",
+          "status": " M"
+        },
+        {
+          "bytes": 11229,
+          "path": "antstack_core/cohereants/behavioral.py",
+          "sha256": "111d08c4f953bf57a767aeeb9f4ad847b4453289bfeb5e15c59deafd916b56f8",
+          "status": " M"
+        },
+        {
+          "bytes": 13298,
+          "path": "antstack_core/cohereants/spectroscopy.py",
+          "sha256": "3ebc9d87815f101ea5c121e5987e2c34af222ce8fa7effdfdfc71e8ed34ee3f7",
+          "status": " M"
+        },
+        {
+          "bytes": 972,
+          "path": "antstack_core/figures/AGENTS.md",
+          "sha256": "61df3b2216752c578bb7ee64f2212a3573a85ff9410bd8d77f348f26eb6afbf1",
+          "status": " M"
+        },
+        {
+          "bytes": 1406,
+          "path": "antstack_core/figures/__init__.py",
+          "sha256": "c156ed801618f449eeb4e682356cfb7cc48333252ff89d3373967a8770116e73",
+          "status": " M"
+        },
+        {
+          "bytes": 24988,
+          "path": "antstack_core/figures/advanced_plots.py",
+          "sha256": "70af68da52157bf008270896d95cf3c4bce8ef8a39a9df6fe942455ea47c8e9c",
+          "status": " M"
+        },
+        {
+          "bytes": 9108,
+          "path": "antstack_core/figures/mermaid.py",
+          "sha256": "1b2abcc6af042c959b7f6a662111880e7fe45dcfae838a28f911de1953af9d71",
+          "status": " M"
+        },
+        {
+          "bytes": 23360,
+          "path": "antstack_core/figures/plots.py",
+          "sha256": "013be2496570f13565487737cabdd71ddb4be7fe633205619db1b83a43af8b2d",
+          "status": " M"
+        },
+        {
+          "bytes": 21515,
+          "path": "antstack_core/figures/publication_plots.py",
+          "sha256": "7b36e114c8eb6f5182b3ba182fd45caad78df576bbf8dcee6412e60168fd710d",
+          "status": " M"
+        },
+        {
+          "bytes": 7676,
+          "path": "antstack_core/figures/references.py",
+          "sha256": "6d72d7502f7e05f16a4645a863eadf95f81e0d2cc1b428bc06b7f43bd9a4bd63",
+          "status": " M"
+        },
+        {
+          "bytes": 937,
+          "path": "antstack_core/mathematics/AGENTS.md",
+          "sha256": "9e29c2f7ee6a015b5028de25b97f40d36349fb338b299995881d182ea378397b",
+          "status": " M"
+        },
+        {
+          "bytes": 701,
+          "path": "antstack_core/mathematics/README.md",
+          "sha256": "a6f1cf55cb425cc63af87162b95bd3ceac6afab2e6af8d5ebcfc78902f7cc1c2",
+          "status": " M"
+        },
+        {
+          "bytes": 4432,
+          "path": "antstack_core/mathematics/__init__.py",
+          "sha256": "1bf440f6cc691c2b6e5cb34636391fd9550082d492a6019be19f35e10863bf9b",
+          "status": " M"
+        },
+        {
+          "bytes": 38305,
+          "path": "antstack_core/orchestration/run_all.py",
+          "sha256": "7a45502fd3732b689d957d643d1b2a62595f47fa9ab7a7dd6120a6aad315e734",
+          "status": " M"
+        },
+        {
+          "path": "antstack_core/orchestration/unified_build.py",
+          "status": " D"
+        },
+        {
+          "bytes": 955,
+          "path": "antstack_core/publishing/AGENTS.md",
+          "sha256": "9f8a1df007369e822814a4dc0d879c2379c91731c21b4a164cc88e23ae083531",
+          "status": " M"
+        },
+        {
+          "bytes": 738,
+          "path": "antstack_core/publishing/README.md",
+          "sha256": "51baf1f816f1a52c7134b5c44cca03fc24af897016faf5a1c5bbb346cfcd36ce",
+          "status": " M"
+        },
+        {
+          "bytes": 2716,
+          "path": "antstack_core/publishing/__init__.py",
+          "sha256": "3ce035aa4f2e85a62d1e931dd3d2bf9a5ae317f78e30b0a84c290c7e25f2eecf",
+          "status": " M"
+        },
+        {
+          "bytes": 18978,
+          "path": "antstack_core/publishing/build_orchestrator.py",
+          "sha256": "d4235948c13a8387551f7accbf7b2883ae8490676a1bb1efdc16c37e5dce624e",
+          "status": " M"
+        },
+        {
+          "bytes": 3752,
+          "path": "antstack_core/publishing/formatting_fixes.py",
+          "sha256": "9b1d85dd9104931fc80c8f55e542b8fa086b9ea144ec3d7553dc314999354dcc",
+          "status": " M"
+        },
+        {
+          "bytes": 21189,
+          "path": "antstack_core/publishing/pdf_generator.py",
+          "sha256": "b193d18263a5462965ce88992a49f5be8d3491d38a4353e56cbdc3ea61da83fe",
+          "status": " M"
+        },
+        {
+          "bytes": 12097,
+          "path": "antstack_core/publishing/provenance.py",
+          "sha256": "3146ad7a50ecbad3d1ed495b002a2b43d2554d87fd137b1e10ba9279c4271742",
+          "status": " M"
+        },
+        {
+          "bytes": 24341,
+          "path": "antstack_core/publishing/quality_validator.py",
+          "sha256": "3e39b59f6c864608e26420c510b491a4f4c4587909a7c699d737c11f67946965",
+          "status": " M"
+        },
+        {
+          "bytes": 22920,
+          "path": "antstack_core/publishing/reference_manager.py",
+          "sha256": "1bd76557aa7862cea11e9c04c1bedb3df25de33f2e9e91c46ebfd360b58c3c9e",
+          "status": " M"
+        },
+        {
+          "bytes": 15870,
+          "path": "antstack_core/publishing/rendering_validator.py",
+          "sha256": "e363134b9ff0c063e735e3506ee7c4d0f3ef7e013ea9009f9af982288e7192f3",
+          "status": " M"
+        },
+        {
+          "bytes": 17708,
+          "path": "antstack_core/publishing/template_engine.py",
+          "sha256": "6c6f186e8553959b6260168b1fc80a6cc4feffb89dde72898df2b85ea26455d7",
+          "status": " M"
+        },
+        {
+          "bytes": 933,
+          "path": "antstack_core/publishing/templates/AGENTS.md",
+          "sha256": "e1466e5fd23e9e10307b491a3d4bfb02ca17306e80b554f0085cb07197265b1b",
+          "status": " M"
+        },
+        {
+          "bytes": 697,
+          "path": "antstack_core/publishing/templates/README.md",
+          "sha256": "342386562df761dcfde00552ce09f123e2236bf7b1419d176634a77ac2bb6482",
+          "status": " M"
+        },
+        {
+          "path": "antstack_core/publishing/templates/default.latex",
+          "status": " D"
+        },
+        {
+          "path": "build_report.md",
+          "status": " D"
+        },
+        {
+          "bytes": 44605,
+          "path": "bun.lock",
+          "sha256": "55f39ff627d95e49582a66b59dde8af19888beeb91a8c900b8188a9996515ef6",
+          "status": " M"
+        },
+        {
+          "bytes": 927,
+          "path": "complexity_energetics/AGENTS.md",
+          "sha256": "5f68acb40ddc27a08f00ddfd9144830022075b2fdb8b5c3074fefe452fb60c81",
+          "status": " M"
+        },
+        {
+          "bytes": 947,
+          "path": "complexity_energetics/assets/AGENTS.md",
+          "sha256": "f0d85ead9334e61d75a40b2dad675933103825b8153d87497922f90f2ae544be",
+          "status": " M"
+        },
+        {
+          "bytes": 711,
+          "path": "complexity_energetics/assets/README.md",
+          "sha256": "fbbe31bd9987fc2c557de0d1d0fddb6d9a083b782d5b29eca8883d0471eeff35",
+          "status": " M"
+        },
+        {
+          "bytes": 965,
+          "path": "complexity_energetics/generated_content/AGENTS.md",
+          "sha256": "7c3f9302566fff5a9271715ce106d6485cf8c057dccb3dd18b80eebbf8c1aa05",
+          "status": " M"
+        },
+        {
+          "bytes": 729,
+          "path": "complexity_energetics/generated_content/README.md",
+          "sha256": "7e53de692216e95e3f1898b795effde33a6fcf122ea0324d0d3505e5694f54cd",
+          "status": " M"
+        },
+        {
+          "bytes": 1063,
+          "path": "configs/run_all_antstack.example.yaml",
+          "sha256": "a32409eb5aa58d0d92359e69fce763b918ecd656b1201d53f2071af2f90eb446",
+          "status": " M"
+        },
+        {
+          "bytes": 3930,
+          "path": "docs/README.md",
+          "sha256": "d2db4230ba66aac2d638aa3b4664ec1f46ba7a84fd9a8a84153671b8b001947a",
+          "status": " M"
+        },
+        {
+          "bytes": 7527,
+          "path": "docs/api_reference.md",
+          "sha256": "cdfc5a49392544713240bf37566dbd9bb8adf67a5cc5451304a0ca1334a5acd5",
+          "status": " M"
+        },
+        {
+          "bytes": 6211,
+          "path": "docs/architecture.md",
+          "sha256": "0b41e236cccd1899361dc104698d8a085a254352300e3284d9a02fde4c981382",
+          "status": " M"
+        },
+        {
+          "bytes": 6689,
+          "path": "docs/benchmarking.md",
+          "sha256": "75b08cbe7da5bddef879f7366b22128b9a3431f9b7dac84ed851763209c9e340",
+          "status": " M"
+        },
+        {
+          "bytes": 7353,
+          "path": "docs/best_practices.md",
+          "sha256": "3b903ccc1e86d3bd3f5b2a467531056ec6fba7fdc6108204572026bf9640be71",
+          "status": " M"
+        },
+        {
+          "bytes": 7769,
+          "path": "docs/external_ant_data_integration.md",
+          "sha256": "6f6b7024cb4fa2ba23b492f6cc5bf7b150d24e5a8eb4d14bd153d198f8e83f01",
+          "status": " M"
+        },
+        {
+          "bytes": 6871,
+          "path": "docs/getting_started.md",
+          "sha256": "8027781b02d29244962bf3d624ff24d6d96dea5a0e1aa34990aa6dfe718b088a",
+          "status": " M"
+        },
+        {
+          "bytes": 826,
+          "path": "docs/manuscript/AGENTS.md",
+          "sha256": "c9ac0f7e7bbd9bbe448323b585797093715807f23befbe6559e489809dfac6ea",
+          "status": " M"
+        },
+        {
+          "bytes": 7635,
+          "path": "docs/manuscript/MANUSCRIPT_STATUS.md",
+          "sha256": "d7cfe3bf37bb4518883ee407fed23928dedac887d82e38108db670fd89750743",
+          "status": " M"
+        },
+        {
+          "bytes": 1999,
+          "path": "docs/manuscript/README.md",
+          "sha256": "b3eff8c651e67b7c441e8acbde99862cb29fdfb7af1f0dd6ff4e422c7ac47377",
+          "status": " M"
+        },
+        {
+          "bytes": 8417,
+          "path": "docs/public_api_contracts.md",
+          "sha256": "e5976578e7155422780eb6e38cc813d2ade3ca60f7b3d0780e7f03e24f2ee325",
+          "status": " M"
+        },
+        {
+          "bytes": 6459,
+          "path": "docs/reproducibility.md",
+          "sha256": "326ac9119f2f9e4cdc13995614233ea1fe69f4f40999049ef68a2814ae906b4b",
+          "status": " M"
+        },
+        {
+          "bytes": 9002,
+          "path": "docs/scientific_validation.md",
+          "sha256": "4cee43c962ec18567e5239f4254521521ac7f30ceb42657e273ff2eada026994",
+          "status": " M"
+        },
+        {
+          "bytes": 7741,
+          "path": "docs/theory.md",
+          "sha256": "37b6864a57bc1e7c4dd577a91f0fceaf35a8004e8fea4a4e3566c7ab19942f7d",
+          "status": " M"
+        },
+        {
+          "bytes": 8077,
+          "path": "docs/troubleshooting.md",
+          "sha256": "783d187a12609b90ff25f83d899fa42e0ed321f53515ff159d57753950e29f83",
+          "status": " M"
+        },
+        {
+          "bytes": 7118,
+          "path": "docs/validation.md",
+          "sha256": "a557e5f682f184f2b3489659dff5f10c196209ada000f176215e19d4b0a80ba3",
+          "status": " M"
+        },
+        {
+          "bytes": 878,
+          "path": "examples/AGENTS.md",
+          "sha256": "acb0c7eba9b61c1ac56ff7a7580dbe1d0ddb0043a35257d5168639fa9e4f713d",
+          "status": " M"
+        },
+        {
+          "bytes": 642,
+          "path": "examples/README.md",
+          "sha256": "24f9fe31e812bc7ecb3736797855aea83b1644b3cef51e10b3e9436164add3a7",
+          "status": " M"
+        },
+        {
+          "bytes": 3402,
+          "path": "examples/proper_paper_syntax.md",
+          "sha256": "af19f47654c58528e30ba2f2150f027c7e8c3f5caaf9c11acbd90758ff60dc2e",
+          "status": " M"
+        },
+        {
+          "bytes": 790,
+          "path": "outputs/test-run/README.md",
+          "sha256": "06dc92485a97016e9d803d8797263f5caf5bf36da5cfb291003f02b513fe0ab5",
+          "status": " M"
+        },
+        {
+          "bytes": 961,
+          "path": "package.json",
+          "sha256": "88db483a0bc6819db93c5652b89b5dd9e66fe632993632ebf6826451460462a6",
+          "status": " M"
+        },
+        {
+          "bytes": 896,
+          "path": "papers/AGENTS.md",
+          "sha256": "ca376be865fb613c50928e3815677e712a1e025acc6fac7f5c9181d5c7010dc6",
+          "status": " M"
+        },
+        {
+          "bytes": 588,
+          "path": "papers/README.md",
+          "sha256": "63bc0afc9074d65dfa6c4127adf7ab128e89dd1816bce3f0bbd68af1b968eb61",
+          "status": " M"
+        },
+        {
+          "bytes": 890,
+          "path": "papers/ant_stack/AGENTS.md",
+          "sha256": "a183d07112ea2562ef4cc543334df4f4a8470c0fb7ebe645ee4cabd939c5c1aa",
+          "status": " M"
+        },
+        {
+          "bytes": 2379,
+          "path": "papers/ant_stack/Abstract.md",
+          "sha256": "fb9fbdee1114fa6db67bd91d5a021c4004dc4763a7ada59ba0a4d26039e4f354",
+          "status": " M"
+        },
+        {
+          "bytes": 6706,
+          "path": "papers/ant_stack/AntBody.md",
+          "sha256": "6d7f8d6da842923f8397a590124c74529421556278b2ba6202f8508a090fb80b",
+          "status": " M"
+        },
+        {
+          "bytes": 8105,
+          "path": "papers/ant_stack/AntBrain.md",
+          "sha256": "469ea40649f93c2623841351e569bbed60618f8927854da54b6e33da89ed9a89",
+          "status": " M"
+        },
+        {
+          "bytes": 7518,
+          "path": "papers/ant_stack/AntMind.md",
+          "sha256": "174c002c4f7624444c3b57b1ab3298af5786714eafeecf7c34f1298c607d0562",
+          "status": " M"
+        },
+        {
+          "bytes": 2620,
+          "path": "papers/ant_stack/Appendices.md",
+          "sha256": "93bbecc562ac85669f562c1857ac19c66daee1b28a47615c98e98a25d88f6b34",
+          "status": " M"
+        },
+        {
+          "bytes": 5183,
+          "path": "papers/ant_stack/Applications.md",
+          "sha256": "1e633f163c0ebb164a0a5456d0365a72c8a8499d0d1b6acdd3547f993fb508ea",
+          "status": " M"
+        },
+        {
+          "bytes": 3994,
+          "path": "papers/ant_stack/Background.md",
+          "sha256": "8b3a853971d59c0f099ff5681581bdd6ae305fe805f57bc1fe03672dc3972c4a",
+          "status": " M"
+        },
+        {
+          "bytes": 2814,
+          "path": "papers/ant_stack/Discussion.md",
+          "sha256": "6dfb38e4cc27f8b0fdd85d63ae45bef28ce909664a19b63a8a298310b3020e86",
+          "status": " M"
+        },
+        {
+          "bytes": 2430,
+          "path": "papers/ant_stack/Glossary.md",
+          "sha256": "db5da1e05320f01785aa498b4621653a68cfde532f17847dce9f8df543eb42a7",
+          "status": " M"
+        },
+        {
+          "bytes": 2715,
+          "path": "papers/ant_stack/README.md",
+          "sha256": "92953c04c9d5efd8d3ff76ea9a5e85baa0d80ed0823db5a308f52e8b05ee567a",
+          "status": " M"
+        },
+        {
+          "bytes": 5743,
+          "path": "papers/ant_stack/Resources.md",
+          "sha256": "414616aeadf152b4c8828503c1cb9c340199216f1238596c91f4a29bdbe1a776",
+          "status": " M"
+        },
+        {
+          "bytes": 882,
+          "path": "papers/ant_stack/assets/AGENTS.md",
+          "sha256": "50d9aa213a0a40e3ccf329e0f8cbb907e8d3e8b372504451fd732bd42fe7a4df",
+          "status": " M"
+        },
+        {
+          "bytes": 646,
+          "path": "papers/ant_stack/assets/README.md",
+          "sha256": "06b10c651c4ff095b4fef5398e18380ffd9f4b78cd2b6b2dd311227760c11c64",
+          "status": " M"
+        },
+        {
+          "path": "papers/ant_stack/assets/concat_after_prerender.md",
+          "status": " D"
+        },
+        {
+          "bytes": 866,
+          "path": "papers/ant_stack/assets/figures/AGENTS.md",
+          "sha256": "d4a1195f6e5a841bc51e616f2694c2027e2b320852f3463f3798597c594d2bee",
+          "status": " M"
+        },
+        {
+          "bytes": 630,
+          "path": "papers/ant_stack/assets/figures/README.md",
+          "sha256": "a9cf36c74da1966df63780856257fc4d74277f72f6b507ef06ff2b9188b73253",
+          "status": " M"
+        },
+        {
+          "bytes": 884,
+          "path": "papers/ant_stack/assets/mermaid/AGENTS.md",
+          "sha256": "530cff2040ecca307a57cfb30371144bbf207531145ed387478a028700174498",
+          "status": " M"
+        },
+        {
+          "bytes": 648,
+          "path": "papers/ant_stack/assets/mermaid/README.md",
+          "sha256": "803429c951c04b966b3f904e0958ebbd936525cec4c04f8a7375e8894d0c17ea",
+          "status": " M"
+        },
+        {
+          "path": "papers/ant_stack/concat_after_prerender.md",
+          "status": " D"
+        },
+        {
+          "bytes": 1388,
+          "path": "papers/ant_stack/paper_config.yaml",
+          "sha256": "ed75a9e42569225d5a904b5cf8dffcd75361b5fd8fa0e4592b4b15c50be8a32c",
+          "status": " M"
+        },
+        {
+          "bytes": 971,
+          "path": "papers/complexity_energetics/AGENTS.md",
+          "sha256": "5018c96d4515741a89d07825154cb2f20d732480a8bce9e24d900fbc5230eb59",
+          "status": " M"
+        },
+        {
+          "bytes": 2541,
+          "path": "papers/complexity_energetics/Abstract.md",
+          "sha256": "74c0c263e0221d227009ef017e4c90c81bdfe73ffe86adfe13f6fb6eb6ef3202",
+          "status": " M"
+        },
+        {
+          "bytes": 4281,
+          "path": "papers/complexity_energetics/Appendices.md",
+          "sha256": "2f2c2afd79ff7d3ad1cb454bc78546d9a1ab9a1b0b36036c119637e560b0922a",
+          "status": " M"
+        },
+        {
+          "bytes": 5398,
+          "path": "papers/complexity_energetics/Background.md",
+          "sha256": "9c300960f96eb739689d12dbc7c18bede99aa182e4b55bc1706ac899a9badc7e",
+          "status": " M"
+        },
+        {
+          "bytes": 9283,
+          "path": "papers/complexity_energetics/Complexity.md",
+          "sha256": "d6192e4e78b41a26e778ba27119da937df52c8f91a7a4345d587794e3fc5b906",
+          "status": " M"
+        },
+        {
+          "bytes": 5879,
+          "path": "papers/complexity_energetics/Discussion.md",
+          "sha256": "e2fddd000973f0b88181df29695d1a9f973eb38461b9c546c6af18bd324b2071",
+          "status": " M"
+        },
+        {
+          "bytes": 9422,
+          "path": "papers/complexity_energetics/Energetics.md",
+          "sha256": "5ef08f6db18a8dc02cabda81918c5892b5daf56855b085805ed21513bfca4c25",
+          "status": " M"
+        },
+        {
+          "bytes": 8572,
+          "path": "papers/complexity_energetics/Methods.md",
+          "sha256": "97e68f8bbaf7bca13a2d5715eb0ce2c965783610b1fb266c72130400053a12d4",
+          "status": " M"
+        },
+        {
+          "bytes": 3253,
+          "path": "papers/complexity_energetics/README.md",
+          "sha256": "0dbd7a360ef3ef879b174839e1e6fc54c216f56fe780869e30f487d6aff6f38a",
+          "status": " M"
+        },
+        {
+          "bytes": 2690,
+          "path": "papers/complexity_energetics/Resources.md",
+          "sha256": "953d269d95f7319492be719735a12642d7923ddb04fdd1c55988d6bb97a97fb2",
+          "status": " M"
+        },
+        {
+          "bytes": 6260,
+          "path": "papers/complexity_energetics/Results.md",
+          "sha256": "d21834b98c96641f5d61839f8958bbb3a3bdf88219d797bcbc5e8899a2f16c3b",
+          "status": " M"
+        },
+        {
+          "bytes": 4835,
+          "path": "papers/complexity_energetics/Scaling.md",
+          "sha256": "14f3f2f85e9876be9995174b0feff22cdd844c0e4d883e4df17e84c82d05fd4e",
+          "status": " M"
+        },
+        {
+          "bytes": 941,
+          "path": "papers/complexity_energetics/assets/AGENTS.md",
+          "sha256": "dfcc81577e0a8b1aee115d1f3c504a3a872b469f9a2eedeb9e972c108bf2e1a4",
+          "status": " M"
+        },
+        {
+          "bytes": 705,
+          "path": "papers/complexity_energetics/assets/README.md",
+          "sha256": "b6fe032982bdb06b032f038c809861b91cf6b7e4f1014fda7ac7099bbd870b74",
+          "status": " M"
+        },
+        {
+          "path": "papers/complexity_energetics/assets/concat_after_prerender.md",
+          "status": " D"
+        },
+        {
+          "bytes": 897,
+          "path": "papers/complexity_energetics/assets/figures/AGENTS.md",
+          "sha256": "fa6deb11d4d27bf639293d06bb6caf5d052d69d5b03c17df85b6933ba7b40680",
+          "status": " M"
+        },
+        {
+          "bytes": 661,
+          "path": "papers/complexity_energetics/assets/figures/README.md",
+          "sha256": "ee33461e8053e154181c2107c04d5f79bd880750ac21150dadfc53b114461fe7",
+          "status": " M"
+        },
+        {
+          "bytes": 902,
+          "path": "papers/complexity_energetics/assets/mermaid/AGENTS.md",
+          "sha256": "739773f9c5082a2212b3ba1932c9891d1e61ed7b22fab688129689bfe2847ea1",
+          "status": " M"
+        },
+        {
+          "bytes": 666,
+          "path": "papers/complexity_energetics/assets/mermaid/README.md",
+          "sha256": "f70de47f4eaf42014e2963875317560a5cf3ac08937d1eb024f079ffb99df4a8",
+          "status": " M"
+        },
+        {
+          "bytes": 984,
+          "path": "papers/complexity_energetics/generated_content/AGENTS.md",
+          "sha256": "637b36171965ac14a5b921187fdec281727142f20ceb8d5dd50bee1920847c81",
+          "status": " M"
+        },
+        {
+          "bytes": 748,
+          "path": "papers/complexity_energetics/generated_content/README.md",
+          "sha256": "809c4e426e9d51add78ef21b65d3bbc57154fc9df62ff602e168ee8147994f1e",
+          "status": " M"
+        },
+        {
+          "bytes": 2980,
+          "path": "papers/complexity_energetics/manifest.example.yaml",
+          "sha256": "9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a",
+          "status": " M"
+        },
+        {
+          "bytes": 794,
+          "path": "papers/complexity_energetics/out/README.md",
+          "sha256": "1f95149a5cc398164e30ff4f8e3801ad851ec1784e1228df4c13cc108df6acf7",
+          "status": " M"
+        },
+        {
+          "bytes": 1683,
+          "path": "papers/complexity_energetics/paper_config.yaml",
+          "sha256": "2731035235ace07ac049ce4667ea20a1455c9bb117c37ff58cebb502102f7806",
+          "status": " M"
+        },
+        {
+          "bytes": 2243,
+          "path": "papers/complexity_energetics/references.bib",
+          "sha256": "47cb6587c819575953b0287208a70d8ed3546b15ab853659f202e85b7722998e",
+          "status": " M"
+        },
+        {
+          "path": "papers/complexity_energetics/src/AGENTS.md",
+          "status": " D"
+        },
+        {
+          "path": "papers/complexity_energetics/src/README.md",
+          "status": " D"
+        },
+        {
+          "path": "papers/complexity_energetics/src/config_loader.py",
+          "status": " D"
+        },
+        {
+          "path": "papers/complexity_energetics/src/runner.py",
+          "status": " D"
+        },
+        {
+          "bytes": 879,
+          "path": "papers/documentation/AGENTS.md",
+          "sha256": "6b8097b924b22cc78e05f02aee8ebf42ac72180aca0a73cb1fc0e2a4d518b885",
+          "status": " M"
+        },
+        {
+          "bytes": 8661,
+          "path": "papers/documentation/PDF_RENDERING_GUIDE.md",
+          "sha256": "851e4c05722116b4303622658ad237c39ec561d79cfb60cdac4a1efe4119a6bd",
+          "status": " M"
+        },
+        {
+          "bytes": 1268,
+          "path": "papers/documentation/README.md",
+          "sha256": "8c0123e84cf383d2ff87a28f7b41894efdede45739e1e65b5df7baca6e0af16b",
+          "status": " M"
+        },
+        {
+          "bytes": 879,
+          "path": "papers/documentation/assets/AGENTS.md",
+          "sha256": "5397251abdb140019f382d043ba544b199783cd413cad78b426f9e716dcea04b",
+          "status": " M"
+        },
+        {
+          "bytes": 643,
+          "path": "papers/documentation/assets/README.md",
+          "sha256": "f1da192ad58d2e1660a129c42a06119c38a94c2b91060ef042d2c71f40031f3b",
+          "status": " M"
+        },
+        {
+          "path": "papers/documentation/assets/concat_after_prerender.md",
+          "status": " D"
+        },
+        {
+          "bytes": 869,
+          "path": "papers/documentation/assets/figures/AGENTS.md",
+          "sha256": "0986d95e9fe3840b0737c4359c9ff4afd327f21f124b81abf1e809060ee5bef1",
+          "status": " M"
+        },
+        {
+          "bytes": 633,
+          "path": "papers/documentation/assets/figures/README.md",
+          "sha256": "394dbad7219de4f10ba896d868c67254f37aac183c945a70cc0f8c96cd559a6b",
+          "status": " M"
+        },
+        {
+          "bytes": 881,
+          "path": "papers/documentation/assets/mermaid/AGENTS.md",
+          "sha256": "21bb7f4100a3b2bca36c000c74a6081c1c1a5a0c42d51721f172524177b2a5cf",
+          "status": " M"
+        },
+        {
+          "bytes": 645,
+          "path": "papers/documentation/assets/mermaid/README.md",
+          "sha256": "cab6b42a4dee182791a2ebd8e96de04ba47c3cf567b89d2e1aeab660469bbc0d",
+          "status": " M"
+        },
+        {
+          "bytes": 1116,
+          "path": "papers/documentation/paper_config.yaml",
+          "sha256": "a5d7baceb381ee59b2e02384b6402780407b2b081890278b639ced6b2e3da3db",
+          "status": " M"
+        },
+        {
+          "bytes": 1645,
+          "path": "pyproject.toml",
+          "sha256": "4e33ef49e7dc3a503583b49c570a7e1de026154e65f2aa76aa023964715bc8a2",
+          "status": " M"
+        },
+        {
+          "bytes": 3812,
+          "path": "scripts/AGENTS.md",
+          "sha256": "fc630d2f4ac583742d7a9a9aef8c3e31d375877ae2b686b8be2e6ef1a136568c",
+          "status": " M"
+        },
+        {
+          "bytes": 5858,
+          "path": "scripts/README.md",
+          "sha256": "b8283cf4d3d7f35eed6306ad143c677f9dd625f15212d7c7e211c9ab7fb3c582",
+          "status": " M"
+        },
+        {
+          "bytes": 891,
+          "path": "scripts/ant_stack/AGENTS.md",
+          "sha256": "17ca02c69e724099d9f9ad3aab1d98ad6b4a23024278c95fd995f8fb26137b27",
+          "status": " M"
+        },
+        {
+          "bytes": 893,
+          "path": "scripts/common_pipeline/AGENTS.md",
+          "sha256": "6e381bfb8e07624cf47cc49c5d22ab2260b282f7ecd1e59c33d2393210635a06",
+          "status": " M"
+        },
+        {
+          "bytes": 1884,
+          "path": "scripts/common_pipeline/README.md",
+          "sha256": "04a511128f0a02638bd211b53bda51c4188771100ece74657c33de090f913de1",
+          "status": " M"
+        },
+        {
+          "path": "scripts/common_pipeline/build_core.py",
+          "status": " D"
+        },
+        {
+          "path": "scripts/common_pipeline/unified_build.py",
+          "status": " D"
+        },
+        {
+          "bytes": 931,
+          "path": "scripts/complexity_energetics/AGENTS.md",
+          "sha256": "a6f03ee1e81ad6d4e58b0d432d733f449f54c0c5c08064ae89c8181ab3160ced",
+          "status": " M"
+        },
+        {
+          "bytes": 2318,
+          "path": "scripts/complexity_energetics/README.md",
+          "sha256": "fa6fcef003b4505c02733691308e7f1a06d56db945af137b0fcbc1171e2fa857",
+          "status": " M"
+        },
+        {
+          "path": "scripts/complexity_energetics/generate_biomechanical_benchmarks.py",
+          "status": " D"
+        },
+        {
+          "bytes": 1063,
+          "path": "scripts/complexity_energetics/generate_manuscript_figures.py",
+          "sha256": "56bf85e5b6c9547b60023cf567cfb2196ca42d80f9551e975533ee2e2a38d76f",
+          "status": " M"
+        },
+        {
+          "bytes": 1331,
+          "path": "scripts/complexity_energetics/generate_publication_figures.py",
+          "sha256": "2c3893c4ebad786284db08cd24fe01273f78dc7b11899d32e1f189c0ebeda730",
+          "status": " M"
+        },
+        {
+          "bytes": 898,
+          "path": "scripts/complexity_energetics/generate_results_figures.py",
+          "sha256": "961e23e2a5bb399461d6ace55f6d39c42f32802ec46bd5d695f18c13adfeea82",
+          "status": " M"
+        },
+        {
+          "bytes": 258,
+          "path": "scripts/complexity_energetics/run_ce.sh",
+          "sha256": "26413862ee5cfc04b02bec266f7e05b83f8c44dea9c2b3e605b6e1940a58f779",
+          "status": " M"
+        },
+        {
+          "bytes": 901,
+          "path": "tests/AGENTS.md",
+          "sha256": "400faf578d03cbccc58a1030dede00dc9b5960239e25ede7777aa8a3b02db6da",
+          "status": " M"
+        },
+        {
+          "bytes": 871,
+          "path": "tests/antstack_core/AGENTS.md",
+          "sha256": "b0db27890ac5bf84176394cb6d6740d380790abaa745050481c3bdc561af4c25",
+          "status": " M"
+        },
+        {
+          "bytes": 15884,
+          "path": "tests/antstack_core/test_analysis_energy.py",
+          "sha256": "870a874dcbec3a30b882e9121cbf727597efbb74d98babf91ba61f5a4c3a1c70",
+          "status": " M"
+        },
+        {
+          "bytes": 17556,
+          "path": "tests/antstack_core/test_analysis_statistics.py",
+          "sha256": "9bef36ca89ccea9873ea170e4467f998f10365fbfbb9780f884c385e33f2cc70",
+          "status": " M"
+        },
+        {
+          "bytes": 22159,
+          "path": "tests/antstack_core/test_analysis_workloads.py",
+          "sha256": "057667565ac4f81bc0d494db777105fb7a0171c7b82599d96cde23b245ecb9bd",
+          "status": " M"
+        },
+        {
+          "bytes": 2242,
+          "path": "tests/antstack_core/test_architecture_contract.py",
+          "sha256": "0bd4ed448d26dd19dad09e7d9ee02afeaf0d95de18abfc435dd4d8b2130a1190",
+          "status": " M"
+        },
+        {
+          "bytes": 7545,
+          "path": "tests/antstack_core/test_ce_runner_contract.py",
+          "sha256": "352caa0d1cf291a0cc6c6bc3a5b7ed59beb1038e5a9b772495f37342a4e97930",
+          "status": " M"
+        },
+        {
+          "bytes": 1983,
+          "path": "tests/antstack_core/test_cli_entrypoints.py",
+          "sha256": "d3343ec2c7abd6c92af4f1261b9bc6ca626ed7ba8f85c1a89b296f4f1f3787f3",
+          "status": " M"
+        },
+        {
+          "bytes": 1557,
+          "path": "tests/antstack_core/test_cli_entrypoints_subprocess.py",
+          "sha256": "27c52250a64cd3a9fa11ca7681b0c41b28618a642d65069bc7484da63ec8b67e",
+          "status": " M"
+        },
+        {
+          "bytes": 23939,
+          "path": "tests/antstack_core/test_cohereants_behavioral.py",
+          "sha256": "24e83b0fdafe71fb6cfeae627c2875849f6af60906ee46312d22381937aab58a",
+          "status": " M"
+        },
+        {
+          "bytes": 28156,
+          "path": "tests/antstack_core/test_complexity_analysis.py",
+          "sha256": "4743b36651c84d1042a26f1cd2370d064aa434d88a8f3d4e31c79129206f11d1",
+          "status": " M"
+        },
+        {
+          "bytes": 2897,
+          "path": "tests/antstack_core/test_docs_contract.py",
+          "sha256": "e891ea2adb8ae2779137c84b02410431a4bc481127a1cde3dd5c9ef497f0ad92",
+          "status": " M"
+        },
+        {
+          "bytes": 18887,
+          "path": "tests/antstack_core/test_enhanced_complexity_analysis.py",
+          "sha256": "1011fc763b195163c202cd7c2e0f08e68932cd89841c4989b3cde0a33c357b5a",
+          "status": " M"
+        },
+        {
+          "bytes": 24725,
+          "path": "tests/antstack_core/test_enhanced_estimators.py",
+          "sha256": "573475fd54f11c8a587bc6768968774f0610d0d8e986712343605e8d2f383b0d",
+          "status": " M"
+        },
+        {
+          "bytes": 20106,
+          "path": "tests/antstack_core/test_experiment_config.py",
+          "sha256": "bbcdd22cb915c0c0fd4f85dd1a1db59a67e6dff3a346475315cc629f6a3dcaa2",
+          "status": " M"
+        },
+        {
+          "bytes": 1875,
+          "path": "tests/antstack_core/test_figures_mermaid.py",
+          "sha256": "92f7ccc872a912751110d7515bf64582be470842206f9c96caed60e8b8ed6a36",
+          "status": " M"
+        },
+        {
+          "bytes": 2755,
+          "path": "tests/antstack_core/test_figures_plots.py",
+          "sha256": "f44275f2d9316f31440bc7b826a0fef0f2f0ec03ebb3ae322794950def4d81da",
+          "status": " M"
+        },
+        {
+          "bytes": 9714,
+          "path": "tests/antstack_core/test_integration_workflow.py",
+          "sha256": "0270e5399e5f3db1967eaed589125299e0c934dcefce865dbe3e50b25cbb6159",
+          "status": " M"
+        },
+        {
+          "bytes": 10601,
+          "path": "tests/antstack_core/test_key_numbers.py",
+          "sha256": "d3abe5bd1a455bc13abbba9819a4fa0a9ce4999bc328371286e0424b2417d918",
+          "status": " M"
+        },
+        {
+          "bytes": 3836,
+          "path": "tests/antstack_core/test_mathematics.py",
+          "sha256": "4eac8f80df4d1d3d174d86519aa29a0d0102682b7cd5260ac840d76a00193a68",
+          "status": " M"
+        },
+        {
+          "bytes": 7621,
+          "path": "tests/antstack_core/test_power_meters.py",
+          "sha256": "6c522dbc7e8f6bb7243869ecf00b102586487e55b362d99279d612c30f2a4c80",
+          "status": " M"
+        },
+        {
+          "bytes": 5712,
+          "path": "tests/antstack_core/test_publishing_provenance.py",
+          "sha256": "0d103bbcca14f9b095ab0f3b1ef4c310620ff4dfe2787dbc1e400885e27c14e6",
+          "status": " M"
+        },
+        {
+          "bytes": 19578,
+          "path": "tests/antstack_core/test_run_all_antstack.py",
+          "sha256": "61e6a96f4d70e9ba6a3d0de50c51d51cff3c9dde4d8b6235f14d4abf684f7ffc",
+          "status": " M"
+        },
+        {
+          "bytes": 19177,
+          "path": "tests/antstack_core/test_scaling_analysis.py",
+          "sha256": "5515c7b510ac7a5c2ce0bc8f86407c6d3fe2a19d3556c2cf07f22202eec665d5",
+          "status": " M"
+        },
+        {
+          "bytes": 30025,
+          "path": "tests/antstack_core/test_spectroscopy.py",
+          "sha256": "2a4770ffa84c91a73a0244f35a9df0222b5078d1e951d9d251b8fc1eee93e3b5",
+          "status": " M"
+        },
+        {
+          "bytes": 29258,
+          "path": "tests/antstack_core/test_statistical_analysis.py",
+          "sha256": "11d44144ca29e8c43f1cefed93ae65e7c4e5c4b77c55d7434fefdd21eaaec3f6",
+          "status": " M"
+        },
+        {
+          "bytes": 23593,
+          "path": "tests/antstack_core/test_theoretical_limits.py",
+          "sha256": "be64feeb5f982b2f56622d7b3bbe9b1efae9922da9e790394387637c1f3a225b",
+          "status": " M"
+        },
+        {
+          "bytes": 14095,
+          "path": "tests/antstack_core/test_theoretical_limits_deep.py",
+          "sha256": "8c6792f3535ea0ecfed9f460c0d5f4a43bb0cd05ce0dac0a40ce8f81ebe89423",
+          "status": " M"
+        },
+        {
+          "bytes": 27145,
+          "path": "tests/antstack_core/test_veridical_reporting.py",
+          "sha256": "421bd3353ffd40de7fcbf6049abcce4f7cafe63735902b9e4c9094ca74c4f231",
+          "status": " M"
+        },
+        {
+          "bytes": 21631,
+          "path": "tests/antstack_core/test_visualization.py",
+          "sha256": "521620a3db15e17662d4bbbd8625c1275e23c15a3cc254e8ed5dfac73616fa8f",
+          "status": " M"
+        },
+        {
+          "bytes": 931,
+          "path": "tests/complexity_energetics/AGENTS.md",
+          "sha256": "13e74d22f1ba5e359c83ccfe9b1e05158813170314e3ed950cfe82eed0145ba4",
+          "status": " M"
+        },
+        {
+          "bytes": 17975,
+          "path": "tests/complexity_energetics/test_enhanced_ce.py",
+          "sha256": "4c32c1fcf6c313fcf7ac0bf880c0e037086b75ff170401db3e6a614d545c0b53",
+          "status": " M"
+        },
+        {
+          "bytes": 15056,
+          "path": "tests/complexity_energetics/test_integration_workflows.py",
+          "sha256": "4b64cd6fb9d312d87ea840af0bbea7ad64913a58619d75b0b3d5ffe461e6c57e",
+          "status": " M"
+        },
+        {
+          "bytes": 3848,
+          "path": "tests/complexity_energetics/test_key_numbers.py",
+          "sha256": "b8dcc9200ebe78bf811c5e66575a0f695eb581df401796f55b0b54677f494a89",
+          "status": " M"
+        },
+        {
+          "bytes": 11830,
+          "path": "tests/complexity_energetics/test_orchestrators.py",
+          "sha256": "97a42b9ef42b09e6de6965f7db8b7ec5697995c6a7bd0290d3c33f78443d0d89",
+          "status": " M"
+        },
+        {
+          "bytes": 874,
+          "path": "tests/core_rendering/AGENTS.md",
+          "sha256": "6ca8c844298d6a1e67b73e0a5102911e975e9ffca1f0e91db7ccdfd3292046fc",
+          "status": " M"
+        },
+        {
+          "bytes": 11559,
+          "path": "tests/core_rendering/test_core_refactor.py",
+          "sha256": "5115fea3645f76da0ed5089526e584f96abbd0d76845ece34e5ff5354c7ecbd5",
+          "status": " M"
+        },
+        {
+          "bytes": 930,
+          "path": "tools/AGENTS.md",
+          "sha256": "b0eefb0dfd2fc8d8566bb90385ae72668fb39c836c6af9b8ddff61be305e30e6",
+          "status": " M"
+        },
+        {
+          "bytes": 18021,
+          "path": "tools/ensure_folder_docs.py",
+          "sha256": "99342150bfa63c90ca7d93d7b1db9fcb9bb4db27b8a3e1ca4ebf5101b4d170f3",
+          "status": " M"
+        },
+        {
+          "path": "tools/filters/AGENTS.md",
+          "status": " D"
+        },
+        {
+          "path": "tools/filters/README.md",
+          "status": " D"
+        },
+        {
+          "path": "tools/filters/auto_link_code_urls.lua",
+          "status": " D"
+        },
+        {
+          "path": "tools/filters/pandoc_crossref.lua",
+          "status": " D"
+        },
+        {
+          "path": "tools/filters/unicode_to_tex.lua",
+          "status": " D"
+        },
+        {
+          "bytes": 584,
+          "path": "tools/render_pdf.sh",
+          "sha256": "c6f4e57975a10d9aeb77baf981827c10b3fc9854652b0db0d481caa2edd13481",
+          "status": " M"
+        },
+        {
+          "bytes": 406711,
+          "path": "uv.lock",
+          "sha256": "533b626fa7145d3dccfe95a502d98e5dc2a15bd99dded6176878f5dd93bfdf1d",
+          "status": " M"
+        },
+        {
+          "bytes": 894,
+          "path": ".github/AGENTS.md",
+          "sha256": "5ea76475550c43c0191cf0e951533806befb7e483aeaf03ea269238def88b3e3",
+          "status": "??"
+        },
+        {
+          "bytes": 658,
+          "path": ".github/README.md",
+          "sha256": "ac7b0ed95c84f040eba38514457bdd3420e7b6b957efe8c25d8a399d332188a8",
+          "status": "??"
+        },
+        {
+          "bytes": 986,
+          "path": ".github/workflows/AGENTS.md",
+          "sha256": "68c96c6b5ec626fe6ffa42c3c96314766722902f58c3f5f7908a8c22be8a2c54",
+          "status": "??"
+        },
+        {
+          "bytes": 750,
+          "path": ".github/workflows/README.md",
+          "sha256": "dfe2c948afa44aaa02f9934c07251c210891b61887acab9bff4df78d938f0a3d",
+          "status": "??"
+        },
+        {
+          "bytes": 22329,
+          "path": ".github/workflows/validate.yml",
+          "sha256": "f90bbf05fae22629fd5802749ceb4bd581d7d216f7f2c215aec892eb6672bc7f",
+          "status": "??"
+        },
+        {
+          "bytes": 30055,
+          "path": "antstack_core/orchestration/complexity_energetics.py",
+          "sha256": "cffad68a61e4f68d4c8eaaa792bee09cd04c37121df3b10ffc7dc12f094fe358",
+          "status": "??"
+        },
+        {
+          "bytes": 11843,
+          "path": "antstack_core/publishing/paper_builder.py",
+          "sha256": "50dc49bab5ec33f4fec8bc2635793f28c6f06fb14d849b8f797d6a7a7d3d8b3b",
+          "status": "??"
+        },
+        {
+          "bytes": 1024,
+          "path": "papers/graphical_abstracts/AGENTS.md",
+          "sha256": "285d2906b398b25bc28d50330fb3289fac4a57057e3587b9c112924744dd232d",
+          "status": "??"
+        },
+        {
+          "bytes": 788,
+          "path": "papers/graphical_abstracts/README.md",
+          "sha256": "d5afcd4c4d4e356c56445937f1dba1330372f05f02db7c0ce25c0265123ee649",
+          "status": "??"
+        },
+        {
+          "bytes": 343756,
+          "path": "papers/graphical_abstracts/ant_stack_graphical_abstract.png",
+          "sha256": "0ed6aa1d3fbc241ca08193063fbc88c8fed505cc1405d7037ee51a0f383a9b31",
+          "status": "??"
+        },
+        {
+          "bytes": 108607,
+          "path": "papers/graphical_abstracts/ant_stack_graphical_abstract.svg",
+          "sha256": "963360e2939c4ceb78dc909a78d10fefcabec8bc35e54e357db0c8de05a57118",
+          "status": "??"
+        },
+        {
+          "bytes": 422099,
+          "path": "papers/graphical_abstracts/complexity_energetics_graphical_abstract.png",
+          "sha256": "69c617a0776e00dca50b6a919c0ac3cbd3edc0be310469ce42350d6d79965c0a",
+          "status": "??"
+        },
+        {
+          "bytes": 144746,
+          "path": "papers/graphical_abstracts/complexity_energetics_graphical_abstract.svg",
+          "sha256": "585fdbfe1d4c5a49c0cd12c34ec8c40c6bc80110221b09600eef9253e792c5e6",
+          "status": "??"
+        },
+        {
+          "bytes": 11551,
+          "path": "papers/graphical_abstracts/graphical_abstracts.provenance.json",
+          "sha256": "7d71a199ec893ae8435c9c9e8d065006638be1b7a5826116cc9622a48d8be81f",
+          "status": "??"
+        },
+        {
+          "bytes": 13002,
+          "path": "tests/antstack_core/test_ce_figure_families.py",
+          "sha256": "a39258c88ab0891a9c4d5373b50a7a2efa6d33303e3f12d4d2b3452d4e12b617",
+          "status": "??"
+        },
+        {
+          "bytes": 8616,
+          "path": "tests/antstack_core/test_figure_numerics.py",
+          "sha256": "0c4c1d41eb8a1d5f0ad12522613e7915a571bf56c058e773c1ccb1def482ad22",
+          "status": "??"
+        },
+        {
+          "bytes": 2975,
+          "path": "tests/antstack_core/test_template_custody.py",
+          "sha256": "52e7301f3204fdcbfad413e00d7008b1c816c1f59bd83805a16a8fb237ed1c0e",
+          "status": "??"
+        },
+        {
+          "bytes": 21477,
+          "path": "tools/generate_graphical_abstracts.py",
+          "sha256": "5be3d1ac6eb422f2844d7e42f86c03030507e4fd6ccc4d516e1d11b29363c90b",
+          "status": "??"
+        },
+        {
+          "bytes": 33788,
+          "path": "tools/release_smoke.py",
+          "sha256": "67f9e6ec5bc5e3385c5bb4b2895402fe4c9b516ebfb6e6c816026dbb11026457",
+          "status": "??"
+        }
+      ],
+      "commit": "3d3c6b994e4a8f04f8d982d1e9cc2fec5e7b11b0",
+      "dirty": true,
+      "root": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack"
+    }
+  }
+}

@@ -26,6 +26,8 @@ import json
 import logging
 from collections import defaultdict, Counter
 
+from ..figures.references import _without_code, validate_cross_references
+
 logger = logging.getLogger(__name__)
 
 
@@ -144,16 +146,25 @@ class QualityValidator:
         all_issues = []
         file_reports = {}
 
+        if not files:
+            all_issues.append(ValidationIssue("error", "source", "No sources supplied"))
         # Validate each file
         for file_path in files:
-            if file_path.exists() and file_path.suffix.lower() in ['.md', '.markdown']:
+            if not file_path.is_file():
+                issues = [ValidationIssue('error', 'source', 'Source file not found', file_path=file_path)]
+            elif file_path.suffix.lower() in ['.md', '.markdown']:
                 issues = self._validate_file(file_path)
-                file_reports[str(file_path)] = issues
-                all_issues.extend(issues)
+            else:
+                issues = [ValidationIssue('error', 'source', 'Unsupported source format', file_path=file_path)]
+            file_reports[str(file_path)] = issues
+            all_issues.extend(issues)
 
         # Cross-file validation
         cross_file_issues = self._validate_cross_file_consistency(files)
         all_issues.extend(cross_file_issues)
+        present = [path for path in files if path.is_file()]
+        references = validate_cross_references('\n\n'.join(path.read_text(encoding='utf-8') for path in present))
+        all_issues.extend(ValidationIssue('error', 'references', message) for message in references['issues'])
 
         # Generate summary
         report.issues = all_issues
@@ -511,7 +522,7 @@ class QualityValidator:
         for file_path in files:
             if file_path.exists():
                 try:
-                    content = file_path.read_text(encoding='utf-8')
+                    content = _without_code(file_path.read_text(encoding="utf-8"))
 
                     # Check for common build-breaking patterns
                     if '\\begin{document}' in content and '\\end{document}' not in content:
@@ -550,7 +561,15 @@ class QualityValidator:
 
         # Add build issues to main report
         report.issues.extend(build_issues)
-        report.total_issues += len(build_issues)
+        for issue in build_issues:
+            if issue.file_path is not None:
+                report.file_reports.setdefault(str(issue.file_path), []).append(issue)
+        report.total_issues = len(report.issues)
+        report.errors = sum(issue.issue_type == 'error' for issue in report.issues)
+        report.warnings = sum(issue.issue_type == 'warning' for issue in report.issues)
+        report.info = report.total_issues - report.errors - report.warnings
+        report.summary = self._generate_summary_report(report.issues)
+        report.validation_passed = report.errors == 0
 
         return report
 

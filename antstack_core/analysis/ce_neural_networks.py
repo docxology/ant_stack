@@ -20,7 +20,7 @@ def analyze_connectivity_patterns(network_sizes: List[int], sparsity: float,
     """Compare different neural connectivity patterns across network sizes."""
     print("Analyzing neural connectivity patterns...")
 
-    patterns = ["random", "small_world", "scale_free", "biological"]
+    patterns = ["random", "structured"]
     results = {}
 
     for pattern in patterns:
@@ -94,15 +94,15 @@ def analyze_sparsity_effects(network_size: int, sparsity_levels: List[float],
     spikes_values = []
 
     for rho in sparsity_levels:
-        # Use biological connectivity as baseline
+        # Compare the supported random-connectivity model across sparsities.
         flops, memory, spikes = calculate_sparse_neural_complexity(
-            network_size, rho, "biological"
+            network_size, rho, "random"
         )
 
         # Calculate energy using brain workload model
         params = {
             'K': 128, 'N_KC': network_size, 'rho': rho, 'H': 64, 'hz': 100,
-            'connectivity_pattern': 'biological'
+            'connectivity_pattern': 'random'
         }
         load = enhanced_brain_workload_closed_form(0.01, params)
         breakdown = estimate_detailed_energy(load, coeffs, 0.01)
@@ -176,7 +176,7 @@ def analyze_brain_scaling(K_values: List[int], output_dir: Path) -> Dict[str, An
     for K in K_values:
         params = {
             'K': K, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100,
-            'connectivity_pattern': 'biological'
+            'connectivity_pattern': 'random'
         }
 
         load = enhanced_brain_workload_closed_form(0.01, params)
@@ -297,7 +297,7 @@ def run(args):
     print(f"\nKey Findings:")
 
     # Best connectivity pattern
-    patterns = ["random", "small_world", "scale_free", "biological"]
+    patterns = ["random", "structured"]
     best_pattern = min(patterns, key=lambda p: connectivity_results[p]['flops'][-1])
     print(f"- Most efficient connectivity: {best_pattern}")
 

@@ -1,6 +1,6 @@
 # Scripts
 
-Thin operational wrappers for Ant Stack paper builds, validation, tracing, key-number updates, run-all orchestration, and complexity energetics analyses. Most buildable logic lives in `antstack_core`; apart from the paper build pipeline in `common_pipeline/build_core.py`, scripts only set paths, parse arguments, and invoke package entrypoints.
+Thin operational wrappers for Ant Stack paper builds, validation, tracing, key-number updates, run-all orchestration, and complexity energetics analyses. Build and analysis logic lives in `antstack_core`; scripts only set paths, parse arguments, and invoke package entrypoints.
 
 ## Top level
 
@@ -15,10 +15,8 @@ Thin operational wrappers for Ant Stack paper builds, validation, tracing, key-n
 
 | Script | Purpose | Delegates to | Command |
 | --- | --- | --- | --- |
-| `unified_build.py` | Build and validate all configured papers | `antstack_core.orchestration.unified_build:run` | `uv run python scripts/common_pipeline/unified_build.py [--paper NAME] [--no-tests] [--validate-only]` |
 | `update_paper_key_numbers.py` | Replace hardcoded manuscript numbers with key-number placeholders | `antstack_core.analysis.key_numbers_updater:run` | `uv run python scripts/common_pipeline/update_paper_key_numbers.py [--paper NAME] [--section NAME] [--validate]` |
-| `comprehensive_formatting_fix.py` | Manuscript formatting fixes (citations, URLs, variables, references) | `antstack_core.publishing.formatting_fixes:main` | `uv run python scripts/common_pipeline/comprehensive_formatting_fix.py` |
-| `build_core.py` | Paper build pipeline (`ModularPaperBuilder`) | `antstack_core.figures` and `antstack_core.analysis` helpers; loaded by `antstack_core.cli.build` | `uv run antstack-build --validate-only` |
+| `comprehensive_formatting_fix.py` | Conservative prose URL/path/variable formatting; no identity guessing | `antstack_core.publishing.formatting_fixes:main` | `uv run python scripts/common_pipeline/comprehensive_formatting_fix.py FILE.md ...` |
 | `run_validation_suite.py` | Comprehensive validation suite runner | pytest and repo validators via subprocess | `uv run python scripts/common_pipeline/run_validation_suite.py` |
 | `test_ce_runner.py` | Complexity-energetics runner sanity assertions | `antstack_core.analysis` primitives | `uv run python scripts/common_pipeline/test_ce_runner.py` |
 | `diagnose_crossref_issue.py` | Cross-reference diagnostics | `tools/render_pdf.sh` via subprocess | `uv run python scripts/common_pipeline/diagnose_crossref_issue.py` |
@@ -34,13 +32,12 @@ Thin operational wrappers for Ant Stack paper builds, validation, tracing, key-n
 | `analyze_neural_networks.py` | Neural connectivity, sparsity, and brain scaling analysis | `antstack_core.analysis.ce_neural_networks:run` | `uv run python scripts/complexity_energetics/analyze_neural_networks.py [--output DIR]` |
 | `comprehensive_analysis.py` | Advanced complexity analysis with veridical reporting | `antstack_core.analysis.ce_comprehensive_analysis:run` | `uv run python scripts/complexity_energetics/comprehensive_analysis.py [--manifest PATH]` |
 | `generate_comprehensive_analysis.py` | Module scaling and theoretical-limits report | `antstack_core.analysis.ce_module_scaling_analysis:run` | `uv run python scripts/complexity_energetics/generate_comprehensive_analysis.py [--manifest PATH]` |
-| `generate_biomechanical_benchmarks.py` | Biomechanical benchmark report generation | `antstack_core.analysis.ce_biomechanical_benchmarks:run` | `uv run python scripts/complexity_energetics/generate_biomechanical_benchmarks.py [--output-dir DIR]` |
-| `generate_manuscript_figures.py` | Manuscript figure suite | `antstack_core.analysis.ce_manuscript_figures:run` | `uv run python scripts/complexity_energetics/generate_manuscript_figures.py [--output DIR]` |
-| `generate_publication_figures.py` | Publication figure suite with captions | `antstack_core.analysis.ce_publication_figures:run` | `uv run python scripts/complexity_energetics/generate_publication_figures.py [--output DIR]` |
-| `generate_results_figures.py` | Results figure generation | `antstack_core.analysis.ce_results_figures:run` | `uv run python scripts/complexity_energetics/generate_results_figures.py [--output DIR]` |
-| `generate_multipanel_figures.py` | Multipanel figure layouts and LaTeX snippets | `antstack_core.analysis.ce_multipanel_figures:main` | `uv run python scripts/complexity_energetics/generate_multipanel_figures.py` |
-| `generate_tables_and_numbers.py` | Manuscript tables and key numbers | `antstack_core.analysis.ce_tables_and_numbers:main` | `uv run python scripts/complexity_energetics/generate_tables_and_numbers.py` |
-| `run_ce.sh` | Canonical complexity-energetics runner | `antstack_core.cli.ce` console script | `bash scripts/complexity_energetics/run_ce.sh` |
+| `generate_manuscript_figures.py` | Isolated enhanced manuscript figure family | `antstack_core.analysis.ce_manuscript_figures:run` | `uv run python scripts/complexity_energetics/generate_manuscript_figures.py --output NEW_DIRECTORY [--format png\|svg\|pdf]` |
+| `generate_publication_figures.py` | Source-bound figures with attached native captions | `antstack_core.analysis.ce_publication_figures:run` | `uv run python scripts/complexity_energetics/generate_publication_figures.py --output NEW_DIRECTORY [--format png\|svg\|pdf]` |
+| `generate_results_figures.py` | Distinct enhanced results figure family | `antstack_core.analysis.ce_results_figures:run` | `uv run python scripts/complexity_energetics/generate_results_figures.py --output NEW_DIRECTORY` |
+| `generate_multipanel_figures.py` | Isolated multipanel family and actual LaTeX source | `antstack_core.analysis.ce_multipanel_figures:main` | `uv run python scripts/complexity_energetics/generate_multipanel_figures.py --output NEW_DIRECTORY` |
+| `generate_tables_and_numbers.py` | Complete enhanced-model Markdown/JSON family and checksummed provenance | `antstack_core.analysis.ce_tables_and_numbers:main` | `uv run python scripts/complexity_energetics/generate_tables_and_numbers.py --output NEW_DIRECTORY` |
+| `run_ce.sh` | Standalone canonical CE with an explicit fresh destination | `antstack_core.cli.ce` console script | `bash scripts/complexity_energetics/run_ce.sh NEW_OUTPUT_DIRECTORY [CE options]` |
 
 Use `uv run python <script>` only when there is no console entrypoint for the workflow. Prefer adding a package-backed CLI in `antstack_core/cli` over adding business logic directly in this directory.
 

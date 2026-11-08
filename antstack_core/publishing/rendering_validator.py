@@ -13,6 +13,9 @@ except ImportError:
     CORE_AVAILABLE = False
 
 
+from ..figures.references import _without_code
+from .paper_builder import ModularPaperBuilder
+from .pdf_generator import validate_pdf_environment
 class RenderingSystemValidator:
     """Comprehensive validation of the PDF rendering system."""
     
@@ -33,60 +36,23 @@ class RenderingSystemValidator:
                         papers.append(paper_dir.name)
         
         return papers
+
+    def _content_sources(self, paper_name: str) -> List[Path]:
+        config = ModularPaperBuilder(self.project_root).load_paper_config(paper_name)
+        return [self.papers_dir / paper_name / name for name in config['content']['files']]
+
     
     def validate_paper_config(self, paper_name: str) -> Dict[str, Any]:
-        """Validate paper configuration file."""
-        config_file = self.papers_dir / paper_name / "paper_config.yaml"
+        """Use the same strict schema and ordered content selection as the builder."""
         results = {"valid": False, "errors": [], "warnings": []}
-        
         try:
-            with open(config_file, 'r') as f:
-                config = yaml.safe_load(f)
-            
-            # Check required sections
-            required_sections = ['paper', 'content', 'build', 'latex']
-            missing_sections = [s for s in required_sections if s not in config]
-            
-            if missing_sections:
-                results["errors"].append(f"Missing required sections: {missing_sections}")
-                return results
-            
-            # Validate paper metadata
-            paper_info = config['paper']
-            required_fields = ['name', 'title', 'author', 'output_filename']
-            missing_fields = [f for f in required_fields if f not in paper_info]
-            
-            if missing_fields:
-                results["errors"].append(f"Missing paper fields: {missing_fields}")
-            
-            # Validate content structure
-            content = config['content']
-            if 'files' not in content or not isinstance(content['files'], list):
-                results["errors"].append("Content files must be a list")
-            
-            # Validate build configuration
-            build = config['build']
-            if not isinstance(build.get('cross_reference_validation', True), bool):
-                results["warnings"].append("cross_reference_validation should be boolean")
-            
-            # Check if all content files exist
-            missing_files = []
-            for file_name in content.get('files', []):
-                file_path = self.papers_dir / paper_name / file_name
-                if not file_path.exists():
-                    missing_files.append(file_name)
-            
-            if missing_files:
-                results["errors"].append(f"Missing content files: {missing_files}")
-            
-            results["valid"] = len(results["errors"]) == 0
-            
-        except yaml.YAMLError as e:
-            results["errors"].append(f"YAML syntax error: {e}")
-        except Exception as e:
-            results["errors"].append(f"Configuration error: {e}")
-        
+            sources = self._content_sources(paper_name)
+            results['errors'].extend(f'Missing content file: {path.name}' for path in sources if not path.is_file())
+            results['valid'] = not results['errors']
+        except (OSError, ValueError, TypeError, yaml.YAMLError) as error:
+            results['errors'].append(str(error))
         return results
+
     
     def validate_figure_format(self, paper_name: str) -> Dict[str, Any]:
         """Validate figure format compliance."""
@@ -95,11 +61,11 @@ class RenderingSystemValidator:
         paper_dir = self.papers_dir / paper_name
         
         # Find all markdown files
-        md_files = list(paper_dir.glob("*.md"))
+        md_files = self._content_sources(paper_name)
         
         for md_file in md_files:
             with open(md_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+                content = _without_code(f.read())
             
             # Find figure definitions
             figure_pattern = r'## Figure: ([^{]+) \{#fig:([^}]+)\}'
@@ -136,7 +102,7 @@ class RenderingSystemValidator:
         inline_pattern = r'!\[[^\]]*\]\([^)]+\)\{#fig:[^}]+\}'
         for md_file in md_files:
             with open(md_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+                content = _without_code(f.read())
             
             if re.search(inline_pattern, content):
                 results["errors"].append(f"Inline figure definition found in {md_file.name}")
@@ -149,7 +115,7 @@ class RenderingSystemValidator:
         results = {"valid": False, "errors": [], "warnings": [], "issues": []}
         
         paper_dir = self.papers_dir / paper_name
-        md_files = list(paper_dir.glob("*.md"))
+        md_files = self._content_sources(paper_name)
         
         # Common Unicode symbols that should be LaTeX
         unicode_symbols = {
@@ -169,7 +135,7 @@ class RenderingSystemValidator:
         
         for md_file in md_files:
             with open(md_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+                content = _without_code(f.read())
             
             for unicode_char, latex_cmd in unicode_symbols.items():
                 if unicode_char in content:
@@ -183,14 +149,13 @@ class RenderingSystemValidator:
         
         # Check for proper math wrapping
         math_patterns = [
-            (r'\\\([^)]*\\\)', "LaTeX inline math should use $...$"),
             (r'\\mu\\\\mathrm', "Math formatting issue"),
             (r'\\lambda\\\\mathrm', "Math formatting issue"),
         ]
         
         for md_file in md_files:
             with open(md_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+                content = _without_code(f.read())
             
             for pattern, message in math_patterns:
                 if re.search(pattern, content):
@@ -204,11 +169,11 @@ class RenderingSystemValidator:
         results = {"valid": False, "errors": [], "warnings": [], "links": []}
         
         paper_dir = self.papers_dir / paper_name
-        md_files = list(paper_dir.glob("*.md"))
+        md_files = self._content_sources(paper_name)
         
         for md_file in md_files:
             with open(md_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+                content = _without_code(f.read())
             
             # Find naked URLs
             url_pattern = r'https?://[^\s\)]+'
@@ -245,11 +210,11 @@ class RenderingSystemValidator:
         results = {"valid": False, "errors": [], "warnings": [], "references": []}
         
         if not CORE_AVAILABLE:
-            results["warnings"].append("Core modules not available, skipping cross-reference validation")
+            results['errors'].append('Core cross-reference validator is unavailable')
             return results
         
         paper_dir = self.papers_dir / paper_name
-        md_files = list(paper_dir.glob("*.md"))
+        md_files = self._content_sources(paper_name)
         
         # Collect all content
         full_content = ""
@@ -260,40 +225,22 @@ class RenderingSystemValidator:
         # Use core validation
         try:
             validation_result = validate_cross_references(full_content, str(paper_dir))
-            results.update(validation_result)
+            results.update(valid=validation_result['valid'], errors=validation_result['issues'],
+                           warnings=validation_result['warnings'], references=validation_result['references'])
         except Exception as e:
             results["errors"].append(f"Cross-reference validation failed: {e}")
         
         return results
     
     def validate_build_system(self) -> Dict[str, Any]:
-        """Validate build system integration."""
-        results = {"valid": False, "errors": [], "warnings": []}
-        
-        # Check build scripts exist
-        build_script = self.project_root / "scripts" / "common_pipeline" / "build_core.py"
-        render_script = self.project_root / "tools" / "render_pdf.sh"
-        
-        if not build_script.exists():
-            results["errors"].append("Build script not found: build_core.py")
-        
-        if not render_script.exists():
-            results["errors"].append("Render script not found: render_pdf.sh")
-        
-        # Check core package
-        core_package = self.project_root / "antstack_core"
-        if not core_package.exists():
-            results["errors"].append("Core package not found: antstack_core")
-        
-        # Check required directories
-        required_dirs = ["papers", "scripts", "tools", "tests"]
-        for dir_name in required_dirs:
-            dir_path = self.project_root / dir_name
-            if not dir_path.exists():
-                results["errors"].append(f"Required directory not found: {dir_name}")
-        
-        results["valid"] = len(results["errors"]) == 0
-        return results
+        """Observe installed rendering tools, not unshipped repository script/test folders."""
+        environment = validate_pdf_environment()
+        errors = [f'Missing rendering prerequisite: {key}' for key, available in environment['validation'].items() if not available]
+        if not self.papers_dir.is_dir():
+            errors.append('Configured project has no papers directory')
+        return {'valid': not errors, 'errors': errors, 'warnings': [], 'checks': environment['validation'],
+                'validation_scope': 'source/tool preflight; no PDF render was performed'}
+
     
     def _get_context(self, content: str, char: str, context_length: int = 50) -> str:
         """Get context around a character in content."""
@@ -322,10 +269,14 @@ class RenderingSystemValidator:
         
         # Validate each component
         results["config"] = self.validate_paper_config(paper_name)
-        results["figures"] = self.validate_figure_format(paper_name)
-        results["math"] = self.validate_math_formatting(paper_name)
-        results["hyperlinks"] = self.validate_hyperlinks(paper_name)
-        results["cross_references"] = self.validate_cross_references(paper_name)
+        if results['config']['valid']:
+            results["figures"] = self.validate_figure_format(paper_name)
+            results["math"] = self.validate_math_formatting(paper_name)
+            results["hyperlinks"] = self.validate_hyperlinks(paper_name)
+            results["cross_references"] = self.validate_cross_references(paper_name)
+        else:
+            for component in ('figures', 'math', 'hyperlinks', 'cross_references'):
+                results[component] = {'valid': False, 'errors': [], 'warnings': [], 'status': 'not_run'}
         
         # Overall validation
         component_valid = all([

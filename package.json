@@ -1,6 +1,6 @@
 {
   "name": "ant-stack",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Mermaid and workflow helpers for the Ant Stack scientific publication system.",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "test:collect": "uv run pytest --collect-only -q",
     "lint": "uv run ruff check .",
     "run:all": "uv run run-all-antstack --config configs/run_all_antstack.example.yaml",
-    "ce": "uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out",
+    "ce": "uv run antstack-ce papers/complexity_energetics/manifest.example.yaml",
     "validate": "uv run antstack-build --validate-only"
   },
   "repository": {
@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/docxology/ant_stack#readme",
   "devDependencies": {
-    "mermaid-filter": "^1.4.7"
+    "@mermaid-js/mermaid-cli": "12.2.0",
+    "puppeteer": "25.16.0"
   }
 }

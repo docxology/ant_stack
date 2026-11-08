@@ -66,9 +66,6 @@ from .provenance import (
     write_provenance
 )
 
-__version__ = "2.0.0"
-__author__ = "Daniel Ari Friedman"
-__email__ = "daniel@activeinference.institute"
 
 __all__ = [
     # PDF Generation

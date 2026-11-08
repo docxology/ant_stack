@@ -1,451 +1,331 @@
-"""
-Key Numbers Integration Module
+"""Consume the separate enhanced analytical model, never empirical evidence.
 
-Provides comprehensive integration of key_numbers.json data into paper sections
-with dynamic updating, validation, and formatting capabilities.
+Only the complete schema emitted by ``ce_tables_and_numbers`` is accepted.
+Input coherence does not establish source freshness, calibration or scientific
+validity; callers retain custody of the producer and its generation.
 """
 
 from __future__ import annotations
 
 import json
-import os
-from dataclasses import dataclass, asdict
-from typing import Dict, Any, Optional, Union, List
+import math
+import re
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
+from typing import Any, Dict, Optional, Union
+
+from antstack_core.publishing.provenance import (
+    atomic_json, atomic_text, file_identity, ordinary_path,
+)
+from .energy import EnergyCoefficients
+
+
+_ENHANCED_PATH = Path("papers/complexity_energetics/generated_content/key_numbers.json")
+_MODULES = ("body", "brain", "mind")
+
+
+def _section(value: Any, keys: set[str], name: str) -> None:
+    if not isinstance(value, dict) or set(value) != keys:
+        raise ValueError(f"{name} must contain exactly: {', '.join(sorted(keys))}")
+
+
+def _number(value: Any, name: str, *, positive: bool = False) -> None:
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or not math.isfinite(value) or value < 0 or (positive and value == 0)):
+        raise ValueError(f"{name} must be finite and {'positive' if positive else 'nonnegative'}")
+
+
+def _equal(actual: float, expected: float, name: str) -> None:
+    if not math.isclose(actual, expected, rel_tol=1e-10, abs_tol=1e-12):
+        raise ValueError(f"Incoherent {name}: {actual} != {expected}")
 
 
 @dataclass
 class KeyNumbersData:
-    """Structured representation of key numbers data."""
+    """Supplied enhanced estimates and their required, unverified model context."""
 
+    schema_version: int
+    model_family: str
+    provenance: str
+    assumed_energy_coefficients: Dict[str, float]
     per_decision_energy: Dict[str, float]
     computational_load: Dict[str, Union[float, int]]
-    scaling_exponents: Dict[str, Union[float, str]]
-    system_parameters: Dict[str, Union[float, int]]
+    scaling_exponents: Dict[str, Any]
+    system_parameters: Dict[str, Any]
+
+    def __post_init__(self) -> None:
+        if type(self.schema_version) is not int or self.schema_version != 1 or self.model_family != "enhanced_analytical":
+            raise ValueError("Unsupported enhanced-model schema or family")
+        if not isinstance(self.provenance, str) or not self.provenance.strip():
+            raise ValueError("Enhanced-model provenance notes are required")
+        coefficients = self.assumed_energy_coefficients
+        _section(coefficients, {item.name for item in fields(EnergyCoefficients)}, "assumed_energy_coefficients")
+        for key, value in coefficients.items():
+            _number(value, f"assumed_energy_coefficients.{key}")
+        # The producer explicitly declares default assumptions. A changed
+        # coefficient cannot retain that declaration and claim coherence.
+        if coefficients != asdict(EnergyCoefficients()):
+            raise ValueError("Coefficients contradict the declared default-model provenance")
+        energy = self.per_decision_energy
+        _section(energy, {f"{module}_mj" for module in (*_MODULES, "total")}, "per_decision_energy")
+        for key, value in energy.items():
+            _number(value, f"per_decision_energy.{key}")
+        _equal(energy["total_mj"], sum(energy[f"{module}_mj"] for module in _MODULES), "total energy (mJ)")
+        loads = self.computational_load
+        _section(loads, {f"{module}_{metric}" for module in _MODULES for metric in ("flops", "memory_kb")}, "computational_load")
+        for key, value in loads.items():
+            _number(value, f"computational_load.{key}")
+        scaling = self.scaling_exponents
+        _section(scaling, {"body_energy", "body_r_squared", "body_regime"}, "scaling_exponents")
+        exponent, r_squared = scaling["body_energy"], scaling["body_r_squared"]
+        if exponent is not None and (isinstance(exponent, bool) or not isinstance(exponent, (int, float)) or not math.isfinite(exponent)):
+            raise ValueError("body_energy exponent must be finite or unavailable (null)")
+        if r_squared is not None:
+            if isinstance(r_squared, bool) or not isinstance(r_squared, (int, float)) or not math.isfinite(r_squared) or not 0 <= r_squared <= 1:
+                raise ValueError("body_r_squared must be in [0, 1] or undefined (null)")
+            if exponent is None:
+                raise ValueError("An unavailable fit cannot supply an R-squared")
+        if not isinstance(scaling["body_regime"], str) or not scaling["body_regime"].strip():
+            raise ValueError("body_regime must state the supplied fit regime")
+        if exponent is None and scaling["body_regime"] != "unavailable":
+            raise ValueError("An unavailable exponent must have an unavailable regime")
+        system = self.system_parameters
+        _section(system, {"control_frequency_hz", "decision_period_ms", "baseline_power_mw", "total_power_w", "total_power_boundary"}, "system_parameters")
+        for key in ("control_frequency_hz", "decision_period_ms"):
+            _number(system[key], f"system_parameters.{key}", positive=True)
+        for key in ("baseline_power_mw", "total_power_w"):
+            _number(system[key], f"system_parameters.{key}")
+        if system["total_power_boundary"] != "sum of isolated module compute-plus-idle estimates, not whole-device power":
+            raise ValueError("Missing or unsupported isolated-module power boundary")
+        _equal(system["control_frequency_hz"] * system["decision_period_ms"], 1000, "decision interval")
+        _equal(system["baseline_power_mw"], coefficients["baseline_w"] * 1000, "baseline power")
+        _equal(system["total_power_w"], energy["total_mj"] / system["decision_period_ms"], "isolated-module power sum")
+        for module in _MODULES:
+            # SRAM/DRAM split and spike counts are not supplied in this schema;
+            # only a necessary lower bound can be checked, not model reproduction.
+            lower_j = (coefficients["baseline_w"] * system["decision_period_ms"] / 1000
+                       + loads[f"{module}_flops"] * coefficients["flops_pj"] * 1e-12
+                       + loads[f"{module}_memory_kb"] * 1024
+                       * min(coefficients["sram_pj_per_byte"], coefficients["dram_pj_per_byte"]) * 1e-12)
+            actual_j = energy[f"{module}_mj"] / 1000
+            if actual_j < lower_j and not math.isclose(actual_j, lower_j, rel_tol=1e-10, abs_tol=1e-15):
+                raise ValueError(f"{module} energy is below its declared compute-plus-idle lower bound")
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "KeyNumbersData":
-        """Create KeyNumbersData from dictionary."""
-        return cls(
-            per_decision_energy=data.get("per_decision_energy", {}),
-            computational_load=data.get("computational_load", {}),
-            scaling_exponents=data.get("scaling_exponents", {}),
-            system_parameters=data.get("system_parameters", {})
-        )
+        """Reject incomplete or mixed-family input instead of inventing context."""
+        _section(data, {item.name for item in fields(cls)}, "key numbers")
+        return cls(**data)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary format."""
+        """Serialize every supplied context and numerical field without loss."""
+        self.__post_init__()
         return asdict(self)
+
+    def model_context(self) -> Dict[str, Any]:
+        """Expose assumptions separately from the evidence they do not supply."""
+        self.__post_init__()
+        return {
+            "schema_version": self.schema_version,
+            "model_family": self.model_family,
+            "provenance": self.provenance,
+            "assumed_energy_coefficients": dict(self.assumed_energy_coefficients),
+            "empirically_validated": False,
+            "canonical_base_evidence": False,
+            "source_freshness_verified": False,
+        }
 
 
 class KeyNumbersLoader:
-    """Loads and manages key numbers data from JSON files.
-
-    Provides caching, validation, and formatted access to key numbers
-    for integration into paper sections.
-    """
+    """Load caller-owned enhanced input; never fall back to another family."""
 
     def __init__(self, json_path: Optional[Union[str, Path]] = None):
-        """Initialize loader with path to key_numbers.json.
-
-        Args:
-            json_path: Path to key_numbers.json file. If None, searches in standard locations.
-        """
         if json_path is None:
-            # Search in standard locations
-            candidates = [
-                Path("papers/complexity_energetics/generated_content/key_numbers.json"),
-                Path("generated_content/key_numbers.json"),
-                Path("key_numbers.json")
-            ]
-            for candidate in candidates:
-                if candidate.exists():
-                    abs_candidate = Path(os.path.abspath(candidate))
-                    candidate_text = str(abs_candidate)
-                    if candidate_text.startswith("/private/var/"):
-                        abs_candidate = Path(candidate_text.replace("/private/var/", "/var/", 1))
-                    json_path = abs_candidate
-                    break
-
-        if json_path is None:
-            raise FileNotFoundError("Could not find key_numbers.json in standard locations")
-
-        self.json_path = Path(json_path)
+            # Checkout convenience only, relative to the caller's project. An
+            # installed distribution has no bundled paper evidence to discover.
+            if not _ENHANCED_PATH.is_file():
+                raise FileNotFoundError("Provide an enhanced-model JSON path; no caller-owned checkout input was found")
+            json_path = _ENHANCED_PATH
+        self.json_path = ordinary_path(json_path)
         self._cache: Optional[KeyNumbersData] = None
-        self._last_modified: Optional[float] = None
+        self._identity: Optional[Dict[str, Any]] = None
 
     def load(self, force_reload: bool = False) -> KeyNumbersData:
-        """Load key numbers data with caching.
-
-        Args:
-            force_reload: Force reload even if cached
-
-        Returns:
-            KeyNumbersData object with current values
-        """
-        if not self.json_path.exists():
-            raise FileNotFoundError(f"Key numbers file not found: {self.json_path}")
-
-        current_mtime = self.json_path.stat().st_mtime
-
-        if (not force_reload and
-            self._cache is not None and
-            self._last_modified == current_mtime):
-            return self._cache
-
-        with open(self.json_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-
-        self._cache = KeyNumbersData.from_dict(data)
-        self._last_modified = current_mtime
-        return self._cache
-
-    def get_formatted_value(self, key_path: str, format_spec: str = ".3f") -> str:
-        """Get formatted value from key numbers data.
-
-        Args:
-            key_path: Dot-separated path to value (e.g., "per_decision_energy.body_mj")
-            format_spec: Python format specification
-
-        Returns:
-            Formatted string representation
-        """
-        data = self.load()
-        keys = key_path.split('.')
-        value = data
-
-        for key in keys:
-            if hasattr(value, key):
-                value = getattr(value, key)
-            elif isinstance(value, dict) and key in value:
-                value = value[key]
-            else:
-                if format_spec == ".3f":
-                    raise KeyError(f"Key path not found: {key_path}")
-                return "N/A"
-
-        if isinstance(value, (int, float)):
-            return f"{value:{format_spec}}"
-        return str(value)
+        """Load complete coherent input; content identity, not mtime, binds cache."""
+        source = ordinary_path(self.json_path)
+        if not source.is_file():
+            raise FileNotFoundError(f"Key numbers file not found: {source}")
+        identity = file_identity(source)
+        if force_reload or self._cache is None or identity != self._identity:
+            with source.open(encoding="utf-8") as handle:
+                supplied = json.load(handle)
+            data = KeyNumbersData.from_dict(supplied)
+            self._cache, self._identity = data, identity
+        # Never expose the cached mutable dictionaries to consumer mutation.
+        return KeyNumbersData.from_dict(self._cache.to_dict())
 
     def get_value(self, key_path: str) -> Any:
-        """Get a raw value by dot-separated path, returning None if missing."""
-        data = self.load()
-        value: Any = data.to_dict()
+        """Read a supplied value; missing paths raise, explicit null stays null."""
+        value: Any = self.load().to_dict()
         for key in key_path.split("."):
-            if isinstance(value, dict) and key in value:
-                value = value[key]
-            else:
-                return None
+            if not isinstance(value, dict) or key not in value:
+                raise KeyError(f"Key path not found: {key_path}")
+            value = value[key]
         return value
 
+    def get_formatted_value(self, key_path: str, format_spec: str = ".3f") -> str:
+        value = self.get_value(key_path)
+        if value is None:
+            raise ValueError(f"Key-number estimate is unavailable: {key_path}")
+        return format(value, format_spec) if isinstance(value, (int, float)) else str(value)
+
     def get_all_values(self, format_spec: str = ".3f") -> Dict[str, Any]:
-        """Return all values with numeric leaves formatted as strings."""
+        """Format supplied numbers while retaining provenance and null estimates."""
         def format_leaf(value: Any) -> Any:
             if isinstance(value, dict):
-                return {k: format_leaf(v) for k, v in value.items()}
-            if isinstance(value, (int, float)):
-                return f"{value:{format_spec}}"
-            return value
-
-        return format_leaf(self.load().to_dict())
+                return {key: format_leaf(item) for key, item in value.items()}
+            return format(value, format_spec) if isinstance(value, (int, float)) else value
+        return {key: value if key == "schema_version" else format_leaf(value)
+                for key, value in self.load().to_dict().items()}
 
     def get_summary(self) -> Dict[str, Any]:
-        """Summarize total energy, dominant module, and scaling regime."""
         data = self.load()
-        energy = data.per_decision_energy
-        total_energy = energy.get("total", energy.get("total_mj", sum(
-            float(v) for k, v in energy.items()
-            if k not in {"total", "total_mj"} and isinstance(v, (int, float))
-        )))
-        module_values = {
-            k.replace("_mj", ""): v for k, v in energy.items()
-            if k.replace("_mj", "") in {"body", "brain", "mind"} and isinstance(v, (int, float))
-        }
-        dominant_module = max(module_values, key=module_values.get) if module_values else None
-        scaling_regime = data.scaling_exponents.get("combined", data.scaling_exponents.get("body_regime", "unknown"))
         return {
-            "total_energy": total_energy,
-            "dominant_module": dominant_module,
-            "scaling_regime": scaling_regime,
+            **data.model_context(),
+            "total_energy_mj": data.per_decision_energy["total_mj"],
+            "dominant_module": max(_MODULES, key=lambda module: data.per_decision_energy[f"{module}_mj"]),
+            "body_scaling_regime": data.scaling_exponents["body_regime"],
+            "total_power_boundary": data.system_parameters["total_power_boundary"],
         }
 
     def get_energy_value(self, component: str, unit: str = "mj") -> float:
-        """Get energy value for specific component.
-
-        Args:
-            component: Component name ("body", "brain", "mind", "total")
-            unit: Unit ("mj" for millijoules, "j" for joules)
-
-        Returns:
-            Energy value in specified units
-        """
-        data = self.load()
-        key = f"{component}_{unit}"
-        return data.per_decision_energy.get(key, 0.0)
+        """Read the producer's explicit mJ values, optionally converting to J."""
+        if unit.lower() not in {"j", "mj"}:
+            raise ValueError("Supported energy units are J and mJ")
+        value = self.load().per_decision_energy[f"{component}_mj"]
+        return value / 1000 if unit.lower() == "j" else value
 
     def get_computational_load(self, component: str, metric: str) -> Union[float, int]:
-        """Get computational load metric.
+        return self.load().computational_load[f"{component}_{metric}"]
 
-        Args:
-            component: Component name ("body", "brain", "mind")
-            metric: Metric name ("flops", "memory_kb")
-
-        Returns:
-            Metric value
-        """
-        data = self.load()
-        key = f"{component}_{metric}"
-        return data.computational_load.get(key, 0)
-
-    def get_scaling_info(self, component: str) -> Dict[str, Union[float, str]]:
-        """Get scaling information for component.
-
-        Args:
-            component: Component name
-
-        Returns:
-            Dictionary with scaling exponent, r_squared, and regime
-        """
-        data = self.load()
-        prefix = f"{component}_"
+    def get_scaling_info(self, component: str) -> Dict[str, Any]:
+        scaling = self.load().scaling_exponents
         return {
-            "exponent": data.scaling_exponents.get(f"{prefix}energy", 0),
-            "r_squared": data.scaling_exponents.get(f"{prefix}r_squared", 0),
-            "regime": data.scaling_exponents.get(f"{prefix}regime", "unknown")
+            "exponent": scaling[f"{component}_energy"],
+            "r_squared": scaling[f"{component}_r_squared"],
+            "regime": scaling[f"{component}_regime"],
         }
 
 
 class KeyNumbersManager:
-    """Manages key numbers integration into paper sections.
-
-    Provides methods to replace placeholders in markdown files with
-    current key numbers values.
-    """
+    """Render and edit enhanced inputs without claiming empirical validity."""
 
     def __init__(self, loader: Union[KeyNumbersLoader, str, Path]):
-        """Initialize manager with loader.
-
-        Args:
-            loader: KeyNumbersLoader instance or JSON path
-        """
         self.loader = loader if isinstance(loader, KeyNumbersLoader) else KeyNumbersLoader(loader)
 
+    @staticmethod
+    def resolve_key_path(key_path: str) -> str:
+        """Resolve explicitly authored semantic placeholders, not numeric literals."""
+        parts = key_path.split(".")
+        if len(parts) == 2 and parts[0] == "energy" and parts[1] in {*_MODULES, "total"}:
+            return f"per_decision_energy.{parts[1]}_mj"
+        if len(parts) == 3 and parts[0] == "scaling" and parts[1] in _MODULES:
+            metrics = {"exponent": "energy", "r_squared": "r_squared", "regime": "regime"}
+            return f"scaling_exponents.{parts[1]}_{metrics[parts[2]]}"
+        return key_path
+
     def replace_placeholders(self, text: str) -> str:
-        """Replace key numbers placeholders in text.
-
-        Supports placeholders like:
-        - {{key_numbers.per_decision_energy.body_mj:.2e}}
-        - {{key_numbers.energy.body}}
-        - {{key_numbers.scaling.brain.exponent}}
-
-        Args:
-            text: Text containing placeholders
-
-        Returns:
-            Text with placeholders replaced
-        """
-        import re
-
+        """Render exact supplied metrics; missing/unavailable data is an error."""
         def replace_match(match):
-            placeholder = match.group(1)
-            parts = placeholder.split(':', 1)
-            key_path = parts[0].strip()
-            format_spec = parts[1].strip() if len(parts) > 1 else ".3f"
-
-            try:
-                if key_path.startswith("energy."):
-                    # Handle energy shortcuts
-                    component = key_path.split('.')[1]
-                    return self.loader.get_formatted_value(
-                        f"per_decision_energy.{component}_mj", format_spec
-                    )
-                elif key_path.startswith("scaling."):
-                    # Handle scaling shortcuts
-                    parts = key_path.split('.')
-                    if len(parts) >= 3:
-                        component = parts[1]
-                        metric = parts[2]
-                        scaling_info = self.loader.get_scaling_info(component)
-                        return self.loader.get_formatted_value(
-                            f"scaling_exponents.{component}_{metric}", format_spec
-                        )
-                else:
-                    # Handle full key paths
-                    return self.loader.get_formatted_value(key_path, format_spec)
-            except (KeyError, ValueError):
-                return match.group(0)  # Return original if replacement fails
-
-        # Replace {{key_numbers.*}} patterns
-        pattern = r'\{\{key_numbers\.([^}]+)\}\}'
-        return re.sub(pattern, replace_match, text)
+            parts = match.group(1).split(":", 1)
+            path = self.resolve_key_path(parts[0].strip())
+            return self.loader.get_formatted_value(path, parts[1].strip() if len(parts) == 2 else ".3f")
+        return re.sub(r"\{\{key_numbers\.([^}]+)\}\}", replace_match, text)
 
     def update_paper_section(self, file_path: Union[str, Path], dry_run: bool = False) -> bool:
-        """Update paper section file with current key numbers.
-
-        Args:
-            file_path: Path to markdown file
-            dry_run: If True, don't write changes
-
-        Returns:
-            True if file was updated
-        """
-        file_path = Path(file_path)
-
-        if not file_path.exists():
+        source = ordinary_path(file_path)
+        original = source.read_text(encoding="utf-8")
+        updated = self.replace_placeholders(original)
+        if updated == original:
             return False
-
-        with open(file_path, 'r', encoding='utf-8') as f:
-            original_content = f.read()
-
-        updated_content = self.replace_placeholders(original_content)
-
-        if updated_content != original_content:
-            if not dry_run:
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(updated_content)
-            return True
-
-        return False
+        if not dry_run:
+            atomic_text(source, updated)
+        return True
 
     def get_value(self, key_path: str) -> Any:
-        """Get a raw key-number value."""
         return self.loader.get_value(key_path)
 
     def get_formatted_value(self, key_path: str, format_spec: str = ".3f") -> str:
-        """Get a formatted key-number value."""
-        try:
-            return self.loader.get_formatted_value(key_path, format_spec)
-        except KeyError:
-            return "N/A"
+        return self.loader.get_formatted_value(key_path, format_spec)
 
     def update_value(self, key_path: str, value: Any) -> None:
-        """Update a value in the backing JSON file if the path already exists."""
-        data = self.loader.load(force_reload=True).to_dict()
-        cursor = data
-        parts = key_path.split(".")
-        for key in parts[:-1]:
-            if not isinstance(cursor, dict) or key not in cursor:
-                return
-            cursor = cursor[key]
-        if isinstance(cursor, dict) and parts[-1] in cursor:
-            cursor[parts[-1]] = value
-            with open(self.loader.json_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-            self.loader.load(force_reload=True)
+        self.update_multiple_values({key_path: value})
 
     def update_multiple_values(self, updates: Dict[str, Any]) -> None:
-        """Update several existing values in one pass."""
+        """Publish all explicit edits together only if the complete input coheres.
+
+        No related total, coefficient or power is silently recalculated. Callers
+        must supply every affected value, or regenerate the enhanced family.
+        """
+        data = self.loader.load(force_reload=True).to_dict()
         for key_path, value in updates.items():
-            self.update_value(key_path, value)
+            cursor = data
+            parts = key_path.split(".")
+            for key in parts[:-1]:
+                if not isinstance(cursor, dict) or key not in cursor:
+                    raise KeyError(key_path)
+                cursor = cursor[key]
+            if not isinstance(cursor, dict) or parts[-1] not in cursor:
+                raise KeyError(key_path)
+            cursor[parts[-1]] = value
+        checked = KeyNumbersData.from_dict(data)
+        atomic_json(self.loader.json_path, checked.to_dict())
+        self.loader.load(force_reload=True)
 
     def calculate_total_energy(self) -> float:
-        """Calculate total energy from module energy values."""
-        energy = self.loader.load().per_decision_energy
-        if "total" in energy:
-            return float(energy["total"])
-        if "total_mj" in energy:
-            return float(energy["total_mj"])
-        return sum(float(energy.get(key, energy.get(f"{key}_mj", 0.0))) for key in ["body", "brain", "mind"])
+        """Return the supplied, sum-checked total in mJ, not a guessed total."""
+        return self.loader.get_energy_value("total", "mj")
 
     def get_scaling_analysis(self) -> Dict[str, Any]:
-        """Return common scaling-analysis values."""
-        exponents = self.loader.load().scaling_exponents
-        return {
-            "body_exponent": exponents.get("body", exponents.get("body_energy", 0.0)),
-            "brain_exponent": exponents.get("brain", exponents.get("brain_energy", 0.0)),
-            "mind_exponent": exponents.get("mind", exponents.get("mind_energy", 0.0)),
-            "system_scaling": exponents.get("combined", exponents.get("system", 0.0)),
-        }
+        data = self.loader.load()
+        return {**data.model_context(), "scaling_exponents": dict(data.scaling_exponents)}
 
     def generate_report(self) -> str:
-        """Generate a human-readable key-numbers report."""
         data = self.loader.load()
-        lines = ["Key Numbers Report", "==================", "Energy:"]
-        for key, value in data.per_decision_energy.items():
-            lines.append(f"- {key}: {value}")
-        lines.append("Scaling:")
-        for key, value in data.scaling_exponents.items():
-            lines.append(f"- {key}: {value}")
-        return "\n".join(lines)
+        return ("Key Numbers Report — Enhanced Analytical Estimates\n"
+                + data.provenance + "\nInput coherence only; source freshness is not verified.\n"
+                + json.dumps(data.to_dict(), indent=2, allow_nan=False))
 
-    def validate_data(self) -> tuple[bool, List[str]]:
-        """Validate key-number data and return a legacy tuple."""
-        errors: List[str] = []
-        data = self.loader.load()
-        for section_name, section in data.to_dict().items():
-            if isinstance(section, dict):
-                for key, value in section.items():
-                    if isinstance(value, (int, float)) and "energy" in section_name and value < 0:
-                        errors.append(f"Negative energy value: {section_name}.{key}")
-        if not data.per_decision_energy:
-            errors.append("Missing per_decision_energy section")
-        return len(errors) == 0, errors
+    def validate_data(self) -> tuple[bool, list[str]]:
+        """Check complete input coherence only; not scientific validation."""
+        result = self.validate_key_numbers()
+        return result["valid"], result["issues"]
 
     def validate_key_numbers(self) -> Dict[str, Any]:
-        """Validate key numbers data for completeness and consistency.
-
-        Returns:
-            Dictionary with validation results
-        """
+        """Report schema/accounting coherence, never empirical certification."""
+        result = {
+            "valid": False,
+            "validation_scope": "enhanced_model_input_coherence",
+            "empirically_validated": False,
+            "canonical_base_evidence": False,
+            "source_freshness_verified": False,
+            "issues": [],
+            "warnings": ["Supplied deterministic estimates are not calibrated or empirically validated; source freshness is not verified."],
+        }
         try:
-            data = self.loader.load()
+            data = self.loader.load(force_reload=True)
+        except (OSError, ValueError, TypeError) as error:
+            result["issues"].append(str(error))
+        else:
+            result.update(data.model_context())
+            result["valid"] = True
+        return result
 
-            validation_results = {
-                "valid": True,
-                "issues": [],
-                "warnings": []
-            }
-
-            # Check required energy values
-            required_energy_keys = ["body", "brain", "mind"]
-            for key in required_energy_keys:
-                if key not in data.per_decision_energy and f"{key}_mj" not in data.per_decision_energy:
-                    validation_results["issues"].append(f"Missing energy key: {key}")
-                    validation_results["valid"] = False
-
-            # Check computational load values
-            if not data.computational_load:
-                validation_results["issues"].append("Missing computational load values")
-                validation_results["valid"] = False
-            required_load_keys = ["body_flops", "brain_flops", "mind_flops"]
-            for key in required_load_keys:
-                if key not in data.computational_load and "flops" not in data.computational_load:
-                    validation_results["issues"].append(f"Missing load key: {key}")
-                    validation_results["valid"] = False
-
-            # Check scaling exponents
-            if not data.scaling_exponents:
-                validation_results["warnings"].append("No scaling exponents found")
-
-            # Check system parameters
-            if not data.system_parameters:
-                validation_results["warnings"].append("No system parameters found")
-
-            return validation_results
-
-        except Exception as e:
-            return {
-                "valid": False,
-                "issues": [f"Validation failed: {str(e)}"],
-                "warnings": []
-            }
-
-
-# Global instance for convenience
-_default_loader = None
-_default_manager = None
 
 def get_key_numbers_loader() -> KeyNumbersLoader:
-    """Get default key numbers loader instance."""
-    global _default_loader
-    if _default_loader is None:
-        _default_loader = KeyNumbersLoader()
-    return _default_loader
+    """Create a loader bound to this caller's checkout, without global custody."""
+    return KeyNumbersLoader()
+
 
 def get_key_numbers_manager() -> KeyNumbersManager:
-    """Get default key numbers manager instance."""
-    global _default_manager
-    if _default_manager is None:
-        _default_manager = KeyNumbersManager(get_key_numbers_loader())
-    return _default_manager
+    return KeyNumbersManager(get_key_numbers_loader())

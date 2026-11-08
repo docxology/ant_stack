@@ -27,7 +27,6 @@ sys.path.insert(0, str(project_root))
 
 from antstack_core.analysis.enhanced_complexity_analysis import (
     ComplexityMetrics,
-    AgentBasedModel,
     NetworkComplexityAnalyzer,
     ThermodynamicComplexityAnalyzer,
     ComplexityEntropyAnalyzer,
@@ -42,194 +41,8 @@ except ImportError:
     HAS_NUMPY_REAL = False
 
 
-class TestComplexityMetrics(unittest.TestCase):
-    """Test ComplexityMetrics dataclass functionality."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.sample_metrics = {
-            "entropy": 2.5,
-            "mutual_information": 1.8,
-            "information_density": 0.95,
-            "network_density": 0.7,
-            "clustering_coefficient": 0.6,
-            "path_length": 2.3,
-            "modularity": 0.4,
-            "thermodynamic_efficiency": 0.85,
-            "entropy_production_rate": 1.2,
-            "free_energy": -5.0,
-            "scaling_exponent": 1.8,
-            "scaling_confidence": 0.92,
-            "regime_classification": "super-linear",
-            "variance": 0.15,
-            "skewness": -0.2,
-            "kurtosis": 1.1
-        }
-
-    def test_complexity_metrics_creation(self):
-        """Test basic ComplexityMetrics creation."""
-        metrics = ComplexityMetrics(**self.sample_metrics)
-
-        self.assertEqual(metrics.entropy, 2.5)
-        self.assertEqual(metrics.mutual_information, 1.8)
-        self.assertEqual(metrics.scaling_exponent, 1.8)
-        self.assertEqual(metrics.regime_classification, "super-linear")
-
-    def test_complexity_metrics_defaults(self):
-        """Test ComplexityMetrics with default values."""
-        metrics = ComplexityMetrics()
-
-        self.assertEqual(metrics.entropy, 0.0)
-        self.assertEqual(metrics.network_density, 0.0)
-        self.assertEqual(metrics.thermodynamic_efficiency, 0.0)
-        self.assertEqual(metrics.regime_classification, "unknown")
-
-    def test_complexity_metrics_with_partial_data(self):
-        """Test ComplexityMetrics with partial data."""
-        partial_data = {
-            "entropy": 2.0,
-            "scaling_exponent": 1.5,
-            "regime_classification": "linear"
-        }
-
-        metrics = ComplexityMetrics(**partial_data)
-
-        self.assertEqual(metrics.entropy, 2.0)
-        self.assertEqual(metrics.scaling_exponent, 1.5)
-        self.assertEqual(metrics.regime_classification, "linear")
-        # Other fields should remain at defaults
-        self.assertEqual(metrics.mutual_information, 0.0)
-        self.assertEqual(metrics.network_density, 0.0)
 
 
-class TestAgentBasedModel(unittest.TestCase):
-    """Test AgentBasedModel functionality."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.agents = [
-            {"initial_state": 0.5, "initial_energy": 1.0},
-            {"initial_state": 0.3, "initial_energy": 1.2},
-            {"initial_state": 0.7, "initial_energy": 0.8}
-        ]
-
-        self.interactions = [
-            (0, 1, 0.5),
-            (1, 2, 0.3),
-            (2, 0, 0.4)
-        ]
-
-        self.environment_params = {"temperature": 298.0, "pressure": 101325.0}
-
-    def test_agent_based_model_creation(self):
-        """Test AgentBasedModel creation."""
-        model = AgentBasedModel(
-            agents=self.agents,
-            interactions=self.interactions,
-            environment_params=self.environment_params,
-            time_steps=100
-        )
-
-        self.assertEqual(len(model.agents), 3)
-        self.assertEqual(len(model.interactions), 3)
-        self.assertEqual(model.time_steps, 100)
-
-    def test_agent_based_model_simulation(self):
-        """Test agent-based model simulation."""
-        model = AgentBasedModel(
-            agents=self.agents,
-            interactions=self.interactions,
-            environment_params=self.environment_params,
-            time_steps=10
-        )
-
-        results = model.simulate(seed=42)
-
-        # Check that results contain expected metrics
-        self.assertIn('total_energy', results)
-        self.assertIn('state_variance', results)
-        self.assertIn('interaction_strength', results)
-        self.assertIn('clustering_coefficient', results)
-        self.assertIn('entropy', results)
-
-        # Check that we have results for each time step
-        self.assertEqual(len(results['total_energy']), 10)
-        self.assertEqual(len(results['state_variance']), 10)
-        self.assertEqual(len(results['entropy']), 10)
-
-    def test_agent_based_model_simulation_deterministic(self):
-        """Test that simulation is deterministic with fixed seed."""
-        model1 = AgentBasedModel(
-            agents=self.agents,
-            interactions=self.interactions,
-            environment_params=self.environment_params,
-            time_steps=5
-        )
-
-        model2 = AgentBasedModel(
-            agents=self.agents,
-            interactions=self.interactions,
-            environment_params=self.environment_params,
-            time_steps=5
-        )
-
-        results1 = model1.simulate(seed=123)
-        results2 = model2.simulate(seed=123)
-
-        # Results should be identical with same seed
-        self.assertEqual(results1['total_energy'], results2['total_energy'])
-        self.assertEqual(results1['state_variance'], results2['state_variance'])
-
-    def test_agent_based_model_empty_agents(self):
-        """Test agent-based model with empty agents."""
-        model = AgentBasedModel(
-            agents=[],
-            interactions=[],
-            environment_params=self.environment_params,
-            time_steps=5
-        )
-
-        results = model.simulate(seed=42)
-
-        # Should handle empty case gracefully
-        self.assertIn('total_energy', results)
-        self.assertIn('entropy', results)
-        # Results should be empty or have default values
-        self.assertEqual(len(results['total_energy']), 5)
-
-    def test_agent_based_model_single_agent(self):
-        """Test agent-based model with single agent."""
-        single_agent = [{"initial_state": 0.5, "initial_energy": 1.0}]
-
-        model = AgentBasedModel(
-            agents=single_agent,
-            interactions=[],
-            environment_params=self.environment_params,
-            time_steps=3
-        )
-
-        results = model.simulate(seed=42)
-
-        # Should handle single agent case
-        self.assertIn('total_energy', results)
-        self.assertIn('entropy', results)
-        self.assertEqual(len(results['total_energy']), 3)
-
-    def test_agent_based_model_no_interactions(self):
-        """Test agent-based model with no interactions."""
-        model = AgentBasedModel(
-            agents=self.agents,
-            interactions=[],
-            environment_params=self.environment_params,
-            time_steps=3
-        )
-
-        results = model.simulate(seed=42)
-
-        # Should handle no interactions case
-        self.assertIn('total_energy', results)
-        self.assertIn('entropy', results)
-        self.assertEqual(len(results['total_energy']), 3)
 
 
 class TestNetworkComplexityAnalyzer(unittest.TestCase):
@@ -384,74 +197,6 @@ class TestComplexityEntropyAnalyzer(unittest.TestCase):
         self.assertEqual(len(result['entropy']), 0)
 
 
-class TestEnhancedBootstrapAnalyzer(unittest.TestCase):
-    """Test EnhancedBootstrapAnalyzer functionality."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.x_values = [1.0, 2.0, 3.0, 4.0, 5.0]
-        self.y_values = [1.0, 1.8, 2.6, 3.4, 4.2]
-
-    def test_enhanced_bootstrap_analyzer_creation(self):
-        """Test EnhancedBootstrapAnalyzer creation."""
-        analyzer = EnhancedBootstrapAnalyzer(n_bootstrap=500)
-
-        self.assertIsNotNone(analyzer)
-        self.assertEqual(analyzer.n_bootstrap, 500)
-
-    def test_enhanced_bootstrap_analyzer_scaling_analysis(self):
-        """Test bootstrap-based scaling analysis."""
-        analyzer = EnhancedBootstrapAnalyzer(n_bootstrap=100)
-
-        result = analyzer.analyze_scaling_with_bootstrap(
-            self.x_values,
-            self.y_values,
-            confidence_level=0.95
-        )
-
-        self.assertIsInstance(result, dict)
-        self.assertIn('scaling_exponent', result)
-        self.assertIn('intercept', result)
-        self.assertIn('r_squared', result)
-
-        # Confidence interval may or may not be present depending on bootstrap success
-        if 'confidence_interval' in result:
-            ci = result['confidence_interval']
-            self.assertIsInstance(ci, tuple)
-            self.assertEqual(len(ci), 2)
-            self.assertLess(ci[0], ci[1])
-
-    def test_enhanced_bootstrap_analyzer_different_confidence(self):
-        """Test with different confidence levels."""
-        analyzer = EnhancedBootstrapAnalyzer(n_bootstrap=50)
-
-        result_95 = analyzer.analyze_scaling_with_bootstrap(
-            self.x_values, self.y_values, confidence_level=0.95
-        )
-        result_90 = analyzer.analyze_scaling_with_bootstrap(
-            self.x_values, self.y_values, confidence_level=0.90
-        )
-
-        # 90% CI should be narrower than 95% CI if both are present
-        if 'confidence_interval' in result_95 and 'confidence_interval' in result_90:
-            ci_95 = result_95['confidence_interval']
-            ci_90 = result_90['confidence_interval']
-            self.assertLess(ci_90[1] - ci_90[0], ci_95[1] - ci_95[0])
-
-    def test_enhanced_bootstrap_analyzer_insufficient_data(self):
-        """Test with insufficient data."""
-        analyzer = EnhancedBootstrapAnalyzer(n_bootstrap=100)
-
-        result = analyzer.analyze_scaling_with_bootstrap(
-            [1.0, 2.0],  # Only 2 points
-            [1.0, 2.0],
-            confidence_level=0.95
-        )
-
-        # Should handle insufficient data gracefully
-        self.assertIsInstance(result, dict)
-        # May not have valid results for insufficient data
-        self.assertTrue('error' in result or 'scaling_exponent' in result)
 
 
 class TestComprehensiveComplexityAnalysis(unittest.TestCase):
@@ -556,36 +301,6 @@ class TestComprehensiveComplexityAnalysis(unittest.TestCase):
 class TestIntegration(unittest.TestCase):
     """Test integration between different complexity analysis components."""
 
-    def test_agent_based_network_integration(self):
-        """Test integration between agent-based model and network analysis."""
-        # Create a simple agent-based model
-        agents = [
-            {"initial_state": 0.5, "initial_energy": 1.0},
-            {"initial_state": 0.3, "initial_energy": 1.2},
-            {"initial_state": 0.7, "initial_energy": 0.8}
-        ]
-
-        interactions = [
-            (0, 1, 0.5),
-            (1, 2, 0.3),
-            (2, 0, 0.4)
-        ]
-
-        model = AgentBasedModel(
-            agents=agents,
-            interactions=interactions,
-            environment_params={"temperature": 298.0},
-            time_steps=5
-        )
-
-        # Simulate to get emergent behavior
-        simulation_results = model.simulate(seed=42)
-
-        # Use final states to create network analysis
-        final_states = [simulation_results['state_variance'][-1]]
-        # Note: This is a simplified integration test
-        self.assertIsInstance(simulation_results, dict)
-        self.assertIn('total_energy', simulation_results)
 
     def test_multi_analyzer_consistency(self):
         """Test consistency across different analysis methods."""
@@ -631,3 +346,125 @@ class TestIntegration(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+# Exact scientific references for both implementations, including Python-only paths.
+import pytest
+
+
+@pytest.mark.parametrize("numpy_backend", [False, True])
+def test_reference_graph_metrics_and_weight_invariance(monkeypatch, numpy_backend):
+    import importlib
+    module = importlib.import_module(NetworkComplexityAnalyzer.__module__)
+    monkeypatch.setattr(module, "HAS_NUMPY", numpy_backend)
+    analyzer = NetworkComplexityAnalyzer()
+    triangle = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
+    metrics = analyzer.analyze_network_complexity(triangle)
+    assert metrics.clustering_coefficient == pytest.approx(1)
+    assert metrics.path_length == pytest.approx(1)
+    assert metrics.modularity == pytest.approx(0)
+    assert metrics.mutual_information == pytest.approx(math.log2(1.5))
+    pair = [[0, 1], [1, 0]]
+    weighted = [[0, 100], [100, 0]]
+    assert analyzer.analyze_network_complexity(pair).path_length == 1
+    assert analyzer.analyze_network_complexity(pair).mutual_information == pytest.approx(1)
+    assert analyzer.analyze_network_complexity(weighted).mutual_information == pytest.approx(1)
+    assert analyzer._calculate_modularity(pair, [0, 0]) == pytest.approx(0)
+    assert analyzer._calculate_modularity(pair, [0, 1]) == pytest.approx(-0.5)
+    assert analyzer._calculate_path_length([[9, 1], [1, 4]]) == 1
+
+
+def test_disconnected_modularity_paths_and_permutation():
+    analyzer = NetworkComplexityAnalyzer()
+    graph = [[0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]
+    metrics = analyzer.analyze_network_complexity(graph)
+    assert metrics.modularity == pytest.approx(0.5)
+    assert math.isinf(metrics.path_length)
+    assert analyzer.analyze_network_complexity([[0, 0], [0, 0]]).mutual_information is None
+    order = [0, 2, 1, 3]
+    permuted = [[graph[i][j] for j in order] for i in order]
+    assert analyzer.analyze_network_complexity(permuted) == metrics
+    path = [[0, 1, 0], [1, 0, 1], [0, 1, 0]]
+    assert analyzer.analyze_network_complexity(path).path_length == pytest.approx(4 / 3)
+    assert analyzer.analyze_network_complexity(path).clustering_coefficient == 0
+    for invalid in ([[0, 1]], [[0, 1], [0, 0]], [[0, -1], [-1, 0]], [[0, math.nan], [math.nan, 0]]):
+        with pytest.raises(ValueError):
+            analyzer.analyze_network_complexity(invalid)
+    with pytest.raises(ValueError):
+        analyzer.analyze_network_complexity(graph, communities=[0])
+
+
+def test_cycle_energy_entropy_units_and_duration():
+    from antstack_core.analysis.energy import EnergyBreakdown
+    analyzer = ThermodynamicComplexityAnalyzer(300)
+    energy = EnergyBreakdown(compute_memory=1)
+    fast = analyzer.analyze_thermodynamic_efficiency(energy, 1, 0, duration_s=0.01)
+    slow = analyzer.analyze_thermodynamic_efficiency(energy, 1, 0, duration_s=0.02)
+    assert fast.entropy_change == pytest.approx(1 / 300)
+    assert fast.entropy_production_rate == pytest.approx(1 / 3)
+    assert slow.entropy_production_rate == pytest.approx(1 / 6)
+    assert fast.free_energy == pytest.approx(0)
+    assert slow.free_energy == pytest.approx(fast.free_energy)
+    for bad in (0, -1, math.inf, math.nan):
+        with pytest.raises(ValueError):
+            ThermodynamicComplexityAnalyzer(bad)
+        with pytest.raises(ValueError):
+            analyzer.analyze_thermodynamic_efficiency(energy, 1, 0, duration_s=bad)
+    with pytest.raises(ValueError):
+        analyzer.analyze_thermodynamic_efficiency(energy, 1, -1)
+    with pytest.raises(ValueError):
+        analyzer.analyze_thermodynamic_efficiency(EnergyBreakdown(), 1, 0)
+
+
+@pytest.mark.parametrize("numpy_backend", [False, True])
+def test_lz78_reference_phrases(monkeypatch, numpy_backend):
+    import importlib
+    module = importlib.import_module(ComplexityEntropyAnalyzer.__module__)
+    monkeypatch.setattr(module, "HAS_NUMPY", numpy_backend)
+    analyzer = ComplexityEntropyAnalyzer()
+    for sequence, expected in [([], 0), ([0], 1), ([0, 0, 0, 0], 3 / 4),
+                               ([0, 1, 2, 3], 1), ([0, 1, 0, 1, 0, 1], 4 / 6)]:
+        assert analyzer._calculate_lemple_ziv_complexity(sequence) == pytest.approx(expected)
+    assert analyzer.create_complexity_entropy_diagram([0, 0, 0, 0], 4)['complexity'] == [0.75]
+    assert analyzer.create_complexity_entropy_diagram([0, 1, 2, 3], 4)['complexity'] == [1]
+    with pytest.raises(ValueError):
+        analyzer._calculate_lemple_ziv_complexity([0, math.nan])
+
+
+@pytest.mark.parametrize("numpy_backend", [False, True])
+def test_paired_bootstrap_reproducible_exact_power_law(monkeypatch, numpy_backend):
+    import importlib
+    import random
+    module = importlib.import_module(EnhancedBootstrapAnalyzer.__module__)
+    monkeypatch.setattr(module, "HAS_NUMPY", numpy_backend)
+    analyzer = EnhancedBootstrapAnalyzer(n_bootstrap=120, seed=74)
+    state = random.getstate()
+    result = analyzer.analyze_scaling_with_bootstrap([1, 2, 4, 8], [1, 4, 16, 64])
+    assert random.getstate() == state
+    assert result == analyzer.analyze_scaling_with_bootstrap([1, 2, 4, 8], [1, 4, 16, 64])
+    assert result['valid'] is True
+    assert 0 < result['bootstrap_valid'] <= result['bootstrap_attempted'] == 120
+    assert len(result['bootstrap_exponents']) == result['bootstrap_valid']
+    assert result['bootstrap_exponents'] == pytest.approx([2] * result['bootstrap_valid'])
+    assert result['bootstrap_intercepts'] == pytest.approx([1] * result['bootstrap_valid'])
+    assert result['confidence_interval'] == pytest.approx((2, 2))
+    assert result['confidence_intervals']['intercept'] == pytest.approx((1, 1))
+    assert result['confidence_intervals']['r_squared'] == pytest.approx((1, 1))
+    assert result['bias_corrected']['exponent'] == pytest.approx(2)
+
+
+def test_bootstrap_invalid_and_confidence_boundaries():
+    for bad in (0, -1, 1.5, True):
+        with pytest.raises(ValueError):
+            EnhancedBootstrapAnalyzer(bad)
+    analyzer = EnhancedBootstrapAnalyzer(120, seed=8)
+    assert analyzer.analyze_scaling_with_bootstrap([1, 2], [1, 4])['valid'] is False
+    assert analyzer.analyze_scaling_with_bootstrap([1, 1, 1], [1, 2, 3])['valid'] is False
+    for bad in (0, 1, -0.1, math.nan):
+        with pytest.raises(ValueError):
+            analyzer.analyze_scaling_with_bootstrap([1, 2, 3], [1, 4, 9], bad)
+    low = analyzer.analyze_scaling_with_bootstrap([1, 2, 4, 8, 16], [1, 3, 15, 72, 210], 0.9)
+    high = analyzer.analyze_scaling_with_bootstrap([1, 2, 4, 8, 16], [1, 3, 15, 72, 210], 0.95)
+    assert high['confidence_interval'][0] <= low['confidence_interval'][0]
+    assert high['confidence_interval'][1] >= low['confidence_interval'][1]
+    assert high['confidence_interval'][0] < high['confidence_interval'][1]

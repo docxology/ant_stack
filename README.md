@@ -1,114 +1,64 @@
 # Ant Stack
 
-Ant Stack is a reproducible scientific-publication and analysis workspace for embodied AI, ant-inspired systems, complexity energetics, and publication rendering. The repository is organized as a `uv` Python project with `bun`-managed Node tooling for Mermaid and document workflows.
+Analytical workload/energy models and scientific-publication tooling, packaged as `antstack_core` (3.0.0). The Body–Brain–Mind architecture is a proposal: the package does **not** implement an ant dynamics solver, validated neural circuit, active-inference decision engine, or calibrated hardware-energy model.
 
-## Current State
+## Start with the native toolchain
 
-- Python package: `antstack_core`
-- CLI entrypoints: `antstack-build`, `antstack-ce`, and `run-all-antstack`
-- Test suite at the v2.0.0 release: `676 passed, 10 subtests passed` with `uv run pytest -q` (re-run locally for the current count)
-- Package manager: `uv`
-- Node/tooling manager: `bun`
-- Paper roots: `papers/ant_stack`, `papers/complexity_energetics`, and `papers/documentation`
-- Canonical generated output root: `outputs/<run_id>/`
-- Compatibility complexity output root: `papers/complexity_energetics/out`
-
-## Architecture
-
-```mermaid
-flowchart TD
-    Config["configs/run_all_antstack.example.yaml"] --> Orchestration["antstack_core.orchestration"]
-    CLI["CLI wrappers\nantstack-build\nantstack-ce\nrun-all-antstack"] --> Orchestration
-    Architecture["antstack_core.architecture\nexecutable module contracts"] --> Tests
-    Analysis["antstack_core.analysis"] --> Orchestration
-    Figures["antstack_core.figures"] --> Orchestration
-    Publishing["antstack_core.publishing"] --> Build["Paper validation and PDF build"]
-    Orchestration --> Outputs["outputs/<run_id>\ndata, statistics, figures, animations, reports, papers, logs, provenance"]
-    Orchestration --> Projection["papers/complexity_energetics/out\nassets\nGenerated.md"]
-    Tests["pytest contract tests"] --> Analysis
-    Tests --> Figures
-    Tests --> Orchestration
-    Tests --> Publishing
-```
-
-## Setup
+Use `uv` for Python and Bun for Node tooling. `.python-version` selects Python 3.15; the package requires Python 3.11 or newer. `.node-version` pins Node. Keep development environments and caches local to the checkout:
 
 ```bash
+export UV_CACHE_DIR="$PWD/cache/uv"
+export MPLCONFIGDIR="$PWD/cache/matplotlib"
+export MPLBACKEND=Agg
+export XDG_CACHE_HOME="$PWD/cache/xdg"
+export PUPPETEER_CACHE_DIR="$PWD/cache/puppeteer"
+export BUN_INSTALL_CACHE_DIR="$PWD/cache/bun"
 uv sync --extra dev
 bun install
 ```
 
-Optional external document tools:
+Full paper rendering additionally needs Pandoc 3.13, XeLaTeX with `cleveref`, and a working local Chromium/Puppeteer installation. SVG inputs need `rsvg-convert`; MP4 output needs FFmpeg. Installing Python dependencies alone does not qualify these paths. Follow inherited admission rules when this checkout is managed by a collection; standalone CI uses only this project's commands.
 
-- `pandoc` for paper rendering
-- LaTeX or XeLaTeX for PDF output
-- Mermaid-compatible Node tooling for diagram rendering
+## Choose the intended output contract
 
-## Common Commands
+| Command | Result and boundary |
+|---|---|
+| `uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only` | Validate the analytical manifest without creating a run. |
+| `uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/standalone-ce-example` | Generate one standalone CE artifact family. The selected root must be new or empty; choose a fresh name on subsequent runs. |
+| `uv run run-all-antstack --config configs/run_all_antstack.example.yaml` | Generate a fresh canonical `outputs/<run_id>/` and, when enabled, its CE paper projection. |
+| `uv run antstack-build --validate-only` | Check configured sources/references; write `build_report.md`, but no PDFs. |
+| `uv run antstack-build` | Run configured analysis and actually render the three papers. A failed render returns nonzero and does not replace a previous PDF. |
 
-```bash
-uv run pytest --collect-only -q
-uv run pytest -q
-uv run ruff check .
-uv run python tools/ensure_folder_docs.py --check
-uv run antstack-build --validate-only
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out
-uv run run-all-antstack --config configs/run_all_antstack.example.yaml
-bun run test
-bun run lint
-bun run run:all
-```
+`bun run ce --out outputs/standalone-ce-example` forwards the explicit output choice. It no longer writes directly over the paper's populated `out/` directory.
 
-## Repository Layout
+## Canonical evidence, projections, and historical artifacts
 
-| Path | Purpose |
-| --- | --- |
-| `antstack_core/analysis` | Energy models, workloads, statistics, complexity analysis, power meters, experiment manifests, key numbers, and theoretical limits. |
-| `antstack_core/architecture.py` | Executable architecture contract for package modules, folder signposting, public exports, layers, and Mermaid rendering. |
-| `antstack_core/cohereants` | Cohereants APIs for spectroscopy, behavioral analysis, and physical conversion helpers. |
-| `antstack_core/figures` | Matplotlib plots, publication figures, Mermaid helpers, figure references, and asset organization. |
-| `antstack_core/orchestration` | Package-owned `run-all-antstack` orchestration, output layout, manifests, checksums, logs, and provenance. |
-| `antstack_core/publishing` | Build orchestration, PDF helpers, validation, templates, and reference management. |
-| `antstack_core/cli` | Thin console wrappers for package and paper workflows. |
-| `configs/` | Validated YAML configs for canonical package workflows. |
-| `outputs/` | Default canonical root for generated run artifacts under `outputs/<run_id>/`. |
-| `papers/` | Manuscript sources, paper configs, assets, generated fragments, and paper-local runner code. |
-| `scripts/` | Thin wrappers and operational utilities around package APIs. |
-| `tests/` | Pytest suite for package APIs, rendering contracts, documentation contracts, and complexity energetics workflows. |
-| `tools/` | Maintenance utilities and Pandoc Lua filters. |
-| `docs/` | User and developer documentation, including empirical ant-data integration. |
+A completed canonical run has `manifest.json`, relative artifact paths, SHA-256/byte identities, input snapshots, package-source identities, dependencies, and an explicit completion flag. These certify recorded bytes and requested producer coverage—not empirical accuracy, authenticity against a malicious editor, or biological validity. [Reproducibility](docs/reproducibility.md) defines the boundaries.
 
-For the current public API and CLI contract, start with [docs/public_api_contracts.md](docs/public_api_contracts.md).
+The CE projection consists of `papers/complexity_energetics/Generated.md`, produced assets, and `out/`, with an ownership inventory. Use run-all or the configured paper builder to update it coherently. A failed replacement preserves the previous completed generation; owned replacements retain their prior tree in an archive. Do not edit generated numbers by hand.
 
-## Generated Artifact Policy
+The default run-all config copies the existing PDF as `historical_paper`; `build_pdf: false` does **not** compile a fresh manuscript. `build_pdf: true` creates a generated analytical-results report, not the complete manuscript. Full configured papers are built by `antstack-build`. Retained v2 PDFs, `outputs/example-run/`, `outputs/test-run/`, and top-level `complexity_energetics/` are historical comparison material unless a fresh source-bound receipt explicitly identifies them.
 
-Versioned generated plots, tables, PDFs, and manuscript fragments are kept only when they are intentional research artifacts with documented regeneration paths. Cache directories, Python bytecode, virtual environments, package build outputs, OS metadata, and transient test output should not be committed.
+## Source map and evidence classes
 
-Generate canonical run artifacts with:
+| Surface | Responsibility |
+|---|---|
+| `antstack_core/analysis`, `cohereants` | Workload/energy assumptions, statistics, graph/spectral/behavioral helpers and explicit unavailable measurements. |
+| `antstack_core/figures`, `mathematics` | Data-aligned plots, local Mermaid preprocessing and context-preserving math handling. |
+| `antstack_core/orchestration` | Installed CE runner; staged canonical publication and current projection inventory. |
+| `antstack_core/publishing`, `cli` | Installed configured builds, document-wide counters, validation and provenance. |
+| `papers/ant_stack` | Conceptual architecture and proposed evaluation protocols. |
+| `papers/complexity_energetics` | Analytical models with assumed coefficients; current numbers come from a completed generated run. |
+| `papers/documentation` | Configured-source and rendering guide. |
+| `tools`, `scripts` | Repository maintenance, reproducible graphical abstracts, release smoke and thin launchers. |
 
-```bash
-uv run run-all-antstack --config configs/run_all_antstack.example.yaml
-```
+Base workload models and the separate enhanced models are different model families. Repeated deterministic values and descriptive bootstrap intervals are not independent experiments or evidence of calibrated uncertainty. Hardware measurements, species validity, timing guarantees, and physical cost of transport require their own matched observations.
 
-Each run writes `outputs/<run_id>/manifest.json` plus provenance files under `outputs/<run_id>/provenance/`. The manifest records artifact type, path, producing task, source config, byte size, and SHA-256 checksum.
+## Validate, inspect, then release
 
-Regenerate compatibility complexity energetics outputs with:
+[Validation and receipts](docs/validation.md) lists the native gates and records what was actually exercised. [Public API contracts](docs/public_api_contracts.md) describes breaking 3.0.0 behavior; [PDF rendering](PDF_RENDERING_GUIDE.md) distinguishes readiness from a readable render. [Contributing](CONTRIBUTING.md) covers source ownership and release discipline. The private Node package has no registry-publishing workflow.
 
-```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out
-```
-
-## Documentation And Papers
-
-- Documentation index: [docs/README.md](docs/README.md)
-- Architecture contract: [docs/architecture.md](docs/architecture.md)
-- Public API contracts: [docs/public_api_contracts.md](docs/public_api_contracts.md)
-- External ant-data integration: [docs/external_ant_data_integration.md](docs/external_ant_data_integration.md)
-- Paper roots: `papers/ant_stack`, `papers/complexity_energetics`, and `papers/documentation`
-- Legacy generated-artifact root: `complexity_energetics/` — retained comparison figures and tables; generate canonical artifacts under `outputs/<run_id>/` instead
-
-Every intentional directory has a local `README.md` and `AGENTS.md`. Verify coverage after structural changes:
-
-```bash
-uv run python tools/ensure_folder_docs.py --check
-```
+- [Documentation index](docs/README.md)
+- [Architecture contract](docs/architecture.md)
+- [External ant-data integration](docs/external_ant_data_integration.md)
+- [Release history](RELEASE_NOTES.md)

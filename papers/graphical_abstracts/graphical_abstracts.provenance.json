@@ -1,0 +1,231 @@
+{
+  "assets": [
+    {
+      "caption": "Ant Stack as a proposed Body–Brain–Mind architecture (dashed cards), distinct from implemented analytical workload and energy models (solid cards). Arrows describe intended information flow, not an executed sensorimotor loop. Counter models are not contact, neural, or active-inference solvers and do not establish biological fidelity, real-time performance, or energy efficiency.",
+      "evidence_class": "original conceptual diagram; not data-driven evidence",
+      "figure_id": "ant_stack_graphical_abstract",
+      "format": "svg",
+      "path": "ant_stack_graphical_abstract.svg",
+      "sha256": "963360e2939c4ceb78dc909a78d10fefcabec8bc35e54e357db0c8de05a57118",
+      "size_bytes": 108607
+    },
+    {
+      "caption": "Ant Stack as a proposed Body–Brain–Mind architecture (dashed cards), distinct from implemented analytical workload and energy models (solid cards). Arrows describe intended information flow, not an executed sensorimotor loop. Counter models are not contact, neural, or active-inference solvers and do not establish biological fidelity, real-time performance, or energy efficiency.",
+      "evidence_class": "original conceptual diagram; not data-driven evidence",
+      "figure_id": "ant_stack_graphical_abstract",
+      "format": "png",
+      "path": "ant_stack_graphical_abstract.png",
+      "sha256": "0ed6aa1d3fbc241ca08193063fbc88c8fed505cc1405d7037ee51a0f383a9b31",
+      "size_bytes": 343756
+    },
+    {
+      "caption": "Analytical complexity-to-energy accounting: declared assumptions produce workload counters, which are multiplied by illustrative energy prices. Module-isolated rows and a shared-system sum have different boundaries; a system sum requires a matched interval and one idle baseline. The schematic contains no numerical results or empirical calibration.",
+      "evidence_class": "original conceptual diagram; not data-driven evidence",
+      "figure_id": "complexity_energetics_graphical_abstract",
+      "format": "svg",
+      "path": "complexity_energetics_graphical_abstract.svg",
+      "sha256": "585fdbfe1d4c5a49c0cd12c34ec8c40c6bc80110221b09600eef9253e792c5e6",
+      "size_bytes": 144746
+    },
+    {
+      "caption": "Analytical complexity-to-energy accounting: declared assumptions produce workload counters, which are multiplied by illustrative energy prices. Module-isolated rows and a shared-system sum have different boundaries; a system sum requires a matched interval and one idle baseline. The schematic contains no numerical results or empirical calibration.",
+      "evidence_class": "original conceptual diagram; not data-driven evidence",
+      "figure_id": "complexity_energetics_graphical_abstract",
+      "format": "png",
+      "path": "complexity_energetics_graphical_abstract.png",
+      "sha256": "69c617a0776e00dca50b6a919c0ac3cbd3edc0be310469ce42350d6d79965c0a",
+      "size_bytes": 422099
+    }
+  ],
+  "captions": {
+    "ant_stack_graphical_abstract": "Ant Stack as a proposed Body–Brain–Mind architecture (dashed cards), distinct from implemented analytical workload and energy models (solid cards). Arrows describe intended information flow, not an executed sensorimotor loop. Counter models are not contact, neural, or active-inference solvers and do not establish biological fidelity, real-time performance, or energy efficiency.",
+    "complexity_energetics_graphical_abstract": "Analytical complexity-to-energy accounting: declared assumptions produce workload counters, which are multiplied by illustrative energy prices. Module-isolated rows and a shared-system sum have different boundaries; a system sum requires a matched interval and one idle baseline. The schematic contains no numerical results or empirical calibration."
+  },
+  "complete": true,
+  "evidence_class": "original conceptual/analytical schematics, not empirical or numerical results",
+  "limitations": [
+    "No workload or energy function is executed to construct these schematics.",
+    "No numeric model results, device calibration, or observed behavior are depicted.",
+    "Base and enhanced workload families are separate analytical conventions.",
+    "The source hashes bind interpretation to this checkout, not empirical validation.",
+    "This producer is an original requested asset path, not a fallback for failed Mermaid rendering."
+  ],
+  "output_inventory": [
+    "ant_stack_graphical_abstract.svg",
+    "ant_stack_graphical_abstract.png",
+    "complexity_energetics_graphical_abstract.svg",
+    "complexity_energetics_graphical_abstract.png",
+    "graphical_abstracts.provenance.json"
+  ],
+  "producer": {
+    "path": "tools/generate_graphical_abstracts.py",
+    "sha256": "5be3d1ac6eb422f2844d7e42f86c03030507e4fd6ccc4d516e1d11b29363c90b"
+  },
+  "rendering": {
+    "backend": "object-oriented FigureCanvasAgg; SVG exporter for the same figure",
+    "figure_inches": [
+      9,
+      6
+    ],
+    "font": "Matplotlib bundled DejaVu Sans; SVG glyphs embedded as vector paths",
+    "geometry": "native Matplotlib vector patches, lines, arrows and text",
+    "matplotlib": "3.11.2",
+    "network_or_browser": false,
+    "png_dpi": 300,
+    "png_pixels": [
+      2700,
+      1800
+    ],
+    "python": "3.15.2",
+    "randomness": "none",
+    "scope": "byte reproducibility within the same Python/Matplotlib/font environment",
+    "svg_date": null,
+    "svg_hashsalt": "ant-stack-original-conceptual-abstracts-v1"
+  },
+  "schema": "ant-stack-original-graphical-abstracts/v1",
+  "sources": [
+    {
+      "evidence_class": "qualified design proposal",
+      "path": "papers/ant_stack/Abstract.md",
+      "references": [
+        "Abstract"
+      ],
+      "sha256": "fb9fbdee1114fa6db67bd91d5a021c4004dc4763a7ada59ba0a4d26039e4f354",
+      "size_bytes": 2379,
+      "supports": "Three proposed layers; architecture and analytical estimates are not empirical validation."
+    },
+    {
+      "evidence_class": "design targets, not an implemented dynamics solver",
+      "path": "papers/ant_stack/AntBody.md",
+      "references": [
+        "Proposed Interfaces (I/O Contract)",
+        "Morphology and Biomechanics",
+        "Sensory Apparatus"
+      ],
+      "sha256": "6d7f8d6da842923f8397a590124c74529421556278b2ba6202f8508a090fb80b",
+      "size_bytes": 6706,
+      "supports": "Proposed morphology, actuation, sensing, observation and action interfaces."
+    },
+    {
+      "evidence_class": "functional design assumptions",
+      "path": "papers/ant_stack/AntBrain.md",
+      "references": [
+        "Scope and Assumptions",
+        "Integration",
+        "Proposed Implementation Choices and Timing Targets"
+      ],
+      "sha256": "469ea40649f93c2623841351e569bbed60618f8927854da54b6e33da89ed9a89",
+      "size_bytes": 8105,
+      "supports": "Proposed insect-inspired sensory, memory and navigation abstractions; no ant connectome validation."
+    },
+    {
+      "evidence_class": "conceptual cognitive design",
+      "path": "papers/ant_stack/AntMind.md",
+      "references": [
+        "Scope and Assumptions",
+        "Proposed Single-Agent Generative Model",
+        "Proposed Diffusion–Decay Pheromone Field",
+        "Technical Pointers and References"
+      ],
+      "sha256": "174c002c4f7624444c3b57b1ab3298af5786714eafeecf7c34f1298c607d0562",
+      "size_bytes": 7518,
+      "supports": "Proposed beliefs, policy selection and stigmergy; decision-step horizon; base/enhanced distinction."
+    },
+    {
+      "evidence_class": "analytical scope statement",
+      "path": "papers/complexity_energetics/Abstract.md",
+      "references": [
+        "Abstract"
+      ],
+      "sha256": "74c0c263e0221d227009ef017e4c90c81bdfe73ffe86adfe13f6fb6eb6ef3202",
+      "size_bytes": 2541,
+      "supports": "Analytical framework, assumed coefficients, separate base/enhanced families, absent empirical calibration."
+    },
+    {
+      "evidence_class": "analytical definitions and declared assumptions",
+      "path": "papers/complexity_energetics/Methods.md",
+      "references": [
+        "Methodological Framework and Evidence Classes",
+        "Selected Base Workloads",
+        "Separate Enhanced Models",
+        "Energy Estimation and Time Accounting",
+        "Descriptive Scaling Fits and Resampling Limits"
+      ],
+      "sha256": "97e68f8bbaf7bca13a2d5715eb0ce2c965783610b1fb266c72130400053a12d4",
+      "size_bytes": 8572,
+      "supports": "Floor(f*t) updates, traffic units, exact tree nodes versus bounded leaf policies, nonadditive module rows."
+    },
+    {
+      "evidence_class": "accounting definitions, not observed energy flows",
+      "path": "papers/complexity_energetics/Energetics.md",
+      "references": [
+        "Compute, Memory, and Idle Energy",
+        "AntBody: Mechanics and Sensing",
+        "AntMind: Conceptual Layer and Physical Compute",
+        "Integrated Per-Decision Accounting",
+        "Units and Conversions"
+      ],
+      "sha256": "5ef08f6db18a8dc02cabda81918c5892b5daf56855b085805ed21513bfca4c25",
+      "size_bytes": 9422,
+      "supports": "Joule conversions, matched time windows, physical terms, shared idle once, Mind physical compute retained."
+    },
+    {
+      "evidence_class": "illustrative configuration, not measurements",
+      "path": "papers/complexity_energetics/manifest.example.yaml",
+      "references": [
+        "coefficients",
+        "workloads",
+        "meter"
+      ],
+      "sha256": "9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a",
+      "size_bytes": 2980,
+      "supports": "Illustrative input authority selects base closed_form workloads and a null meter; no numeric constants copied into diagrams."
+    },
+    {
+      "evidence_class": "implemented analytical models, not solver execution",
+      "path": "antstack_core/analysis/workloads.py",
+      "references": [
+        "body_workload_closed_form",
+        "brain_workload_closed_form",
+        "mind_workload_closed_form",
+        "calculate_contact_complexity",
+        "calculate_sparse_neural_complexity",
+        "calculate_active_inference_complexity",
+        "effective_policy_count",
+        "enhanced_mind_workload_closed_form",
+        "estimate_body_energy_mech"
+      ],
+      "sha256": "9fc1238d9594ebd9356fc9d91892f020baea7af3a8c418cbb11edb91df35e6e9",
+      "size_bytes": 28785,
+      "supports": "Implemented count formulas, operation/traffic/spike counters, base tree-node and enhanced leaf-policy conventions, assumed physical power integration."
+    },
+    {
+      "evidence_class": "implemented analytical energy accounting",
+      "path": "antstack_core/analysis/energy.py",
+      "references": [
+        "ComputeLoad",
+        "EnergyCoefficients",
+        "estimate_detailed_energy",
+        "estimate_compute_energy",
+        "EnergyBreakdown",
+        "pj_to_j",
+        "aj_to_j"
+      ],
+      "sha256": "ace12047bf205d14509e3809cab0ea8ffb8d3dcad181d3db16fec5d37c4535dd",
+      "size_bytes": 17066,
+      "supports": "Counter units, coefficient units, pJ/aJ conversions, idle power times duration, joule-valued energy components."
+    },
+    {
+      "evidence_class": "implemented analytical orchestration",
+      "path": "antstack_core/orchestration/complexity_energetics.py",
+      "references": [
+        "CLOSED_FORM_WORKLOADS",
+        "_load_for_manifest_mode",
+        "run_manifest"
+      ],
+      "sha256": "cffad68a61e4f68d4c8eaaa792bee09cd04c37121df3b10ffc7dc12f094fe358",
+      "size_bytes": 30055,
+      "supports": "Base-model dispatch and separate module-isolated versus common-window shared-idle report boundaries."
+    }
+  ]
+}

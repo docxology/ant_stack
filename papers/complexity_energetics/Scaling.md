@@ -1,119 +1,35 @@
-# Scaling Laws and System-Level Behavior
+# Conditional Model Scaling and Limits of Interpretation {#scaling-laws-and-system-level-behavior}
 
-## Empirically-Derived Power Laws and Scaling Regimes
+## Descriptive Analytical Scaling
 
-Our scaling analysis framework (`analyze_scaling_relationship`) reveals distinct computational and energetic regimes across Ant Stack modules, each characterized by different scaling behaviors that have implications for system design and optimization strategies. These analytically-derived scaling relationships, validated through statistical analysis, provide guidance for parameter selection and architectural decisions.
+Parameter sweeps describe the selected closed-form models. They do not measure physiological scaling, solver convergence, or hardware latency. Current fit coefficients and intervals are reported only in the completed run's `Generated.md`; no fixed exponent or goodness-of-fit value is copied here.
 
-**Statistical Analysis Framework**: Scaling relationships are derived through log-log regression analysis with bootstrap confidence intervals, providing statistical foundations. We employ goodness-of-fit metrics and regime classification (linear, quadratic, cubic, sub-linear, super-linear) to characterize scaling behavior with uncertainty bounds.
+A finite-range power-law fit $y=ax^b$ summarizes a curve over its stated range. A large $b$ does not convert a power law into an exponential, and a nearly constant baseline-inclusive response does not imply zero computational or mechanical cost. Compute-only and baseline-inclusive curves answer different questions and must be labeled separately.
 
-**Phase Transition Analysis**: Our analysis reveals critical points where system behavior undergoes qualitative changes, characterized by:
-- **Critical Exponents**: Scaling behavior near phase transitions follows power laws with critical exponents
-- **Finite-Size Scaling**: System behavior depends on the ratio of system size to correlation length
-- **Universality Classes**: Different modules exhibit similar scaling behavior near critical points
+## AntBody: Solver and Joint Dependence
 
-**Multi-Parameter Scaling**: We extend traditional single-parameter scaling to multi-parameter analysis, revealing:
-- **Crossover Behavior**: System behavior changes as different parameters become dominant
-- **Scaling Collapse**: Data from different parameter ranges can be collapsed onto universal curves
-- **Critical Manifolds**: Surfaces in parameter space where phase transitions occur
+In the selected base model, joint count affects both contact work and quadratic control work. The `pgs` iteration rule is $\min(50,\max(10,C))$; contact work is proportional to contact count times that iteration count at fixed $J$. Its piecewise operation counts are not a measured $C^{1.5}$ solver law. The other supported models are `si` and `ldlt`, not LCP/MLCP aliases. Their formula differences alone establish neither an accuracy ranking nor a preferred contact threshold.
 
-**System Design Implications**: The identification of distinct scaling regimes enables targeted optimization strategies for each module, moving beyond one-size-fits-all approaches to module-specific optimization that accounts for the underlying computational and physical constraints.
+Adding a fixed baseline can flatten energy variation relative to compute-only scaling. The manifest baseline is an assumed 0.50 W, not 50 mW. Morphological complexity is not physically free: mechanics, sensing, and hardware utilization must be considered on the same time basis. A nominal 100 Hz control rate is an input; real-time feasibility needs measured latency and deadline-miss distributions on identified hardware.
 
-### AntBody: Contact-Dominated Scaling
+## AntBrain: Activity and Connectivity Assumptions
 
-**Joint Scaling ($J$)**: Flat energy scaling dominated by baseline power consumption
-- **Scaling Relationship**: Energy consumption shows minimal dependence on joint count due to baseline power dominance (sensors and controllers)
-- **Physical Reality**: Fixed baseline power consumption (50 mW) overwhelms joint-dependent computation variations
-- **Practical Impact**: Morphological complexity comes at essentially zero energy cost within practical ranges
+At fixed $N_{KC}$ and $\rho$, base channel processing grows with $K$ and channel state traffic grows with $KH$. A fixed sparse-population term can dominate those increments over a finite range, but there is no general parameter-independent neural energy law. The `random` and `structured` operation models use different assumed connectivity costs; neither is a measured ant topology. There is no supported biological-over-small-world efficiency comparison.
 
-**Contact Complexity**: Algorithm-dependent scaling with critical thresholds
-- PGS solver: $\mathcal{O}(C^{1.5})$ with condition-dependent convergence for real-time performance
-- LCP/MLCP solvers: $\mathcal{O}(C^{2.5-3})$ for higher accuracy at increased computational cost
-- **Critical threshold**: $C > 20$ contacts triggers exponential complexity growth requiring solver switching
+The example activity fraction $\rho=0.02$ is an illustrative assumption. Lower modeled activity reduces some counters, but representational capacity, information loss, learning quality, and task performance are not evaluated by these counters. A sparsity optimum requires a task and data, not energy alone.
 
-### AntBrain: Sparsity-Enabled Efficiency
+## AntMind: Exact Trees Versus Bounded Policies
 
-**Sensory Scaling ($K$)**: Sub-linear scaling through biological sparsity patterns
-- **Scaling Reality**: Energy consumption remains bounded despite massive sensory expansion due to sparse neural coding ($\rho \leq 0.02$)
-- **Sparsity Mechanism**: Only fraction of Kenyon cells activate per decision cycle, preventing combinatorial explosion
-- **Connectivity Advantage**: Biological network topologies provide superior energy efficiency compared to engineered alternatives
+The selected base model sums tree nodes through horizon $H_p$ with branching factor $B$. For $B>1$, exact enumeration grows exponentially in horizon. Enhanced Mind is a distinct policy-count model with a uniform finite budget (default 1000 policies), or exact leaf enumeration when `max_policies=None`. A capped model can saturate its policy-count contribution; it does not exhibit the uncapped tree's growth by necessity. No universal 15-step real-time boundary follows from either model.
 
-**Memory Scaling**: Highly sub-linear memory requirements
-- Sparse matrix representations enable scaling to massive sensory arrays
-- SRAM-resident processing maintains real-time performance constraints
+Inverse parameter values used in energy–proxy plots are declared mathematical proxies, not measured dexterity, accuracy, reward, or throughput. A Pareto frontier requires explicit objective directions and exclusion of dominated points; a sorted curve alone is not evidence of optimality.
 
-### AntMind: Exponential Complexity Frontiers
+## Critical Behavior: Not Established
 
-**Policy Horizon ($H_p$)**: Super-linear scaling with fundamental computational limits
-- **Scaling Reality**: Energy consumption grows exponentially with planning horizon due to policy space expansion
-- **Computational Explosion**: Combinatorial growth in policy evaluation creates fundamental tractability barriers
-- **Tractability Limit**: Real-time constraints impose practical bounds on planning horizons despite bounded rationality approximations
+The released analytical workflow supplies no evidence of a second-order transition at 20 contacts, a first-order transition at activity fraction 0.02, or a planning divergence at horizon 15. Earlier numerical critical exponents (0.67, 0.8, 1.8), their intervals, a tenfold iteration jump, hysteresis, phase coexistence, universality classes, and finite-size critical-point shifts are not retained as results. The selected memoryless closed-form sweeps do not test path dependence or hysteresis.
 
-**Memory Scaling**: Linear growth constrained by sampling strategies
-- Policy sampling limits effective memory requirements despite exponential policy spaces
-- Trade-off between decision quality and computational feasibility remains fundamental
+A future critical-behavior study would need an explicit dynamical model and order parameter, bidirectional sweeps for path dependence, sufficient sizes and resolution, competing noncritical explanations, and independent observations. Piecewise counter rules, fit residuals, and policy-budget saturation should first be explained as model conventions, not physical phase transitions.
 
-Related work integrates compute energy into motion planning (CEIMP \href{https://lean.mit.edu/papers/ceimp-icra}{(Sudhakar et al., 2020)}), halting when planning cost exceeds expected actuation savings. Our scaling sweeps similarly surface regimes where added sensing ($K$) or deeper policies ($H_p$) no longer improve proxy performance enough to justify their energy. Device-level energy coefficients inform these trade-offs \href{https://ieeexplore.ieee.org/document/8845760}{(Koomey et al., 2019)}. For scaling analysis in distributed systems, see \href{https://dl.acm.org/doi/10.1145/3460319.3464797}{(Kumar et al., 2021)} and energy-performance trade-offs in robotics \href{https://ieeexplore.ieee.org/document/8967562}{(Liu et al., 2021)}.
+## Design Interpretation
 
-## Brain: Energy vs K (AL inputs)
-
-Interpretation: $K$ denotes the number of Antennal Lobe (AL) input channels. Increasing $K$ expands sensory dimensionality and raises upstream transform cost (AL) and downstream sparse-coding fan-in (MB). In practice, the marginal energy per added channel depends on (i) sparsity in MB (low $\rho$ reduces active synapses), (ii) memory locality (SRAM vs DRAM traffic), and (iii) event-driven gating. The scaling line plot (`scale_brain_K.png`) highlights the trend; consult the Pareto view to contextualize energy against a proxy performance.
-
-Guidance:
-- Prefer compact AL feature banks tuned to task (informative K, not maximal K).
-- Maintain low $\rho$ in MB to keep spikes and SRAM traffic bounded.
-- Co-design sensing/compression so added K contributes semantic signal, not redundant noise.
-
-See Figure~\ref{fig:scaling_brain_K} for multi-curve scaling under different Mind policies, and Figure~\ref{fig:pareto_brain_K} for the corresponding energy-performance trade-off.
-
-## Critical Point Analysis and Phase Transitions
-
-### Contact Dynamics Phase Transition
-
-The contact dynamics system exhibits a second-order phase transition at $C \approx 20$ contacts, where the system behavior changes from linear to super-linear scaling. This transition is empirically validated through systematic solver benchmarking:
-
-**Empirical Evidence**: PGS solver complexity transitions from $\mathcal{O}(C^{1.5})$ to effectively $\mathcal{O}(C^3)$ when $C > 20$, with condition-dependent iteration counts increasing from 10-50 to 100-500 iterations. This creates a computational bottleneck where real-time performance (10 ms deadline) becomes infeasible.
-
-**Order Parameter**: Contact resolution time $T_c$ exhibits critical scaling:
-\begin{align}
-T_c \propto |C - C_c|^{-\nu} \quad \text{for } C \approx C_c
-\end{align}
-
-where $C_c = 20$ contacts and $\nu \approx 0.67$ (empirically measured critical exponent).
-
-**Critical Behavior Validation**:
-- **Divergence**: Measured iteration counts increase 10$\times$ when crossing $C_c = 20$
-- **Scaling Universality**: PGS and LCP solvers show similar transition behavior
-- **Finite-Size Effects**: Transition point depends on solver tolerance (default: 1e-6)
-
-### Neural Sparsity Critical Point
-
-The neural processing system exhibits a first-order phase transition at $\rho \approx 0.02$, where the system transitions between information-rich and energy-efficient regimes. This is empirically validated through systematic sparsity sweeps:
-
-**Empirical Evidence**: At $\rho = 0.02$, AntBrain achieves optimal balance between energy efficiency and representational capacity. Below this threshold, information loss becomes significant; above it, energy consumption increases exponentially due to reduced event-driven benefits.
-
-**Critical Phenomena Validation**:
-- **Hysteresis**: Plasticity mechanisms create path-dependent behavior when crossing $\rho_c$
-- **Phase Coexistence**: Hybrid sparse-dense processing possible near critical point
-- **Critical Slowing**: Learning convergence time increases near $\rho_c$
-
-**Scaling Behavior**: Empirical measurement shows energy scaling:
-\begin{align}
-E \propto |\rho - \rho_c|^{-\alpha} \quad \text{for } \rho \approx \rho_c
-\end{align}
-
-where $\rho_c = 0.02$ and $\alpha \approx 0.8$ (measured critical exponent from bootstrap analysis with 95% CI [0.7, 0.9]).
-
-### Planning Horizon Threshold
-
-The cognitive processing system exhibits a computational phase transition at $H_p \approx 15$, where bounded rationality approximations become insufficient. This is validated through systematic horizon scaling experiments:
-
-**Empirical Evidence**: Policy evaluation time increases super-linearly beyond $H_p = 15$, with exponential growth in both computation time and memory usage. Bounded rationality (1000 policy limit) provides temporary mitigation but cannot fully prevent the transition.
-
-**Critical Scaling**: Measured computational complexity scales as:
-\begin{align}
-C \propto (H_p - H_{p,c})^{-\gamma} \quad \text{for } H_p \approx H_{p,c}
-\end{align}
-
-where $H_{p,c} = 15$ steps and $\gamma \approx 1.8$ (empirically measured with 95% CI [1.6, 2.0]).
-
-**Finite-Size Effects Validation**: Critical point shifts with available computational budget, from $H_p = 12$ (limited policy sampling) to $H_p = 18$ (full policy evaluation), demonstrating the impact of bounded rationality approximations.
+The framework can compare assumed operation/memory prices and workload dimensions while holding other inputs fixed. Such comparisons motivate device-specific profiling, sensor compression, activity-aware processing, and bounded planning experiments. Compute-aware stopping is supported as a distinct motion-planning research direction [@sudhakar2020balancing], not demonstrated behavior of this analytical sweep. No hardware-independent savings, biological superiority, or universal scaling collapse is inferred.

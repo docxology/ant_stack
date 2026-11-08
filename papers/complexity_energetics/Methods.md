@@ -1,184 +1,65 @@
-# Methods
+# Methods for Analytical Workload and Energy Estimation {#methods}
 
-## Methodological Framework
+## Methodological Framework and Evidence Classes
 
-Our methodology combines theoretical complexity analysis with empirical energy measurement to provide actionable insights for embodied AI system design.
+This study uses deterministic analytical workloads, not a calibrated energy-measurement campaign. Retained quantities have the following provenance:
 
-### Core Principles
+- **Assumptions:** workload dimensions, update rates, solver/pattern choices, memory splits, mechanical and sensor power coefficients, and digital energy prices in the manifest.
+- **Analytical model outputs:** counters, coefficient-based energy estimates, descriptive fits, and generated plots from that manifest.
+- **Literature context:** explicitly cited results from other systems; these do not calibrate this implementation.
+- **Actual measured results:** none identified for the native example manifest, whose meter is null.
+- **Proposed protocols:** the calibration, sensitivity, and external-validation procedures below; these have not been performed by the example workflow.
 
-**Test-Driven Development**: All computational methods are validated through comprehensive unit tests, integration tests, and cross-platform validation, ensuring analytical accuracy rather than idealized constructs.
-
-**Statistical Rigor**: Nonparametric bootstrap analysis ($n\geq 1000$ samples) with deterministic seeding provides uncertainty quantification for all scaling relationships and energy estimates.
-
-**Multi-Scale Integration**: Framework bridges algorithmic complexity analysis, hardware-specific energy modeling, and system-level optimization to ensure practical utility.
-
-### Uncertainty Quantification
-
-**Bootstrap Confidence Intervals**: Nonparametric resampling provides robust uncertainty bounds without distributional assumptions, with minimum n=1000 samples ensuring statistical power >0.8.
-
-**Sensitivity Analysis**: Sobol indices and Morris screening identify critical parameters affecting system behavior, enabling focused optimization efforts.
-
-**Bayesian Framework**: Parameter uncertainty propagation through Monte Carlo methods ensures comprehensive error analysis:
-\begin{align}
-p(\theta | D) \propto p(D | \theta) p(\theta)
-\end{align}
+Software tests can establish implementation behavior against specified mathematical expectations. They do not establish biological realism, cross-platform timing, measurement accuracy, or publication readiness.
 
 ## Computational Workload Modeling
 
-### Module-Specific Workloads
+### Selected Base Workloads
 
-**AntBody**: Physics simulation with solver-dependent complexity analysis
+The package orchestration module `antstack_core.orchestration.complexity_energetics` selects the base closed-form Body, Brain, and Mind functions. A window of duration $t$ at update frequency $f$ contains $n=\lfloor ft\rfloor$ modeled updates. Per-update counters are multiplied by $n$; byte counters represent modeled traffic over updates, not automatically peak resident memory.
 
-- PGS: $\mathcal{O}(C^{1.5})$ with condition-dependent iterations
+**AntBody:** `calculate_contact_complexity` accepts only `pgs`, `si`, and `ldlt`. They are operation-count models, not solver accuracy or convergence benchmarks. For `pgs`, the iteration convention is $I=\min(50,\max(10,C))$ and contact FLOPs are $IC(6J+12)$. For `si`, FLOPs are $20CJ+J^3/3$. For `ldlt`, FLOPs are $(J+3C)^3/3$. Base Body adds $10S$ sensor FLOPs and $20J^2$ control FLOPs per update. No special transition at 20 contacts is inferred from these formulas.
 
-- LCP: $\mathcal{O}(C^3)$ for direct dense matrix factorization
+**AntBrain:** the supported patterns are `random` and `structured`. For $N_a=\lfloor\rho N_{KC}\rfloor$, their neural FLOP models are $N_a^2$ and $N_a\log N_{KC}$ respectively. Base Brain adds $100K$ channel FLOPs and $4KH$ channel bytes per update. These labels do not implement small-world, scale-free, or species-specific biological topologies. The configured $\rho=0.02$ is an assumed activity fraction, not an inferred optimum.
 
-- MLCP: $\mathcal{O}(C^{2.5})$ with sparsity exploitation
+**AntMind:** base planning uses canonical parameters $B$ and $H_p$, with the exact node count
+\begin{equation}
+N_{\mathrm{tree}}=\sum_{h=0}^{H_p}B^h.
+\end{equation}
+Belief, policy, and evidence-bound counters scale with this node count and the configured state/action dimensions. $H_p$ is measured in decision steps, not seconds. The model counts work; it does not execute or assess policy decisions.
 
-- Sensor fusion: $\mathcal{O}(S)$ correlation analysis for multi-modal inputs
+### Separate Enhanced Models
 
-**AntBrain**: Biologically realistic sparse neural networks
+Enhanced Body adds a more detailed sensor/control decomposition; enhanced Brain separately represents AL, MB, CX, and plasticity counters. These must not be used to interpret a base-model sweep without identifying the change of model. Enhanced Mind uses $P=\min(B^{H_p},M)$ policies for a finite `max_policies=M` (default 1000), uniformly across horizons; `max_policies=None` uses $P=B^{H_p}$. This leaf-policy convention differs from the base model's sum of tree nodes. Bounding policy counts does not demonstrate preserved decision quality. Hierarchical overhead is a model assumption, not an observed acceleration.
 
-- AL processing: $\mathcal{O}(K)$ glomerular mapping and normalization
+## Energy Estimation and Time Accounting
 
-- MB sparse coding: $\mathcal{O}(\rho N_{KC})$ with $\rho \leq 0.02$
+The manifest is the numerical input authority for illustrative coefficients. Compute energy over a window is
+\begin{equation}
+E_{\mathrm{compute}}=10^{-12}(N_F e_F+V_S e_S+V_D e_D)+10^{-18}N_{\mathrm{spk}}e_{\mathrm{spk}},
+\end{equation}
+where FLOP/byte prices are in pJ and the spike price is in aJ. Baseline energy is $P_0t$. Mechanical and sensing power estimates must be integrated over the same window before any sum or cost-of-transport calculation. A component must appear only once within the declared system boundary; separate module estimates with their own baseline are not automatically a shared-controller total.
 
-- CX ring attractor: $\mathcal{O}(H)$ with lateral inhibition
+Each result row reports module-isolated compute plus its own idle contribution over that workload window. These rows are not additive shared-controller system energy. The separate per-decision system table uses the same selected base compute models, assumed physical actuation/sensing, and one shared idle baseline at the configured update rate. Cost of transport is unavailable because the supplied distance has no matched modeled locomotion interval.
 
-- Event-driven processing with activity-dependent sparsity
+The generated report must identify whether a statistic is a workload-window energy, a total over repeats, a mean over repeats, or energy per decision. For $n>0$, window energy divided by $n$ yields energy per modeled update; power is window energy divided by $t$. A 0.5 s workload at 100 Hz contains 50 updates, not one decision. At 0.50 W, baseline is 0.25 J over that window and 0.005 J over 10 ms. Do not compare these as equal intervals.
 
-**AntMind**: Bounded rational active inference
+## Descriptive Scaling Fits and Resampling Limits {#scaling-and-uncertainty}
 
-- Policy sampling: Limits effective policies to 1000 maximum
+Log–log regression fits a descriptive finite-range power law $y=ax^b$ to positive finite paired values. A large exponent $b$ is not itself an exponential law $y=a\exp(cx)$, and a goodness-of-fit score is not physical validation. Report the parameter range, response boundary (compute-only versus baseline-inclusive), model family, and fit limitations with each result. For a constant response, the descriptive exponent is zero but the variance-based goodness-of-fit $R^2$ is undefined (reported as `None`/unavailable), not evidence of a perfect fit or superiority.
 
-- Variational message passing: $\mathcal{O}(\text{state\_dim}^2)$ belief updates
+The example requests 100 closed-form repeats and 1000 bootstrap resamples at confidence level 0.95. The former repeat identical formulas for fixed inputs; the latter resample the supplied values. Neither count is an independent empirical sample size, and neither guarantees power greater than 0.8. Identical values have a degenerate resampling interval; no artificial width should be added. Parameter uncertainty and device error require separate justified input distributions or measurements.
 
-- Expected Free Energy: $\mathcal{O}(\text{state\_dim} + \text{action\_dim})$ computation
+Sobol indices, Morris screening, Bayesian posterior calibration, held-out hardware prediction error, and cross-laboratory replication have not been established by this manifest. A future sensitivity analysis must specify parameter distributions, dependence assumptions, sampling design, and evaluated responses. A future power analysis must specify an estimand, independent sampling unit, effect size, variance, test, and error rates.
 
-- Hierarchical decomposition for complex planning problems
+## Proposed Measurement and Calibration Protocol
 
-## Energy Analysis and Estimation
+Before describing coefficients as calibrated, identify a device and measured rails, run operation/memory/spike microbenchmarks with documented instrumentation, record temperature and utilization, and fit coefficients with uncertainty. Validate on independent held-out workloads. Avoid transferring processor-generation trends [@koomey2011energy] into a device-specific calibration claim.
 
-### Energy Decomposition Framework
+RAPL/NVML telemetry and external meters are possible instruments, not evidence that a measurement was taken. Record counter range/wrap behavior, monotonic timestamps, sampling bandwidth, synchronization error, firmware, and meter calibration records. Specify whether sensing, actuation, idle power, and host computation are included. No WT310 accuracy, 100 Hz meter synchronization, dynamometer result, 7 nm circuit calibration, or attojoule-scale measurement resolution is claimed here.
 
-**Compute Energy Components** (standardized coefficients from Appendices Table A):
+Independent ant validation additionally needs species/caste, colony and individual identity, mass definition, temperature, behavioral context, raw records, licenses, and held-out comparisons. General robot modeling literature [@jaramillo2020energy] and compute-aware planning [@sudhakar2020balancing] motivate the approach but do not validate these ant or hardware models.
 
-- FLOP energy: 1.0 pJ/FLOP
+## Reproducibility and Publication Boundary
 
-- Memory hierarchy: SRAM (0.10 pJ/byte), DRAM (20.0 pJ/byte)
-
-- Neuromorphic spikes: 1.0 aJ/spike
-
-- Baseline power: 0.50 W controller idle
-
-**Energy Pipeline**:
-```python
-E_total = E_flops + E_sram + E_dram + E_spikes + E_baseline
-```
-
-### Scaling Analysis Methodology
-
-**Power Law Detection**: Log-log regression with $R^2 > 0.8$ threshold for regime classification (sub-linear, linear, super-linear) with bootstrap confidence intervals.
-
-**Theoretical Validation**: Comparison against Landauer's principle ($kT \ln 2 \approx 2.8 \times 10^{-21}$ J/bit), thermodynamic bounds, and information-theoretic limits.
-
-## Analysis Pipeline and Quality Assurance
-
-### Automated Analysis Framework
-
-**Manifest-Driven Execution**: YAML-based configuration ensures complete reproducibility with deterministic seeding and comprehensive provenance tracking.
-
-**Multi-Stage Pipeline**:
-1. Configuration loading and workload execution
-2. Scaling analysis with parameter sweeps
-3. Statistical validation and uncertainty quantification
-4. Automated figure generation with statistical overlays
-5. Quality assurance and cross-validation
-
-### Validation Framework
-
-**Statistical Rigor**: Bootstrap confidence intervals ($n\geq 1000$), cross-validation against benchmarks, and sensitivity analysis ensure robust results.
-
-**Reproducibility Standards**: Manifest versioning, deterministic seeding, and comprehensive logging enable complete experimental reproduction.
-
-**Quality Assurance**: Automated checks for figure completeness, cross-reference consistency, and statistical reporting standards.
-
-## Measurement and Calibration Protocols
-
-### Hardware-Specific Energy Calibration
-
-**Device Coefficient Derivation**:
-
-- **FLOP Energy**: LINPACK-style dense matrix operations microbenchmarks, calibrated to 1.0 pJ/FLOP against Koomey et al. (2011) trends across processor generations with temperature-controlled ($\pm 2^\circ$C) measurements
-
-- **Memory Hierarchy**: Custom benchmarks measuring SRAM (0.10 pJ/byte) vs DRAM (20.0 pJ/byte) access patterns with cache flushing, validated against Micron Technology DDR4/5 specifications and RAPL energy counters
-
-- **Neuromorphic Spikes**: Circuit-level simulations of TSMC 7nm FinFET spiking neurons, calibrated to 1.0 aJ/spike against Sengupta et al. (2019) measurements with Monte Carlo uncertainty quantification
-
-- **Mechanical Actuation**: Empirical servo motor efficiency curves measured via dynamometer testing, validated against manufacturer specifications and Collins et al. (2015) robotic actuator benchmarks
-
-**Cross-Validation Against Benchmarks**:
-
-- **Mobile Robotics**: Validation against Jaramillo-Morales et al. (2020) energy models for differential-drive platforms (5-50 W range, $\pm 10\%$ accuracy)
-
-- **Energy Scaling**: Cross-validation with Koomey et al. (2011) historical trends (0.5-2 pJ/FLOP range across technology nodes)
-
-- **Neuromorphic**: Validation against Sengupta et al. (2019) spike energy measurements (0.4-5 aJ range)
-
-- **Mechanical**: Comparison with Collins et al. (2015) actuator efficiency benchmarks (20-45% efficiency range)
-
-**Measurement Tool Integration**:
-
-- **CPU Power**: Intel RAPL counters with $\geq 100$ Hz sampling synchronized to decision cycles
-
-- **GPU Power**: NVIDIA NVML for graphics processing energy tracking
-
-- **External Meters**: Yokogawa WT310 power meters for ground-truth validation (accuracy: $\pm 0.1\%$)
-
-- **Neuromorphic**: Custom spike counters with attojoule-scale resolution
-
-### Experimental Reproducibility Standards
-
-**Manifest-Driven Configuration**:
-
-- YAML-based experimental manifests with complete parameter specification
-
-- Deterministic random seeding for stochastic process reproducibility
-
-- Version-controlled software environment specifications
-
-**Data Provenance Tracking**:
-
-- Automatic generation of figure provenance links
-
-- Comprehensive logging of experimental parameters and intermediate results
-
-- Statistical validation with bootstrap confidence intervals for all reported metrics
-
-## Comprehensive Analysis Integration
-
-### Multi-Scale Analysis Framework
-
-**Module-Level Analysis**: Independent characterization with realistic complexity models
-
-- AntBody: Contact dynamics ($\mathcal{O}(C^{1.5}-C^3)$ solver-dependent)
-
-- AntBrain: Sparse neural networks ($\mathcal{O}(\rho N_{KC})$ with $\rho \leq 0.02$)
-
-- AntMind: Bounded rational active inference ($\mathcal{O}(B H_p)$ with $H_p \leq 15$)
-
-**Cross-Module Integration**: Energy flows and computational dependencies with parameter coupling and feedback loops.
-
-**System-Level Optimization**: Pareto frontier analysis for energy-performance trade-offs with multi-objective optimization.
-
-### Statistical Validation Pipeline
-
-**Power Law Detection**: Log-log regression ($R^2 > 0.8$ threshold) with regime classification and bootstrap confidence intervals.
-
-**Uncertainty Quantification**: Bootstrap confidence intervals ($n\geq 1000$) with deterministic seeding for reproducible results.
-
-**Theoretical Validation**: Comparison against Landauer's principle, thermodynamic bounds, and information-theoretic limits.
-
-### Analysis Orchestration
-
-**Manifest-Driven Framework**: YAML-based configuration ensuring complete reproducibility with automated figure generation, statistical overlays, and comprehensive validation.
+Retain the exact manifest, package/environment versions, invocation, model selection, result identity, and artifact provenance. `Generated.md` is the current numerical-result section only when produced by the same completed governed run as the selected figures and tables. Retained older PDFs, concatenations, and plots are historical artifacts, not proof of a fresh successful run. Rendering, cross-reference checks, and numerical tests are separate acceptance steps; none substitutes for empirical calibration.

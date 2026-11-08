@@ -1,10 +1,10 @@
 [project]
 name = "ant-stack"
-version = "2.0.0"
+version = "3.0.0"
 description = "Modular scientific publication and analysis framework for Ant Stack research."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
   { name = "Daniel Ari Friedman", email = "daniel@activeinference.institute" }
 ]
@@ -38,7 +38,7 @@ antstack-ce = "antstack_core.cli.ce:main"
 run-all-antstack = "antstack_core.cli.run_all:main"
 
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -53,6 +53,7 @@ packages = [
   "antstack_core.publishing",
 ]
 
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
@@ -64,7 +65,7 @@ filterwarnings = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 exclude = [
   ".git",
   ".pytest_cache",

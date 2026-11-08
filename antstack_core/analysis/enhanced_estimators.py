@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Optional, Tuple, Union
 import math
 import statistics
 
-from .energy import EnergyCoefficients, ComputeLoad, estimate_detailed_energy
+from .energy import EnergyCoefficients, ComputeLoad, estimate_detailed_energy, _require_nonnegative, _require_positive
 from .statistics import bootstrap_mean_ci, analyze_scaling_relationship
 from .workloads import (
     calculate_contact_complexity,
@@ -38,6 +38,20 @@ class ModuleScalingData:
 
     efficiency_ratio: Optional[float] = None
     theoretical_limit_j: Optional[float] = None
+    mechanical_work_values: List[float] = field(default_factory=list)
+    duration_s: Optional[float] = None
+
+    def __post_init__(self) -> None:
+        count = len(self.parameter_values)
+        for name in ('energy_values', 'flops_values', 'memory_values', 'mechanical_work_values'):
+            values = getattr(self, name)
+            if name != 'mechanical_work_values' or values:
+                if len(values) != count:
+                    raise ValueError(f"{name} must be paired with parameter_values")
+            for value in values:
+                _require_nonnegative(name, value)
+        if self.duration_s is not None:
+            _require_positive("duration_s", self.duration_s)
 
 
 @dataclass
@@ -48,7 +62,7 @@ class ComprehensiveEnergyAnalysis:
     brain_analysis: ModuleScalingData
     mind_analysis: ModuleScalingData
 
-    system_efficiency: float = 0.0
+    system_efficiency: Optional[float] = None  # Sum of matched bounds / sum of modeled energies.
     total_energy_per_decision_j: float = 0.0
     cost_of_transport: float = 0.0
 
@@ -87,6 +101,7 @@ class EnhancedEnergyEstimator:
         flops_values = []
         memory_values = []
 
+        mechanical_work_values = []
         for j in j_values:
             params = base_params.copy()
             params['J'] = j
@@ -98,15 +113,14 @@ class EnhancedEnergyEstimator:
             mass = float(params.get("m", 0.001))
             length = float(params.get("L", 0.01))
             gravity = float(params.get("g", 9.81))
-            coefficients_are_zero = (
-                self.coefficients.flops_pj == 0
-                and self.coefficients.sram_pj_per_byte == 0
-                and self.coefficients.dram_pj_per_byte == 0
-                and self.coefficients.baseline_w == 0
-            )
-            actuation_energy = 0.0 if coefficients_are_zero else max(
-                0.0, j * mass * gravity * length * (1.0 + velocity ** 2)
-            )
+            for name, value in (("v", velocity), ("m", mass), ("L", length), ("g", gravity)):
+                _require_nonnegative(name, value)
+            # Ideal per-decision lift plus acceleration proxy, in joules:
+            # J joints * m kg/joint * (g m/s^2 * L m + v^2 m^2/s^2 / 2).
+            # Assumes each joint lifts L and accelerates from rest to v once;
+            # no regeneration or calibrated biomechanical efficiency is implied.
+            actuation_energy = j * mass * (gravity * length + 0.5 * velocity ** 2)
+            mechanical_work_values.append(actuation_energy)
             energy_breakdown = estimate_detailed_energy(
                 load, self.coefficients, duration_s=dt, actuation_energy=actuation_energy
             )
@@ -127,7 +141,9 @@ class EnhancedEnergyEstimator:
             memory_values=memory_values,
             scaling_exponent=scaling_result.get("scaling_exponent"),
             r_squared=scaling_result.get("r_squared"),
-            scaling_regime=scaling_result.get("scaling_regime")
+            scaling_regime=scaling_result.get("scaling_regime"),
+            mechanical_work_values=mechanical_work_values,
+            duration_s=float(base_params.get("dt", 0.01)),
         )
 
     def analyze_brain_scaling(self, k_values: List[int],
@@ -172,7 +188,8 @@ class EnhancedEnergyEstimator:
             memory_values=memory_values,
             scaling_exponent=scaling_result.get("scaling_exponent"),
             r_squared=scaling_result.get("r_squared"),
-            scaling_regime=scaling_result.get("scaling_regime")
+            scaling_regime=scaling_result.get("scaling_regime"),
+            duration_s=float(base_params.get("dt", 0.01)),
         )
 
     def analyze_mind_scaling(self, h_p_values: List[int],
@@ -199,7 +216,7 @@ class EnhancedEnergyEstimator:
             # Use enhanced closed-form model
             dt = float(params.get("dt", 0.01))
             load = enhanced_mind_workload_closed_form(dt, params)
-            energy_breakdown = estimate_detailed_energy(load, self.coefficients, duration_s=dt * 0.5)
+            energy_breakdown = estimate_detailed_energy(load, self.coefficients, duration_s=dt)
             energy = energy_breakdown.total
             energy_values.append(energy)
             flops_values.append(load.flops)
@@ -217,10 +234,11 @@ class EnhancedEnergyEstimator:
             memory_values=memory_values,
             scaling_exponent=scaling_result.get("scaling_exponent"),
             r_squared=scaling_result.get("r_squared"),
-            scaling_regime=scaling_result.get("scaling_regime")
+            scaling_regime=scaling_result.get("scaling_regime"),
+            duration_s=float(base_params.get("dt", 0.01)),
         )
 
-    def calculate_theoretical_limits(self, module_data: ModuleScalingData) -> Dict[str, float]:
+    def calculate_theoretical_limits(self, module_data: ModuleScalingData) -> Dict[str, Any]:
         """Calculate theoretical energy limits for module.
 
         Args:
@@ -231,28 +249,18 @@ class EnhancedEnergyEstimator:
         """
         from .statistics import estimate_theoretical_limits
 
-        # Estimate typical module parameters for theoretical limit calculation
-        module_key = module_data.module_name.lower()
-        if "body" in module_key:
-            module_params = {
-                'flops': statistics.mean(module_data.flops_values),
-                'bits_processed': statistics.mean(module_data.flops_values) * 64,
-                'mechanical_work_j': 0.00036  # Typical actuation energy
-            }
-        elif "brain" in module_key:
-            module_params = {
-                'flops': statistics.mean(module_data.flops_values),
-                'bits_processed': statistics.mean(module_data.flops_values) * 32,
-                'mechanical_work_j': 0.0
-            }
-        else:  # mind
-            module_params = {
-                'flops': statistics.mean(module_data.flops_values),
-                'bits_processed': statistics.mean(module_data.flops_values) * 64,
-                'mechanical_work_j': 0.0
-            }
-
-        return estimate_theoretical_limits(module_params)
+        # A conditional scenario, not a universal FLOP-to-erasure conversion:
+        # one bit is irreversibly erased per modeled FLOP at 300 K.
+        if not module_data.flops_values:
+            raise ValueError("Theoretical comparison requires workload observations")
+        module_params = {
+            'bits_erased': statistics.mean(module_data.flops_values),
+            'mechanical_work_j': statistics.mean(module_data.mechanical_work_values) if module_data.mechanical_work_values else 0.0,
+        }
+        limits = estimate_theoretical_limits(module_params)
+        limits['erasure_assumption'] = 'One erased bit per modeled FLOP at 300 K'
+        limits['total_bound_accounting'] = 'Sum of separate mechanical work and digital erasure costs; no overlap assumed'
+        return limits
 
     def calculate_efficiency_metrics(
         self,
@@ -267,10 +275,20 @@ class EnhancedEnergyEstimator:
             "mind": statistics.mean(mind_data.energy_values) if mind_data.energy_values else 0.0,
         }
         total = sum(means.values())
+        modules = (body_data, brain_data, mind_data)
+        durations = {module.duration_s for module in modules}
+        if len(durations) != 1 or None in durations:
+            raise ValueError("System accounting requires a common known decision duration")
+        common_duration = next(iter(durations))
+        _require_positive("decision duration", common_duration)
+        total_bound = sum(self.calculate_theoretical_limits(module)['total_theoretical_j'] for module in modules)
+        fraction = total_bound / total if total > 0 else None
         distribution = {name: (value / total if total > 0 else 0.0) for name, value in means.items()}
         bottlenecks = [name for name, share in distribution.items() if share == max(distribution.values(), default=0.0)]
         return {
-            "system_efficiency": 1.0 / (1.0 + total) if total > 0 else 0.0,
+            "system_efficiency": fraction,
+            "valid": fraction is not None and fraction <= 1,
+            "aggregation": "Matched component bounds and mean modeled energies over module sweeps; not an empirical system measurement",
             "energy_distribution": distribution,
             "bottlenecks": bottlenecks,
         }
@@ -279,11 +297,13 @@ class EnhancedEnergyEstimator:
         """Compare empirical module energy against simple theoretical limits."""
         limits = self.calculate_theoretical_limits(module_data)
         actual = statistics.mean(module_data.energy_values) if module_data.energy_values else 0.0
-        landauer = max(limits.get("landauer_j", limits.get("total_theoretical_j", 1e-30)), 1e-30)
-        thermodynamic = max(limits.get("thermodynamic_j", limits.get("total_theoretical_j", 1e-30)), 1e-30)
+        landauer = limits['landauer_limit_j']
+        thermodynamic = limits['mechanical_work_j']
         return {
-            "landauer_efficiency": landauer / actual if actual > 0 else 0.0,
-            "thermodynamic_efficiency": thermodynamic / actual if actual > 0 else 0.0,
+            "landauer_efficiency": landauer / actual if actual > 0 else None,
+            "thermodynamic_efficiency": thermodynamic / actual if actual > 0 else None,
+            "landauer_overhead_ratio": actual / landauer if landauer > 0 else None,
+            "comparison_scope": "Component bounds divided by total modeled energy; not component conversion efficiencies",
             "fundamental_limits": limits,
         }
 
@@ -302,7 +322,7 @@ class EnhancedEnergyEstimator:
                 f"- regime: {module.scaling_regime or 'unknown'}",
             ])
         lines.extend([
-            f"System efficiency: {analysis.system_efficiency:.6g}",
+            f"Modeled aggregate bound/energy fraction: {analysis.system_efficiency if analysis.system_efficiency is not None else 'undefined'}",
             f"Total energy per decision (J): {analysis.total_energy_per_decision_j:.6g}",
         ])
         return "\n".join(lines)
@@ -343,12 +363,9 @@ class EnhancedEnergyEstimator:
         mind_limits = self.calculate_theoretical_limits(mind_analysis)
 
         # Calculate efficiency ratios
-        body_analysis.efficiency_ratio = (statistics.mean(body_analysis.energy_values) /
-                                        body_limits.get('total_theoretical_j', 1.0))
-        brain_analysis.efficiency_ratio = (statistics.mean(brain_analysis.energy_values) /
-                                         brain_limits.get('total_theoretical_j', 1.0))
-        mind_analysis.efficiency_ratio = (statistics.mean(mind_analysis.energy_values) /
-                                        mind_limits.get('total_theoretical_j', 1.0))
+        for module, limits in ((body_analysis, body_limits), (brain_analysis, brain_limits), (mind_analysis, mind_limits)):
+            bound = limits['total_theoretical_j']
+            module.efficiency_ratio = statistics.mean(module.energy_values) / bound if bound > 0 else None
 
         # Store theoretical limits
         body_analysis.theoretical_limit_j = body_limits.get('total_theoretical_j')
@@ -366,16 +383,14 @@ class EnhancedEnergyEstimator:
         gravity = 9.81
         cost_of_transport = total_energy / (mass_kg * gravity * distance_m)
 
-        # System efficiency (harmonic mean of module efficiencies)
-        efficiencies = [body_analysis.efficiency_ratio or 1.0,
-                       brain_analysis.efficiency_ratio or 1.0,
-                       mind_analysis.efficiency_ratio or 1.0]
-        system_efficiency = len(efficiencies) / sum(1/e for e in efficiencies if e > 0)
+        # Energy-weighted bound fraction, never a harmonic mean of overheads.
+        system_efficiency = self.calculate_efficiency_metrics(body_analysis, brain_analysis, mind_analysis)['system_efficiency']
 
         # Generate key numbers dictionary
         key_numbers = self._generate_key_numbers_dict(
             body_analysis, brain_analysis, mind_analysis,
-            total_energy, cost_of_transport
+            total_energy, cost_of_transport, system_efficiency,
+            float(body_params.get('dt', 0.01)), float(body_params.get('hz', 100)),
         )
 
         return ComprehensiveEnergyAnalysis(
@@ -393,7 +408,10 @@ class EnhancedEnergyEstimator:
                                  brain_analysis: ModuleScalingData,
                                  mind_analysis: ModuleScalingData,
                                  total_energy: float,
-                                 cost_of_transport: float) -> Dict[str, Any]:
+                                 cost_of_transport: float,
+                                 system_efficiency: Optional[float],
+                                 duration_s: float,
+                                 control_frequency_hz: float) -> Dict[str, Any]:
         """Generate comprehensive key numbers dictionary.
 
         Args:
@@ -433,12 +451,12 @@ class EnhancedEnergyEstimator:
                 "mind_regime": mind_analysis.scaling_regime or "unknown"
             },
             "system_parameters": {
-                "control_frequency_hz": 100,
-                "decision_period_ms": 10,
+                "control_frequency_hz": control_frequency_hz,
+                "decision_period_ms": duration_s * 1000,
                 "baseline_power_mw": self.coefficients.baseline_w * 1000,
-                "total_power_w": total_energy * 100,
+                "total_power_w": total_energy / duration_s,
                 "cost_of_transport": cost_of_transport,
-                "system_efficiency": (body_analysis.efficiency_ratio or 0) * 100
+                "system_efficiency": system_efficiency * 100 if system_efficiency is not None else None
             },
             "theoretical_limits": {
                 "body_efficiency_ratio": body_analysis.efficiency_ratio,

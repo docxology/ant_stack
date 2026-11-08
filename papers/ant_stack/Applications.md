@@ -1,10 +1,10 @@
-# Applications
+# Proposed Applications and Evaluation Protocols {#applications}
 
-The Ant Stack is a transferable framework for real-world problems. Emulating ant-colony efficiency, robustness, and distributed control enables solutions in robotics, security, and complex systems.
+The following are proposed applications and evaluation protocols, not demonstrated deployments, calibration standards, or evidence of safety/alignment. Ant-inspired efficiency and robustness remain task-specific hypotheses to evaluate.
 
 Design intent: a single, compact agent architecture that ports from high-fidelity simulation to embedded platforms and multi-agent swarms with minimal change.
 
-## Cross-cutting Evaluation Metrics
+## Proposed Cross-Domain Evaluation Metrics {#cross-cutting-evaluation-metrics}
 
 - **Efficiency**: energy per reward; compute per action
 - **Robustness**: success under sensor/actuator noise and partial failures
@@ -14,7 +14,7 @@ Design intent: a single, compact agent architecture that ports from high-fidelit
 
 ## Swarm Robotics
 
-Ant-inspired control deployable to physical platforms.
+Proposed ant-inspired control for physical-platform evaluation; deployment readiness has not been established.
 
 - **Disaster response:** Navigate debris, locate survivors, perform cleanup in hazardous settings
 - **Logistics and construction:** Stigmergic coordination for warehousing and build tasks
@@ -38,7 +38,7 @@ Ant-inspired control deployable to physical platforms.
 
 Secure systems at the cognitive layer: resilience to deception, spoofing, and manipulation.
 
-- **Secure swarms:** Decentralized, emergent control resists compromise
+- **Secure swarms:** Test whether decentralized control improves resilience under a declared compromise model; decentralization alone does not guarantee security
 - **Defending complex systems:** Colony-style distributed detection/response for critical infrastructure
 - **Cognitive honeypots:** Deploy deceptive pheromone fields to study adversary behavior and improve defenses
 - **Incident triage:** Prioritize actions via expected free energy; quantify trade-offs under uncertainty
@@ -63,7 +63,7 @@ Secure systems at the cognitive layer: resilience to deception, spoofing, and ma
 ## Foundational AI Research
 
 - **Emergent intelligence:** Study complex goal-directed behavior from simple local rules
-- **Calibration standard:** Benchmark for energy-efficient AI designs
+- **Benchmark proposal:** Evaluate energy-efficient AI designs after device calibration and task-specific validation
 - **Embodiment ablations:** Vary body/brain/mind couplings to test contributions to generalization
 - **Neural efficiency:** Map performance--energy trade-offs; quantify sparse spiking benefits
 
@@ -74,7 +74,7 @@ Secure systems at the cognitive layer: resilience to deception, spoofing, and ma
 
 ## AI Alignment and Safety
 
-- **Natural alignment:** Local incentives align with collective welfare
+- **Alignment hypothesis:** Test when local incentives support or conflict with collective welfare; natural organization does not guarantee alignment
 - **Emergent goals:** Test designs that avoid undesirable emergent behaviors without central control
 - **Norm compliance:** Measure deviation under resource stress and adversarial signals
 - **Value handshakes:** Encode minimal priors that align individual incentives with group welfare

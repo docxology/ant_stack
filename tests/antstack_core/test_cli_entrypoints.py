@@ -1,30 +1,48 @@
-"""CLI wrapper contract tests."""
+"""Consumer-visible command failures and validation side effects."""
 
 from __future__ import annotations
 
+from pathlib import Path
+import subprocess
+import sys
 
-def test_build_entrypoint_loads_canonical_main() -> None:
-    """The antstack-build wrapper should resolve the build pipeline main."""
-    from antstack_core.cli import build
-
-    assert callable(build._load_build_main())
-    assert callable(build.main)
+import yaml
 
 
-def test_complexity_entrypoint_loads_runner_contract() -> None:
-    """The antstack-ce wrapper should expose the paper runner contract."""
-    from antstack_core.cli import ce
-
-    runner = ce._load_runner()
-    assert callable(runner.main)
-    assert callable(runner.run_manifest)
-    assert callable(ce.run_manifest)
-    assert callable(ce.main)
+def _validate_paper(project: Path, paper: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "antstack_core.cli.build", "--project-root", str(project),
+         "--paper", paper, "--validate-only"],
+        cwd=project, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=30,
+    )
 
 
-def test_run_all_entrypoint_delegates_to_orchestration() -> None:
-    """The run-all wrapper should expose package-owned orchestration."""
-    from antstack_core.cli import run_all
+def test_missing_paper_fails_process_without_writing_outputs(tmp_path: Path) -> None:
+    result = _validate_paper(tmp_path, "absent")
+    assert result.returncode == 1
+    assert list(tmp_path.iterdir()) == []
 
-    assert callable(run_all.run_all)
-    assert callable(run_all.main)
+
+def test_missing_configured_content_is_not_a_successful_validation(tmp_path: Path) -> None:
+    paper = tmp_path / "papers" / "example"
+    paper.mkdir(parents=True)
+    config = {"paper": {"title": "Example"}, "content": {"files": ["Methods.md"]},
+              "build": {}, "latex": {}}
+    (paper / "paper_config.yaml").write_text(yaml.safe_dump(config), encoding="utf-8")
+    result = _validate_paper(tmp_path, "example")
+    assert result.returncode == 1
+    assert not (tmp_path / "example.pdf").exists()
+    assert not (tmp_path / "build_report.md").exists()
+
+
+def test_valid_single_paper_validation_does_not_render(tmp_path: Path) -> None:
+    paper = tmp_path / "papers" / "example"
+    paper.mkdir(parents=True)
+    config = {"paper": {"title": "Example"}, "content": {"files": ["Methods.md"]},
+              "build": {}, "latex": {}}
+    (paper / "paper_config.yaml").write_text(yaml.safe_dump(config), encoding="utf-8")
+    (paper / "Methods.md").write_text("# Methods\n\nAn analytic example.\n", encoding="utf-8")
+    result = _validate_paper(tmp_path, "example")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert not (tmp_path / "example.pdf").exists()
+    assert not (tmp_path / "build_report.md").exists()

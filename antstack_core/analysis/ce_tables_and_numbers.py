@@ -1,448 +1,203 @@
-#!/usr/bin/env python3
-"""Generate all tables and numerical content for the manuscript. Moved verbatim from scripts/complexity_energetics/generate_tables_and_numbers.py; thin wrapper retained for CLI compatibility."""
+"""Generate Markdown tables and numbers for the separate enhanced analytical model.
 
-import sys
+The output is not canonical base-run evidence, empirical validation or device
+calibration. All energy coefficients are assumptions, and mechanics are omitted.
+"""
+
+import argparse
 import os
+import stat
+import tempfile
+from dataclasses import asdict
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
-import json
+from typing import Any, Dict
 
 from antstack_core.analysis import (
-    estimate_detailed_energy, analyze_scaling_relationship,
-    calculate_energy_efficiency_metrics, estimate_theoretical_limits,
-    bootstrap_mean_ci
-)
-from antstack_core.analysis import (
+    EnergyCoefficients, analyze_scaling_relationship, estimate_detailed_energy,
     enhanced_body_workload_closed_form, enhanced_brain_workload_closed_form,
     enhanced_mind_workload_closed_form, calculate_contact_complexity,
-    calculate_sparse_neural_complexity, calculate_active_inference_complexity
 )
-from antstack_core.analysis import EnergyCoefficients
+from antstack_core.analysis.ce_publication_figures import _standard_module_data
+
+PROVENANCE = ('Enhanced analytical workload model, not canonical base-run evidence. '
+              'Compute-plus-idle energy with assumed default EnergyCoefficients; no mechanical work, '
+              'sensing power, device calibration or empirical validation. Mind max_policies=1000. '
+              'Fits describe the displayed deterministic sweep, not independent samples.')
 
 
 def generate_complexity_table() -> str:
-    """Generate the module complexities table with actual calculated values."""
-    
-    print("Generating complexity table...")
-    
-    # Standard parameters
-    body_params = {'J': 18, 'C': 12, 'S': 256, 'hz': 100, 'contact_solver': 'pgs'}
-    brain_params = {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100}
-    mind_params = {'B': 4, 'H_p': 15, 'hz': 100, 'state_dim': 16, 'action_dim': 6}
-    
-    # Calculate actual workloads
-    body_load = enhanced_body_workload_closed_form(0.01, body_params)
-    brain_load = enhanced_brain_workload_closed_form(0.01, brain_params)
-    mind_load = enhanced_mind_workload_closed_form(0.01, mind_params)
-    
-    # Generate table
-    table = """### Table: Module Complexities (Per 10ms Tick) {#tab:module_complexities}
-
-| Module | Time Complexity | Space Complexity | FLOPs/Decision | Memory (bytes) | Notes |
-|--------|-----------------|------------------|----------------|----------------|-------|"""
-    
-    # Physics (Body)
-    contact_flops, contact_memory, _ = calculate_contact_complexity(body_params['J'], body_params['C'], body_params['contact_solver'])
-    joint_flops = body_params['J'] * 25
-    sensor_flops = body_params['S'] * 5
-    
-    table += f"""
-| Physics | $\\mathcal{{O}}(J + C^{{\\alpha}})$ | $\\mathcal{{O}}(J + C)$ | {body_load.flops:.0f} | {body_load.sram_bytes + body_load.dram_bytes:.0f} | $\\alpha \\approx 1.5$ (PGS solver) |"""
-    
-    # Sensors
-    table += f"""
-| Sensors | $\\mathcal{{O}}(S)$ | $\\mathcal{{O}}(S)$ | {sensor_flops:.0f} | {body_params['S'] * 16:.0f} | includes packing/timestamps |"""
-    
-    # AL (Antennal Lobe)
-    al_flops = brain_params['K'] * 15
-    al_memory = brain_params['K'] * 8
-    
-    table += f"""
-| AL | $\\mathcal{{O}}(K)$ | $\\mathcal{{O}}(K)$ | {al_flops:.0f} | {al_memory:.0f} | sparse linear ops |"""
-    
-    # MB (Mushroom Body)
-    mb_flops, mb_memory, mb_spikes = calculate_sparse_neural_complexity(
-        brain_params['N_KC'], brain_params['rho'], 'biological'
-    )
-    
-    table += f"""
-| MB | $\\mathcal{{O}}(\\rho N_{{KC}})$ | $\\mathcal{{O}}(N_{{KC}})$ | {mb_flops:.0f} | {mb_memory:.0f} | sparse coding \\& local plasticity |"""
-    
-    # CX (Central Complex)
-    cx_flops = brain_params['H'] * 12 + brain_params['H']**2 * 0.5
-    cx_memory = brain_params['H'] * 4
-    
-    table += f"""
-| CX | $\\mathcal{{O}}(H)$ | $\\mathcal{{O}}(H)$ | {cx_flops:.0f} | {cx_memory:.0f} | ring update + soft WTA |"""
-    
-    # Policies (Mind)
-    ai_flops, ai_memory = calculate_active_inference_complexity(
-        mind_params['H_p'], mind_params['B'], mind_params['state_dim'], mind_params['action_dim']
-    )
-    
-    table += f"""
-| Policies | $\\mathcal{{O}}(B H_p)$ | $\\mathcal{{O}}(B H_p)$ | {ai_flops:.0f} | {ai_memory:.0f} | bounded rationality sampling |"""
-    
-    # Pheromone grid (placeholder)
-    table += f"""
-| Pheromone | $\\mathcal{{O}}(G + E)$ | $\\mathcal{{O}}(G)$ | 1000 | 40000 | explicit diffusion scheme |"""
-    
-    return table
+    """Report real workload counters rather than unsupported asymptotic claims."""
+    data = _standard_module_data()
+    lines = ['### Table: Enhanced Workload Counters per 10 ms {#tab:module_complexities}', '',
+             '| Module | FLOPs/Decision | Memory Access (bytes) | Spikes |',
+             '|--------|----------------|-----------------------|--------|']
+    for name, item in data.items():
+        load = item['load']
+        lines.append(f'| {name} | {load.flops:.6g} | {load.sram_bytes + load.dram_bytes:.6g} | {load.spikes:.6g} |')
+    return '\n'.join(lines) + '\n\n' + PROVENANCE
 
 
 def generate_energy_coefficients_table() -> str:
-    """Generate energy coefficients table with current values."""
-    
-    print("Generating energy coefficients table...")
-    
     coeffs = EnergyCoefficients()
-    
-    table = """### Table: Energy Coefficients (Device-Calibrated) {#tab:energy_coefficients}
+    lines = ['### Table: Assumed Energy Coefficients (Not Device-Calibrated) {#tab:energy_coefficients}', '',
+             '| Component | Value | Units | Basis |', '|-----------|-------|-------|-------|']
+    for name, value, unit in [('FLOPs', coeffs.flops_pj, 'pJ/FLOP'),
+                              ('SRAM', coeffs.sram_pj_per_byte, 'pJ/byte'),
+                              ('DRAM', coeffs.dram_pj_per_byte, 'pJ/byte'),
+                              ('Spikes', coeffs.spike_aj, 'aJ/spike'),
+                              ('Idle baseline per isolated module', coeffs.baseline_w, 'W')]:
+        lines.append(f'| {name} | {value:.6g} | {unit} | Default model assumption, not measured calibration |')
+    return '\n'.join(lines)
 
-| Component | Coefficient | Value | Units | Reference |
-|-----------|-------------|-------|-------|-----------|"""
-    
-    table += f"""
-| FLOPs | $e_{{\\text{{FLOP}}}}$ | {coeffs.flops_pj:.1f} | pJ/FLOP | (Koomey et al., 2019) |
-| SRAM | $e_{{\\text{{SRAM}}}}$ | {coeffs.sram_pj_per_byte:.2f} | pJ/byte | (Micron Technology, 2023) |
-| DRAM | $e_{{\\text{{DRAM}}}}$ | {coeffs.dram_pj_per_byte:.1f} | pJ/byte | (Micron Technology, 2023) |
-| Spikes | $E_{{\\text{{spk}}}}$ | {coeffs.spike_aj:.1f} | aJ/spike | (Kim et al., 2024) |
-| Baseline | $P_{{\\text{{baseline}}}}$ | {coeffs.baseline_w * 1000:.0f} | mW | System idle power |"""
-    
-    return table
+
+def _scaling_sweeps():
+    return [
+        ('AntBody', 'J', [6, 12, 18, 24, 36], enhanced_body_workload_closed_form,
+         {'C': 12, 'S': 256, 'hz': 100, 'contact_solver': 'pgs'}),
+        ('AntBrain', 'K', [64, 128, 256, 512, 1024], enhanced_brain_workload_closed_form,
+         {'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100}),
+        ('AntMind', 'H_p', [5, 7, 9, 11, 13], enhanced_mind_workload_closed_form,
+         {'B': 3, 'hz': 100, 'state_dim': 12, 'action_dim': 4, 'max_policies': 1000}),
+    ]
+
+
+def _format_fit(fit):
+    if not fit.get('valid', False):
+        return 'unavailable | unavailable'
+    r_squared = 'undefined' if fit['r_squared'] is None else f'{fit["r_squared"]:.6g}'
+    return f'{fit["scaling_exponent"]:.6g} | {r_squared}'
 
 
 def generate_scaling_results_table() -> str:
-    """Generate scaling analysis results table with actual calculated values."""
-    
-    print("Generating scaling results table...")
-    
     coeffs = EnergyCoefficients()
-    
-    # Body scaling analysis
-    J_values = [6, 12, 18, 24, 36]
-    body_energies = []
-    body_flops = []
-    
-    for J in J_values:
-        params = {'J': J, 'C': 12, 'S': 256, 'hz': 100, 'contact_solver': 'pgs'}
-        load = enhanced_body_workload_closed_form(0.01, params)
-        breakdown = estimate_detailed_energy(load, coeffs, 0.01)
-        body_energies.append(breakdown.total)
-        body_flops.append(load.flops)
-    
-    body_energy_scaling = analyze_scaling_relationship(J_values, body_energies)
-    body_flops_scaling = analyze_scaling_relationship(J_values, body_flops)
-    
-    # Brain scaling analysis
-    K_values = [64, 128, 256, 512, 1024]
-    brain_energies = []
-    brain_flops = []
-    
-    for K in K_values:
-        params = {'K': K, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100}
-        load = enhanced_brain_workload_closed_form(0.01, params)
-        breakdown = estimate_detailed_energy(load, coeffs, 0.01)
-        brain_energies.append(breakdown.total)
-        brain_flops.append(load.flops)
-    
-    brain_energy_scaling = analyze_scaling_relationship(K_values, brain_energies)
-    brain_flops_scaling = analyze_scaling_relationship(K_values, brain_flops)
-    
-    # Mind scaling analysis
-    H_p_values = [5, 7, 9, 11, 13]
-    mind_energies = []
-    mind_flops = []
-    
-    for H_p in H_p_values:
-        params = {'B': 3, 'H_p': H_p, 'hz': 100, 'state_dim': 12, 'action_dim': 4}
-        load = enhanced_mind_workload_closed_form(0.01, params)
-        breakdown = estimate_detailed_energy(load, coeffs, 0.01)
-        mind_energies.append(breakdown.total)
-        mind_flops.append(load.flops)
-    
-    mind_energy_scaling = analyze_scaling_relationship(H_p_values, mind_energies)
-    mind_flops_scaling = analyze_scaling_relationship(H_p_values, mind_flops)
-    
-    # Generate table
-    table = """### Table: Empirical Scaling Laws {#tab:scaling_laws}
-
-| Module | Parameter | Energy Scaling | R² | FLOPs Scaling | R² | Regime |
-|--------|-----------|----------------|----|--------------|----|--------|"""
-    
-    table += f"""
-| AntBody | Joint Count (J) | $E \\propto J^{{{body_energy_scaling.get('scaling_exponent', 0):.2e}}}$ | {body_energy_scaling.get('r_squared', 0):.3f} | $\\text{{FLOPs}} \\propto J^{{{body_flops_scaling.get('scaling_exponent', 0):.3f}}}$ | {body_flops_scaling.get('r_squared', 0):.3f} | {body_energy_scaling.get('regime', 'unknown')} |"""
-    
-    table += f"""
-| AntBrain | AL Channels (K) | $E \\propto K^{{{brain_energy_scaling.get('scaling_exponent', 0):.2e}}}$ | {brain_energy_scaling.get('r_squared', 0):.3f} | $\\text{{FLOPs}} \\propto K^{{{brain_flops_scaling.get('scaling_exponent', 0):.3f}}}$ | {brain_flops_scaling.get('r_squared', 0):.3f} | {brain_energy_scaling.get('regime', 'unknown')} |"""
-    
-    table += f"""
-| AntMind | Policy Horizon (H_p) | $E \\propto H_p^{{{mind_energy_scaling.get('scaling_exponent', 0):.1f}}}$ | {mind_energy_scaling.get('r_squared', 0):.3f} | $\\text{{FLOPs}} \\propto H_p^{{{mind_flops_scaling.get('scaling_exponent', 0):.1f}}}$ | {mind_flops_scaling.get('r_squared', 0):.3f} | {mind_energy_scaling.get('regime', 'unknown')} |"""
-    
-    return table
+    lines = ['### Table: Descriptive Enhanced Model Fits {#tab:scaling_laws}', '',
+             '| Module | Parameter Values | Energy Exponent | Log-log R² | FLOPs Exponent | Log-log R² |',
+             '|--------|------------------|-----------------|------------|----------------|------------|']
+    for name, parameter, values, workload, params in _scaling_sweeps():
+        loads = [workload(0.01, dict(params, **{parameter: value})) for value in values]
+        energies = [estimate_detailed_energy(load, coeffs, 0.01).total for load in loads]
+        energy_fit = analyze_scaling_relationship(values, energies)
+        flops_fit = analyze_scaling_relationship(values, [load.flops for load in loads])
+        lines.append(f'| {name} | {parameter}: {values} | {_format_fit(energy_fit)} | {_format_fit(flops_fit)} |')
+    return '\n'.join(lines) + '\n\n' + PROVENANCE
 
 
 def generate_efficiency_analysis_table() -> str:
-    """Generate theoretical efficiency analysis table."""
-    
-    print("Generating efficiency analysis table...")
-    
-    coeffs = EnergyCoefficients()
-    
-    # Calculate actual vs theoretical for each module
-    modules = ['AntBody', 'AntBrain', 'AntMind']
-    actual_energies = []
-    theoretical_energies = []
-    efficiency_ratios = []
-    
-    # Body
-    body_load = enhanced_body_workload_closed_form(0.01, {
-        'J': 18, 'C': 12, 'S': 256, 'hz': 100
-    })
-    body_energy = estimate_detailed_energy(body_load, coeffs, 0.01).total
-    body_limits = estimate_theoretical_limits({
-        'flops': body_load.flops,
-        'mechanical_work_j': 0.001
-    })
-    
-    actual_energies.append(body_energy)
-    theoretical_energies.append(body_limits['total_theoretical_j'])
-    efficiency_ratios.append(body_energy / body_limits['total_theoretical_j'])
-    
-    # Brain
-    brain_load = enhanced_brain_workload_closed_form(0.01, {
-        'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100
-    })
-    brain_energy = estimate_detailed_energy(brain_load, coeffs, 0.01).total
-    brain_limits = estimate_theoretical_limits({
-        'flops': brain_load.flops,
-        'mechanical_work_j': 0.0
-    })
-    
-    actual_energies.append(brain_energy)
-    theoretical_energies.append(brain_limits['total_theoretical_j'])
-    efficiency_ratios.append(brain_energy / brain_limits['total_theoretical_j'])
-    
-    # Mind
-    mind_load = enhanced_mind_workload_closed_form(0.01, {
-        'B': 4, 'H_p': 8, 'hz': 100, 'state_dim': 16, 'action_dim': 6
-    })
-    mind_energy = estimate_detailed_energy(mind_load, coeffs, 0.01).total
-    mind_limits = estimate_theoretical_limits({
-        'flops': mind_load.flops,
-        'mechanical_work_j': 0.0
-    })
-    
-    actual_energies.append(mind_energy)
-    theoretical_energies.append(mind_limits['total_theoretical_j'])
-    efficiency_ratios.append(mind_energy / mind_limits['total_theoretical_j'])
-    
-    # Generate table
-    table = """### Table: Theoretical Efficiency Analysis {#tab:efficiency_analysis}
-
-| Module | Actual Energy (J) | Theoretical Minimum (J) | Efficiency Ratio | Interpretation |
-|--------|-------------------|-------------------------|------------------|----------------|"""
-    
-    interpretations = [
-        "Near-optimal (mechanical work dominated)",
-        "Significant optimization opportunity",
-        "Bounded rationality partially effective"
-    ]
-    
-    for i, (module, actual, theoretical, ratio, interp) in enumerate(
-        zip(modules, actual_energies, theoretical_energies, efficiency_ratios, interpretations)
-    ):
-        table += f"""
-| {module} | {actual:.2e} | {theoretical:.2e} | {ratio:.1e}× | {interp} |"""
-    
-    return table
+    lines = ['### Table: Conditional Erasure Reference Comparison {#tab:efficiency_analysis}', '',
+             '| Module | Modeled Energy (J) | Conditional Erasure Reference (J) | Model / Reference |',
+             '|--------|--------------------|----------------------------------|-------------------|']
+    for name, item in _standard_module_data().items():
+        energy, reference = item['breakdown'].total, item['reference_j']
+        lines.append(f'| {name} | {energy:.6e} | {reference:.6e} | {energy/reference:.6g} |')
+    return ('\n'.join(lines) + '\n\nAssumes one erased bit per FLOP at 300 K; FLOPs do not inherently determine bit erasures. '
+            'No mechanical work is supplied. Ratios are not physical efficiencies or achievable improvement factors.\n\n' + PROVENANCE)
 
 
 def generate_contact_solver_table() -> str:
-    """Generate contact solver comparison table."""
-    
-    print("Generating contact solver comparison table...")
-    
-    solvers = ['PGS', 'LCP', 'MLCP']
-    contact_counts = [5, 10, 15, 20, 25]
-    
-    table = """### Table: Contact Solver Complexity Analysis {#tab:contact_solvers}
-
-| Solver | Theoretical Complexity | Memory Scaling | Typical Range | Best Use Case |
-|--------|------------------------|----------------|---------------|---------------|"""
-    
-    # Calculate representative values
-    for solver in solvers:
-        solver_lower = solver.lower()
-        
-        # Get complexity for mid-range contact count
-        flops_mid, memory_mid, _ = calculate_contact_complexity(18, 15, solver_lower)
-        
-        if solver == 'PGS':
-            table += f"""
-| PGS | $\\mathcal{{O}}(C^{{1.5}})$ | $\\mathcal{{O}}(C)$ | C ≤ 20 | Real-time applications |"""
-        elif solver == 'LCP':
-            table += f"""
-| LCP | $\\mathcal{{O}}(C^3)$ | $\\mathcal{{O}}(C^2)$ | C < 10 | High-accuracy simulation |"""
-        else:  # MLCP
-            table += f"""
-| MLCP | $\\mathcal{{O}}(C^{{2.5}})$ | $\\mathcal{{O}}(C^{{1.5}})$ | 10 ≤ C ≤ 30 | Balanced performance |"""
-    
-    return table
+    """Use supported solvers and publish counters actually computed at each size."""
+    lines = ['### Table: Supported Contact Solver Model Counters {#tab:contact_solvers}', '',
+             '| Solver | Joints | Contacts | FLOPs/Solve | Memory (bytes) | Iterations |',
+             '|--------|--------|----------|-------------|----------------|------------|']
+    for solver in ('pgs', 'si', 'ldlt'):
+        for contacts in (5, 10, 15, 20, 25):
+            flops, memory, iterations = calculate_contact_complexity(18, contacts, solver)
+            lines.append(f'| {solver.upper()} | 18 | {contacts} | {flops:.6g} | {memory:.6g} | {iterations} |')
+    return '\n'.join(lines) + '\n\nAnalytical workload estimates, not measured execution times or solver accuracy benchmarks.'
 
 
 def generate_parameter_ranges_table() -> str:
-    """Generate parameter ranges table with realistic values."""
-    
-    print("Generating parameter ranges table...")
-    
-    table = """### Table: Parameter Ranges and Default Values {#tab:param_ranges}
-
-| Symbol | Meaning | Typical Range | Default | Physical Basis |
-|--------|---------|---------------|---------|----------------|"""
-    
-    table += f"""
-| J | Joint DOF | 6–36 | 18 | Hexapod: 3 DOF × 6 legs |
-| C | Active contacts | 4–30 | 12 | 4 legs × 3 contact points |
-| S | Sensor channels | 64–1024 | 256 | IMU + vision + chemosensors |
-| K | AL input channels | 32–1024 | 128 | Olfactory glomeruli |
-| N_KC | Kenyon cells | 10⁴–10⁵ | 50,000 | Insect mushroom body |
-| ρ | Active sparsity | 0.005–0.1 | 0.02 | Biological cortical activity |
-| H | Heading bins | 16–256 | 64 | Compass resolution |
-| H_p | Policy horizon | 5–20 | 15 | Bounded rationality limit |
-| B | Branching factor | 2–8 | 4 | Action space complexity |"""
-    
-    return table
+    lines = ['### Table: Enhanced Model Sweep Configuration {#tab:param_ranges}', '',
+             '| Module | Varied Parameter | Evaluated Values | Fixed Parameters |',
+             '|--------|------------------|------------------|------------------|']
+    for name, parameter, values, _workload, params in _scaling_sweeps():
+        lines.append(f'| {name} | {parameter} | {values} | {params} |')
+    return '\n'.join(lines) + '\n\nThese are selected model inputs, not measured biological ranges.'
 
 
 def generate_all_tables() -> Dict[str, str]:
-    """Generate all tables and return as dictionary."""
-    
-    tables = {
-        'complexity_table': generate_complexity_table(),
-        'energy_coefficients': generate_energy_coefficients_table(),
-        'scaling_results': generate_scaling_results_table(),
-        'efficiency_analysis': generate_efficiency_analysis_table(),
-        'contact_solvers': generate_contact_solver_table(),
-        'parameter_ranges': generate_parameter_ranges_table()
-    }
-    
-    return tables
+    return {'complexity_table': generate_complexity_table(),
+            'energy_coefficients': generate_energy_coefficients_table(),
+            'scaling_results': generate_scaling_results_table(),
+            'efficiency_analysis': generate_efficiency_analysis_table(),
+            'contact_solvers': generate_contact_solver_table(),
+            'parameter_ranges': generate_parameter_ranges_table()}
 
 
 def generate_key_numbers() -> Dict[str, Any]:
-    """Generate key numerical results for the manuscript."""
-    
-    print("Generating key numerical results...")
-    
+    data = _standard_module_data()
     coeffs = EnergyCoefficients()
-    
-    # Standard workload calculations
-    body_load = enhanced_body_workload_closed_form(0.01, {
-        'J': 18, 'C': 12, 'S': 256, 'hz': 100, 'contact_solver': 'pgs'
-    })
-    brain_load = enhanced_brain_workload_closed_form(0.01, {
-        'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100
-    })
-    mind_load = enhanced_mind_workload_closed_form(0.01, {
-        'B': 4, 'H_p': 12, 'hz': 100, 'state_dim': 16, 'action_dim': 6
-    })
-    
-    # Energy breakdowns
-    body_breakdown = estimate_detailed_energy(body_load, coeffs, 0.01)
-    brain_breakdown = estimate_detailed_energy(brain_load, coeffs, 0.01)
-    mind_breakdown = estimate_detailed_energy(mind_load, coeffs, 0.01)
-    
-    # Scaling analysis
-    J_values = [6, 12, 18, 24, 36]
-    body_energies = []
-    for J in J_values:
-        params = {'J': J, 'C': 12, 'S': 256, 'hz': 100}
-        load = enhanced_body_workload_closed_form(0.01, params)
-        breakdown = estimate_detailed_energy(load, coeffs, 0.01)
-        body_energies.append(breakdown.total)
-    
-    body_scaling = analyze_scaling_relationship(J_values, body_energies)
-    
-    # Key numbers
-    numbers = {
-        'per_decision_energy': {
-            'body_mj': body_breakdown.total * 1000,
-            'brain_mj': brain_breakdown.total * 1000,
-            'mind_mj': mind_breakdown.total * 1000,
-            'total_mj': (body_breakdown.total + brain_breakdown.total + mind_breakdown.total) * 1000
-        },
-        'computational_load': {
-            'body_flops': body_load.flops,
-            'brain_flops': brain_load.flops,
-            'mind_flops': mind_load.flops,
-            'body_memory_kb': (body_load.sram_bytes + body_load.dram_bytes) / 1024,
-            'brain_memory_kb': (brain_load.sram_bytes + brain_load.dram_bytes) / 1024,
-            'mind_memory_kb': (mind_load.sram_bytes + mind_load.dram_bytes) / 1024
-        },
-        'scaling_exponents': {
-            'body_energy': body_scaling.get('scaling_exponent', 0),
-            'body_r_squared': body_scaling.get('r_squared', 0),
-            'body_regime': body_scaling.get('regime', 'unknown')
-        },
-        'system_parameters': {
-            'control_frequency_hz': 100,
-            'decision_period_ms': 10,
-            'baseline_power_mw': coeffs.baseline_w * 1000,
-            'total_power_w': (body_breakdown.total + brain_breakdown.total + mind_breakdown.total) / 0.01
-        }
-    }
-    
-    return numbers
+    energies = {name.removeprefix('Ant').lower() + '_mj': item['breakdown'].total * 1000 for name, item in data.items()}
+    energies['total_mj'] = sum(energies.values())
+    body = _scaling_sweeps()[0]
+    _name, parameter, values, workload, params = body
+    sweep_energies = [estimate_detailed_energy(workload(0.01, dict(params, **{parameter: value})), coeffs, 0.01).total for value in values]
+    fit = analyze_scaling_relationship(values, sweep_energies)
+    load_data = {}
+    for name, item in data.items():
+        prefix, load = name.removeprefix('Ant').lower(), item['load']
+        load_data[prefix + '_flops'] = load.flops
+        load_data[prefix + '_memory_kb'] = (load.sram_bytes + load.dram_bytes) / 1024
+    return {'schema_version': 1, 'model_family': 'enhanced_analytical',
+            'provenance': PROVENANCE, 'assumed_energy_coefficients': asdict(coeffs),
+            'per_decision_energy': energies, 'computational_load': load_data,
+            'scaling_exponents': {'body_energy': fit['scaling_exponent'] if fit.get('valid', False) else None,
+                                  'body_r_squared': fit['r_squared'] if fit.get('valid', False) else None,
+                                  'body_regime': fit.get('scaling_regime', 'unavailable')},
+            'system_parameters': {'control_frequency_hz': 100, 'decision_period_ms': 10,
+                                  'baseline_power_mw': coeffs.baseline_w * 1000,
+                                  'total_power_w': energies['total_mj'] / 1000 / 0.01,
+                                  'total_power_boundary': 'sum of isolated module compute-plus-idle estimates, not whole-device power'}}
 
 
-def main():
-    """Main function to generate all tables and numbers."""
-    
-    print("=" * 60)
-    print("Table and Number Generation")
-    print("=" * 60)
-    
-    # Generate all tables
-    tables = generate_all_tables()
-    
-    # Generate key numbers
-    numbers = generate_key_numbers()
-    
-    # Save to files
-    output_dir = Path("complexity_energetics/generated_content")
-    output_dir.mkdir(exist_ok=True)
-    
-    # Save tables as markdown
-    for table_name, table_content in tables.items():
-        table_file = output_dir / f"{table_name}.md"
-        with open(table_file, 'w') as f:
-            f.write(table_content)
-        print(f"Generated table: {table_file}")
-    
-    # Save numbers as JSON
-    numbers_file = output_dir / "key_numbers.json"
-    with open(numbers_file, 'w') as f:
-        json.dump(numbers, f, indent=2, default=str)
-    print(f"Generated numbers: {numbers_file}")
-    
-    # Generate combined LaTeX include file
-    latex_file = output_dir / "generated_tables.tex"
-    with open(latex_file, 'w') as f:
-        f.write("% Auto-generated tables and content\n")
-        f.write("% Include in main document with: \\input{generated_tables.tex}\n\n")
-        
-        for table_name, table_content in tables.items():
-            f.write(f"% {table_name.replace('_', ' ').title()}\n")
-            f.write(table_content)
-            f.write("\n\n")
-    
-    print(f"Generated LaTeX file: {latex_file}")
-    
-    print(f"\nGeneration complete!")
-    print(f"Generated {len(tables)} tables and comprehensive numerical data")
-    print(f"All content is derived from actual analysis code")
+def main(argv=None):
+    from antstack_core.analysis.ce_manuscript_figures import _fresh_family_path
+    from antstack_core.publishing.provenance import (
+        atomic_json, atomic_text, build_run_provenance, capture_source_state,
+        file_identity, write_provenance,
+    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, required=True,
+                        help='Fresh absent/empty enhanced-model supplement family root')
+    args = parser.parse_args(argv)
+    destination = _fresh_family_path(args.output)
+    source_state = capture_source_state()
+    tables, numbers = generate_all_tables(), generate_key_numbers()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=f'.{destination.name}.stage-', dir=destination.parent) as directory:
+        stage = Path(directory)
+        for name, content in tables.items():
+            atomic_text(stage / f'{name}.md', content + '\n')
+        atomic_json(stage / 'key_numbers.json', numbers)
+        combined = '# Enhanced Analytical Model Tables\n\n' + PROVENANCE + '\n\n' + '\n\n'.join(tables.values()) + '\n'
+        atomic_text(stage / 'generated_tables.md', combined)
+        products = sorted(path.name for path in stage.iterdir()) + ['provenance/provenance.json']
+        inventory_path = 'provenance/output_inventory.json'
+        provenance = build_run_provenance(
+            project='ant-stack-enhanced-tables', output_paths=products + [inventory_path],
+            parameters={'schema_version': 1, 'model_family': 'enhanced_analytical',
+                        'assumed_energy_coefficients': asdict(EnergyCoefficients()),
+                        'model_definition': 'Fixed enhanced analytical inputs and descriptive sweeps in source generator',
+                        'evidence_class': 'model estimates, not empirical validation or canonical base-run evidence'},
+            source_state=source_state,
+        )
+        write_provenance(stage / 'provenance/provenance.json', provenance)
+        artifacts = []
+        for name in products:
+            identity = file_identity(stage / name)
+            artifacts.append({'path': name, 'artifact_type': 'markdown' if name.endswith('.md') else 'provenance' if name.startswith('provenance/') else 'json',
+                              'producing_task': 'enhanced_tables.generate', 'source_config': 'key_numbers.json',
+                              'checksum': identity['sha256'], 'bytes': identity['bytes']})
+        atomic_json(stage / inventory_path, {'schema_version': 1, 'complete': True,
+                                            'artifact_path_base': 'family_root', 'artifacts': artifacts})
+        for artifact in artifacts:
+            if file_identity(stage / artifact['path']) != {'sha256': artifact['checksum'], 'bytes': artifact['bytes']}:
+                raise RuntimeError(f"Supplement changed before publication: {artifact['path']}")
+        _fresh_family_path(destination)
+        if destination.exists():
+            os.chmod(stage, stat.S_IMODE(destination.stat().st_mode))
+        os.replace(stage, destination)
+    print(f'Published enhanced analytical supplements: {destination}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

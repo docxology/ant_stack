@@ -14,6 +14,7 @@ import math
 import numpy as np
 
 from .statistics import estimate_theoretical_limits
+from .energy import _require_nonnegative, _require_positive, calculate_landauer_limit
 
 
 @dataclass
@@ -27,8 +28,10 @@ class TheoreticalLimit:
 
     uncertainty_factor: Optional[float] = None
     confidence_level: Optional[float] = None
+    component: str = "total"
 
     def __post_init__(self):
+        _require_nonnegative("value_j", self.value_j)
         if self.assumptions is None:
             self.assumptions = []
 
@@ -39,11 +42,14 @@ class EfficiencyAnalysis:
 
     actual_energy_j: float
     theoretical_limit_j: float
-    efficiency_ratio: float
-    optimization_potential: float
+    efficiency_ratio: Optional[float]  # Actual / bound: an overhead ratio, not a fraction.
+    optimization_potential: Optional[float]
 
     limit_type: str
     bottleneck_identified: Optional[str] = None
+    efficiency_fraction: Optional[float] = None  # Bound / actual, conditional on assumptions.
+    valid: bool = True
+    error: Optional[str] = None
 
 
 @dataclass
@@ -56,6 +62,7 @@ class ModuleTheoreticalAnalysis:
 
     dominant_limit: Optional[str] = None
     optimization_recommendations: List[str] = None
+    bound_combination: str = "Maximum applicable component bound; conservative total floor, not an additive cost"
 
 
 class TheoreticalLimitsAnalyzer:
@@ -69,36 +76,39 @@ class TheoreticalLimitsAnalyzer:
     - Optimization recommendations
     """
 
-    def __init__(self):
-        """Initialize theoretical limits analyzer."""
-        # Fundamental physical constants
-        self.k_B = 1.380649e-23  # Boltzmann constant (J/K)
-        self.T_room = 298.15     # Room temperature (K)
-        self.kT = self.k_B * self.T_room
-        self.landauer_limit = 1.4e-21  # Landauer-style room-temperature test contract (J/bit)
+    def __init__(self, temperature_k: float = 298.15):
+        """Initialize at a stated positive operating temperature in kelvin."""
+        _require_positive("temperature_k", temperature_k)
+        self.k_B = 1.380649e-23
+        self.T_room = temperature_k
+        self.kT = self.k_B * temperature_k
+        self.landauer_limit = calculate_landauer_limit(1.0, temperature_k)
 
     def calculate_landauer_limits(self, bits_processed: float) -> TheoreticalLimit:
         """Calculate Landauer's principle limits for computation.
 
         Args:
-            bits_processed: Number of bits processed
+            bits_processed: Bits irreversibly erased (one erasure per supplied bit).
 
         Returns:
             TheoreticalLimit for Landauer calculation
         """
+        _require_nonnegative("bits_processed", bits_processed)
         energy_j = bits_processed * self.landauer_limit
 
         return TheoreticalLimit(
             limit_type="landauer",
             value_j=energy_j,
-            description="Minimum energy required by Landauer's principle for irreversible computation",
+            description="Conditional k_B T ln(2) erasure bound, not a bound per arbitrary processed bit",
             assumptions=[
                 "Irreversible computation",
-                "Room temperature",
+                f"Temperature: {self.T_room} K",
+                "One irreversible erasure per supplied bit",
                 "Ideal thermodynamic efficiency"
             ],
             uncertainty_factor=1.0,  # Fundamental limit
-            confidence_level=1.0
+            confidence_level=1.0,
+            component="computation",
         )
 
     def calculate_thermodynamic_limits(self, mechanical_work_j: float,
@@ -108,21 +118,19 @@ class TheoreticalLimitsAnalyzer:
 
         Args:
             mechanical_work_j: Mechanical work performed
-            entropy_change: Entropy change proxy for dissipative processes
+            entropy_change: Nonnegative dissipative entropy change in J/K.
             efficiency: Efficiency factor (1.0 = ideal)
 
         Returns:
             TheoreticalLimit for thermodynamic calculation
         """
-        # For mechanical systems, the theoretical minimum is the work itself
-        # (assuming 100% efficiency)
-        if mechanical_work_j <= 0:
-            energy_j = 0.0
-        else:
-            efficiency = max(efficiency, 1e-12)
-            energy_j = max(mechanical_work_j, mechanical_work_j / efficiency)
-            if entropy_change > 0:
-                energy_j += entropy_change * self.kT
+        _require_nonnegative("mechanical_work_j", mechanical_work_j)
+        _require_nonnegative("entropy_change", entropy_change)
+        _require_positive("efficiency", efficiency)
+        if efficiency > 1:
+            raise ValueError("efficiency must be in (0, 1]")
+        # Conditional actuator model: input work / efficiency plus T * delta S.
+        energy_j = mechanical_work_j / efficiency + self.T_room * entropy_change
 
         return TheoreticalLimit(
             limit_type="thermodynamic",
@@ -134,7 +142,8 @@ class TheoreticalLimitsAnalyzer:
                 "Ideal actuator performance"
             ],
             uncertainty_factor=1.0 / efficiency,
-            confidence_level=0.95
+            confidence_level=0.95,
+            component="mechanical",
         )
 
     def calculate_information_limits(self, channel_capacity: float,
@@ -148,21 +157,26 @@ class TheoreticalLimitsAnalyzer:
         Returns:
             TheoreticalLimit for information-theoretic calculation
         """
+        _require_nonnegative("channel_capacity", channel_capacity)
+        _require_nonnegative("time_seconds", time_seconds)
         bits_processed = channel_capacity * time_seconds
         energy_j = bits_processed * self.landauer_limit
 
         return TheoreticalLimit(
             limit_type="information_theoretic",
             value_j=energy_j,
-            description="Information-theoretic minimum for signal processing and communication",
+            description="Conditional erasure bound for received information, not a universal communication floor",
             assumptions=[
                 f"Channel capacity: {channel_capacity:.1e} bits/s",
                 f"Processing time: {time_seconds:.3f} s",
                 "Shannon entropy",
-                "Ideal coding and modulation"
+                "Ideal coding and modulation",
+                "One irreversible bit erasure per received bit",
+                f"Temperature: {self.T_room} K",
             ],
             uncertainty_factor=2.0,  # Practical coding overhead
-            confidence_level=0.8
+            confidence_level=0.8,
+            component="sensing_communication",
         )
 
     def calculate_neuromorphic_limits(self, spikes_per_second: float,
@@ -176,13 +190,15 @@ class TheoreticalLimitsAnalyzer:
         Returns:
             TheoreticalLimit for neuromorphic calculation
         """
+        _require_nonnegative("spikes_per_second", spikes_per_second)
+        _require_nonnegative("spike_energy_aj", spike_energy_aj)
         energy_per_second = spikes_per_second * spike_energy_aj * 1e-18
         energy_per_decision = energy_per_second * 0.01  # 10ms decision
 
         return TheoreticalLimit(
             limit_type="neuromorphic",
             value_j=energy_per_decision,
-            description="Theoretical minimum for event-driven neuromorphic computation",
+            description="Conditional technology energy estimate for a 10 ms spiking workload; not a fundamental bound",
             assumptions=[
                 f"Spike energy: {spike_energy_aj} aJ/spike",
                 f"Spike rate: {spikes_per_second:.1e} spikes/s",
@@ -190,7 +206,8 @@ class TheoreticalLimitsAnalyzer:
                 "Ideal spike generation and processing"
             ],
             uncertainty_factor=1.5,  # Technology variation
-            confidence_level=0.7
+            confidence_level=0.7,
+            component="neuromorphic_computation",
         )
 
     def analyze_module_limits(self, module_name: str,
@@ -213,8 +230,9 @@ class TheoreticalLimitsAnalyzer:
         elif module_name == "mind":
             limits.extend(self._analyze_mind_limits(module_params))
 
-        # Find dominant limit
-        dominant_limit = min(limits, key=lambda x: x.value_j) if limits else None
+        # Every component floor also bounds total energy; max is conservative.
+        # Do not add possibly overlapping erasure/communication estimates.
+        dominant_limit = max(limits, key=lambda x: x.value_j) if limits else None
         dominant_type = dominant_limit.limit_type if dominant_limit else None
 
         # Generate optimization recommendations
@@ -316,19 +334,23 @@ class TheoreticalLimitsAnalyzer:
         Returns:
             EfficiencyAnalysis with comprehensive results
         """
-        if theoretical_limit_j <= 0:
+        _require_nonnegative("actual_energy_j", actual_energy_j)
+        _require_nonnegative("theoretical_limit_j", theoretical_limit_j)
+        if theoretical_limit_j == 0 or actual_energy_j == 0:
             return EfficiencyAnalysis(
                 actual_energy_j=actual_energy_j,
                 theoretical_limit_j=theoretical_limit_j,
-                efficiency_ratio=float('inf'),
-                optimization_potential=0.0,
-                limit_type=limit_type
+                efficiency_ratio=None,
+                optimization_potential=None,
+                limit_type=limit_type,
+                valid=False,
+                error="Efficiency ratios require positive actual energy and a positive bound",
             )
-
         efficiency_ratio = actual_energy_j / theoretical_limit_j
-        # Repository test contract pins potential = limit/actual (1/ratio), capped
-        # away from 1.0; 0.0 when the system is already at or below the limit.
-        optimization_potential = 0.0 if efficiency_ratio <= 1.0 else min(0.999999999, 1.0 / efficiency_ratio)
+        efficiency_fraction = theoretical_limit_j / actual_energy_j
+        optimization_potential = max(0.0, 1.0 - efficiency_fraction)
+        _require_nonnegative("actual/bound ratio", efficiency_ratio)
+        _require_nonnegative("bound/actual fraction", efficiency_fraction)
 
         # Identify potential bottlenecks
         bottleneck = None
@@ -345,7 +367,10 @@ class TheoreticalLimitsAnalyzer:
             efficiency_ratio=efficiency_ratio,
             optimization_potential=optimization_potential,
             limit_type=limit_type,
-            bottleneck_identified=bottleneck
+            bottleneck_identified=bottleneck,
+            efficiency_fraction=efficiency_fraction,
+            valid=actual_energy_j >= theoretical_limit_j,
+            error=None if actual_energy_j >= theoretical_limit_j else "Actual energy is below the assumed bound",
         )
 
     def _generate_optimization_recommendations(self,
@@ -418,9 +443,9 @@ class TheoreticalLimitsAnalyzer:
         module_params = third if isinstance(third, dict) else {}
         base_analysis = self.analyze_module_limits(module_name.lower().replace("ant", ""), module_params)
         if base_analysis.limits:
-            min_limit = min(base_analysis.limits, key=lambda x: x.value_j)
+            binding_limit = max(base_analysis.limits, key=lambda x: x.value_j)
             base_analysis.efficiency_analysis = self.calculate_efficiency_analysis(
-                actual_energy_j, min_limit.value_j, min_limit.limit_type
+                actual_energy_j, binding_limit.value_j, binding_limit.limit_type
             )
         return base_analysis
 
@@ -455,6 +480,8 @@ class TheoreticalLimitsAnalyzer:
         """
         if mechanical_work_j is not None:
             mechanical_work = mechanical_work_j
+        for name, value in (("bits_processed", bits_processed), ("mechanical_work", mechanical_work), ("entropy_change", entropy_change), ("information_processed", information_processed)):
+            _require_nonnegative(name, value)
         limits: Dict[str, TheoreticalLimit] = {}
 
         # Landauer limit for computation
@@ -491,6 +518,8 @@ class TheoreticalLimitsAnalyzer:
         Returns:
             Complete ModuleTheoreticalAnalysis
         """
+        if actual_energy_j is not None:
+            _require_nonnegative("actual_energy_j", actual_energy_j)
         params = module_params or {}
         if any([bits_processed, mechanical_work, entropy_change, information_processed]):
             limits_map = self.calculate_comprehensive_limits(
@@ -500,11 +529,11 @@ class TheoreticalLimitsAnalyzer:
                 information_processed=information_processed,
             )
             limits = list(limits_map.values())
-            dominant = min(limits, key=lambda x: x.value_j).limit_type if limits else None
+            dominant = max(limits, key=lambda x: x.value_j).limit_type if limits else None
             efficiency = None
             if actual_energy_j is not None and limits:
-                min_limit = min(limits, key=lambda x: x.value_j)
-                efficiency = self.calculate_efficiency_analysis(actual_energy_j, min_limit.value_j, min_limit.limit_type)
+                binding_limit = max(limits, key=lambda x: x.value_j)
+                efficiency = self.calculate_efficiency_analysis(actual_energy_j, binding_limit.value_j, binding_limit.limit_type)
             recommendations = self._generate_optimization_recommendations(module_name, limits, dominant)
             return ModuleTheoreticalAnalysis(
                 module_name=module_name,
@@ -546,7 +575,7 @@ class TheoreticalLimitsAnalyzer:
             return opportunities
 
         # Analyze efficiency gaps
-        if analysis.efficiency_analysis:
+        if analysis.efficiency_analysis and analysis.efficiency_analysis.valid:
             eff = analysis.efficiency_analysis
             if eff.efficiency_ratio > 100:
                 opportunities.append("Reduce algorithmic complexity")
@@ -563,13 +592,15 @@ class TheoreticalLimitsAnalyzer:
         return opportunities
 
     def compare_with_empirical_data(self, empirical_energy: float, empirical_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Compare an empirical energy value with documented theoretical context."""
+        """Compare a supplied energy with a conditional erasure reference, not validation."""
+        _require_nonnegative("empirical_energy", empirical_energy)
         reference = self.calculate_landauer_limits(empirical_data.get("bits_processed", 1.0)).value_j
-        ratio = empirical_energy / reference if reference > 0 else float("inf")
-        validation_score = max(0.0, min(1.0, float(empirical_data.get("efficiency", 0.0))))
+        ratio = empirical_energy / reference if reference > 0 else None
         return {
             "empirical_vs_theoretical": ratio,
-            "validation_score": validation_score,
+            "supplied_efficiency": empirical_data.get("efficiency"),
+            "validation_status": "not-assessed",
+            "reference_assumption": "Supplied bits_processed treated as erased bits; no measured erasure count established.",
             "bottleneck": empirical_data.get("bottleneck"),
             "optimization_potential": empirical_data.get("optimization_potential"),
         }
@@ -626,8 +657,10 @@ class TheoreticalLimitsAnalyzer:
                 "Efficiency Analysis:",
                 f"  Actual energy: {eff.actual_energy_j:.2e} J",
                 f"  Theoretical limit: {eff.theoretical_limit_j:.2e} J",
-                f"  Efficiency ratio: {eff.efficiency_ratio:.2f}",
-                f"  Optimization potential: {eff.optimization_potential:.3f}",
+                f"  Actual/bound overhead ratio: {eff.efficiency_ratio if eff.efficiency_ratio is not None else 'undefined'}",
+                f"  Bound/actual fraction: {eff.efficiency_fraction if eff.efficiency_fraction is not None else 'undefined'}",
+                f"  Optimization potential: {eff.optimization_potential if eff.optimization_potential is not None else 'undefined'}",
+                f"  Valid under stated assumptions: {eff.valid}; {eff.error or ''}",
             ])
             if eff.bottleneck_identified:
                 report_lines.append(f"  Bottleneck: {eff.bottleneck_identified}")

@@ -25,6 +25,10 @@ from typing import Any, Dict, Optional, List, Union
 from pathlib import Path
 import yaml
 import json
+import math
+
+from .energy import _require_positive
+from .workloads import _require_integer, validate_workload_parameters
 
 
 @dataclass
@@ -73,7 +77,7 @@ class WorkloadConfig:
         return cls(
             name=data.get("name", ""),
             duration_s=float(data.get("duration_s", 2.0)),
-            repeats=int(data.get("repeats", 5)),
+            repeats=data.get("repeats", 5),
             params=data.get("params", {}) or {},
             mode=data.get("mode")
         )
@@ -246,75 +250,47 @@ class ScalingConfig:
 
 @dataclass
 class MeterConfig:
-    """Configuration for power measurement devices.
+    """Only options actually consumed by the supported meter backends.
 
-    Defines the settings for power measurement and energy monitoring
-    during experiments.
-
-    Attributes:
-        meter_type: Type of power meter ("null", "rapl", "nvml")
-        device_index: Device index for multi-device systems
-        sampling_rate_hz: Sampling rate for power measurements
-        measurement_duration_s: Duration of measurement period
-        channels: List of measurement channels
-        calibration_file: Path to calibration file
-        baseline_measurement: Whether to perform baseline measurements
-        energy_path: Path to energy measurement file (for RAPL)
-        log_measurements: Whether to log power measurements
+    Device availability is checked by the meter, not by config construction.
+    No calibration, baseline-subtraction, sampler or logging service is implied.
     """
     meter_type: str = "null"
     device_index: int = 0
-    sampling_rate_hz: float = 1000.0
-    measurement_duration_s: float = 5.0
-    channels: List[str] = None
-    calibration_file: Optional[str] = None
-    baseline_measurement: bool = False
     energy_path: Optional[str] = None
-    log_measurements: bool = False
 
     def __post_init__(self):
-        """Initialize default values after dataclass creation."""
-        if self.channels is None:
-            self.channels = ["cpu", "memory", "disk"]
-    
+        from numbers import Integral
+        self.meter_type = "null" if self.meter_type is None else self.meter_type
+        if not isinstance(self.meter_type, str) or self.meter_type not in {"null", "rapl", "nvml"}:
+            raise ValueError("Meter type must be null, rapl, or nvml")
+        if isinstance(self.device_index, bool) or not isinstance(self.device_index, Integral) or self.device_index < 0:
+            raise ValueError("device_index must be a nonnegative integer")
+        self.device_index = int(self.device_index)
+        if self.device_index and self.meter_type != "nvml":
+            raise ValueError("device_index selects NVML devices only")
+        if self.energy_path is not None:
+            if self.meter_type != "rapl" or not isinstance(self.energy_path, str) or not self.energy_path.strip():
+                raise ValueError("energy_path must be a nonempty RAPL counter path")
+
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization.
-        
-        Returns:
-            Dictionary representation of meter configuration
-        """
         return asdict(self)
 
-    def calculate_buffer_size(self) -> int:
-        """Return the number of samples required for one measurement window."""
-        return int(self.sampling_rate_hz * self.measurement_duration_s)
-
-    def validate_channels(self, allowed_channels: List[str]) -> bool:
-        """Validate configured channels against an allowed channel list."""
-        allowed = set(allowed_channels)
-        return all(channel in allowed for channel in self.channels)
-    
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'MeterConfig':
-        """Create MeterConfig from dictionary.
+        if not isinstance(data, dict):
+            raise ValueError("meter must be a mapping")
+        unsupported = set(data) - {"meter_type", "type", "device_index", "energy_path"}
+        if unsupported:
+            raise ValueError("Unsupported meter controls: " + ", ".join(sorted(unsupported)))
+        kind = data.get("meter_type", data.get("type", "null"))
+        if "meter_type" in data and "type" in data:
+            normalized = ["null" if value is None else value for value in (data["meter_type"], data["type"])]
+            if normalized[0] != normalized[1]:
+                raise ValueError("Conflicting meter type declarations")
+        return cls(meter_type=kind, device_index=data.get("device_index", 0), energy_path=data.get("energy_path"))
 
-        Args:
-            data: Dictionary containing meter configuration
 
-        Returns:
-            MeterConfig instance
-        """
-        return cls(
-            meter_type=data.get("meter_type") or data.get("type") or "null",
-            device_index=int(data.get("device_index", 0)),
-            sampling_rate_hz=float(data.get("sampling_rate_hz", 1000.0)),
-            measurement_duration_s=float(data.get("measurement_duration_s", 5.0)),
-            channels=data.get("channels", ["cpu", "memory", "disk"]),
-            calibration_file=data.get("calibration_file"),
-            baseline_measurement=bool(data.get("baseline_measurement", False)),
-            energy_path=data.get("energy_path"),
-            log_measurements=bool(data.get("log_measurements", False))
-        )
 
 
 @dataclass
@@ -336,7 +312,7 @@ class ExperimentManifest:
         mass_kg: System mass for cost-of-transport calculations
         distance_m: Distance for cost-of-transport calculations
     """
-    experiment_name: str = ""  # For backward compatibility
+    experiment_name: str = "Ant Stack experiment"
     seed: int = 0
     workloads: Dict[str, WorkloadConfig] = None
     coefficients: EnergyCoefficientsConfig = None
@@ -348,7 +324,7 @@ class ExperimentManifest:
 
     def __init__(
         self,
-        experiment_name: str = "",
+        experiment_name: str = "Ant Stack experiment",
         seed: int = 0,
         workloads: Optional[Dict[str, WorkloadConfig]] = None,
         coefficients: Optional[EnergyCoefficientsConfig] = None,
@@ -432,6 +408,8 @@ class ExperimentManifest:
         
         with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
+        if not isinstance(data, dict):
+            raise ValueError("Experiment manifest must be a mapping")
         
         # Parse workloads
         workloads = {}
@@ -454,7 +432,7 @@ class ExperimentManifest:
         )
         
         return ExperimentManifest(
-            experiment_name=data.get("experiment_name", ""),
+            experiment_name=data.get("experiment_name", path.stem),
             description=data.get("description", ""),
             seed=int(data.get("seed", 0)),
             workloads=workloads,
@@ -540,7 +518,7 @@ class ExperimentManifest:
                 for name, value in (data.get("workloads", {}) or {}).items()
             }
         return cls(
-            experiment_name=data.get("experiment_name", ""),
+            experiment_name=data.get("experiment_name", "Ant Stack experiment"),
             description=data.get("description", ""),
             workload_configs=[WorkloadConfig.from_dict(v) for v in workload_configs] if workload_configs is not None else None,
             workloads=workloads,
@@ -562,43 +540,39 @@ class ExperimentManifest:
         """
         errors = []
 
-        if not self.experiment_name:
+        def check(label, function, *args):
+            try:
+                function(*args)
+            except (TypeError, ValueError, OverflowError) as exc:
+                errors.append(f"{label}: {exc}")
+
+        if not isinstance(self.experiment_name, str) or not self.experiment_name.strip():
             errors.append("Experiment name is required")
-        if not self.workload_configs:
+        if not self.workloads:
             errors.append("At least one workload is required")
-        
-        # Validate seed
-        if self.seed < 0:
-            errors.append("Seed must be non-negative")
-        
-        # Validate workloads
+        check("Seed", _require_integer, "seed", self.seed)
         for name, workload in self.workloads.items():
-            if workload.duration_s <= 0:
-                errors.append(f"Workload '{name}' duration must be positive")
-            if workload.repeats <= 0:
-                errors.append(f"Workload '{name}' repeats must be positive")
-        
-        # Validate coefficients
-        if self.coefficients.flops_pj <= 0:
-            errors.append("FLOP energy coefficient must be positive")
-        if self.coefficients.sram_pj_per_byte <= 0:
-            errors.append("SRAM energy coefficient must be positive")
-        if self.coefficients.dram_pj_per_byte <= 0:
-            errors.append("DRAM energy coefficient must be positive")
-        
-        # Validate scaling
+            check(f"Workload '{name}' duration", _require_positive, "duration_s", workload.duration_s)
+            check(f"Workload '{name}' repeats", _require_integer, "repeats", workload.repeats, 1)
+            if workload.mode not in {None, "loop", "closed_form"}:
+                errors.append(f"Workload '{name}' mode must be loop or closed_form")
+            check(f"Workload '{name}' parameters", validate_workload_parameters, name, workload.duration_s, workload.params)
+        check("Energy coefficients", self.coefficients.to_energy_coefficients)
         if not 0 < self.scaling.confidence_level < 1:
             errors.append("Confidence level must be between 0 and 1")
-        if self.scaling.bootstrap_samples <= 0:
-            errors.append("Bootstrap samples must be positive")
-        
-        # Validate physical parameters for CoT
-        if self.mass_kg is not None and self.mass_kg <= 0:
-            errors.append("Mass must be positive")
-        if self.distance_m is not None and self.distance_m <= 0:
-            errors.append("Distance must be positive")
-        
-        return len(errors) == 0, errors
+        check("Bootstrap samples", _require_integer, "bootstrap_samples", self.scaling.bootstrap_samples, 1)
+        check("Scaling points", _require_integer, "n_points", self.scaling.n_points, 1)
+        for name, values in self.scaling.parameter_ranges.items():
+            if not all(math.isfinite(v) for v in values):
+                errors.append(f"Scaling range '{name}' must be finite")
+        if self.meter.meter_type not in {"null", "rapl", "nvml"}:
+            errors.append("Meter type must be null, rapl, or nvml")
+        check("Meter device", _require_integer, "device_index", self.meter.device_index)
+        if self.mass_kg is not None:
+            check("Mass", _require_positive, "mass_kg", self.mass_kg)
+        if self.distance_m is not None:
+            check("Distance", _require_positive, "distance_m", self.distance_m)
+        return not errors, errors
 
     def save_to_yaml(self, path: Union[str, Path]) -> None:
         """Backward-compatible YAML save alias."""

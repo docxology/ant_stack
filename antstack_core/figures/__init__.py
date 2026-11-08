@@ -13,7 +13,7 @@ Following .cursorrules specifications for:
 - Pandoc-compatible cross-reference format
 """
 
-from .plots import PlotConfig, bar_plot, line_plot, scatter_plot
+from .plots import PlotConfig, bar_plot, interval_plot, line_plot, scatter_plot
 from .publication_plots import (
     FigureManager,
     PublicationPlotConfig,
@@ -27,6 +27,7 @@ from .assets import organize_figure_assets, copy_figure_files
 
 __all__ = [
     "bar_plot",
+    "interval_plot",
     "line_plot", 
     "scatter_plot",
     "PlotConfig",

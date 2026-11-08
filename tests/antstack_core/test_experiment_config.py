@@ -41,6 +41,54 @@ except ImportError:
     yaml = None
     HAS_YAML = False
 
+class TestScientificManifestDomains(unittest.TestCase):
+    @staticmethod
+    def manifest(**kwargs):
+        return ExperimentManifest(workloads={'body': WorkloadConfig(name='body')}, **kwargs)
+
+    def test_missing_optional_experiment_name_has_meaningful_default(self):
+        manifest = ExperimentManifest.from_dict({'workloads': {'body': {'name': 'body', 'mode': 'closed_form'}}})
+        self.assertTrue(manifest.experiment_name.strip())
+        self.assertEqual(manifest.validate(), (True, []))
+
+    def test_all_coefficient_domains_and_zero_prices(self):
+        for field in EnergyCoefficientsConfig.__dataclass_fields__:
+            for bad in (-1, float('nan'), float('inf')):
+                manifest = self.manifest(coefficients=EnergyCoefficientsConfig(**{field: bad}))
+                with self.subTest(field=field, bad=bad):
+                    self.assertFalse(manifest.validate()[0])
+            zero = self.manifest(coefficients=EnergyCoefficientsConfig(**{field: 0}))
+            self.assertEqual(zero.validate(), (True, []))
+
+    def test_invalid_workload_duration_mode_names_and_parameters(self):
+        for bad in (-1, 0, float('nan'), float('inf')):
+            manifest = ExperimentManifest(workloads={'body': WorkloadConfig(name='body', duration_s=bad)})
+            self.assertFalse(manifest.validate()[0])
+        for bad in (0, -1, 1.5, float('nan'), float('inf')):
+            manifest = ExperimentManifest(workloads={'body': WorkloadConfig(name='body', repeats=bad)})
+            self.assertFalse(manifest.validate()[0])
+        self.assertFalse(ExperimentManifest(workloads={'typo': WorkloadConfig(name='typo')}).validate()[0])
+        self.assertFalse(ExperimentManifest(workloads={'body': WorkloadConfig(name='body', mode='typo')}).validate()[0])
+        invalid = (
+            ('body', {'J': -1}), ('body', {'contact_solver': 'lcp'}),
+            ('brain', {'rho': 1.1}), ('brain', {'rho': float('nan')}),
+            ('brain', {'connectivity_pattern': 'biological'}),
+            ('mind', {'B': 0}), ('mind', {'branching': 4}), ('mind', {'max_policies': 0}),
+        )
+        for name, params in invalid:
+            manifest = ExperimentManifest(workloads={name: WorkloadConfig(name=name, params=params)})
+            with self.subTest(name=name, params=params):
+                self.assertFalse(manifest.validate()[0])
+
+    def test_invalid_physical_and_meter_values_are_not_valid(self):
+        for field in ('mass_kg', 'distance_m'):
+            for bad in (-1, 0, float('nan'), float('inf')):
+                self.assertFalse(self.manifest(**{field: bad}).validate()[0])
+        for config in ({'meter_type': 'hardware'}, {'device_index': -1}, {'device_index': True}):
+            with self.subTest(config=config), self.assertRaises(ValueError):
+                MeterConfig.from_dict(config)
+
+
 
 class TestWorkloadConfig(unittest.TestCase):
     """Test WorkloadConfig class functionality."""
@@ -296,90 +344,26 @@ class TestScalingConfig(unittest.TestCase):
 
 
 class TestMeterConfig(unittest.TestCase):
-    """Test MeterConfig class functionality."""
+    """Unsupported acquisition promises and invalid device selection fail closed."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-        self.config = MeterConfig(
-            meter_type="software",
-            sampling_rate_hz=1000,
-            measurement_duration_s=10.0,
-            channels=["cpu", "memory", "disk"],
-            calibration_file="calibration.json",
-            baseline_measurement=True
-        )
+    def test_unimplemented_controls_are_not_silently_accepted(self):
+        controls = {"baseline_measurement": True, "log_measurements": True,
+                    "calibration_file": "not-a-calibration.json", "sampling_rate_hz": 1000,
+                    "measurement_duration_s": 5, "channels": ["cpu"]}
+        for key, value in controls.items():
+            with self.subTest(control=key), self.assertRaises(ValueError):
+                MeterConfig.from_dict({"meter_type": "null", key: value})
 
-    def test_meter_config_creation(self):
-        """Test basic MeterConfig creation."""
-        config = MeterConfig(meter_type="hardware")
-        self.assertEqual(config.meter_type, "hardware")
-        self.assertEqual(config.sampling_rate_hz, 1000)  # default
-        self.assertEqual(config.measurement_duration_s, 5.0)  # default
+    def test_invalid_device_and_inapplicable_options_are_refused(self):
+        for config in ({"meter_type": "hardware"}, {"device_index": -1}, {"device_index": True},
+                       {"device_index": "1"}, {"meter_type": "rapl", "device_index": 1},
+                       {"meter_type": "null", "energy_path": "/unused"},
+                       {"meter_type": "rapl", "energy_path": ""},
+                       {"meter_type": "null", "type": "rapl"}):
+            with self.subTest(config=config), self.assertRaises(ValueError):
+                MeterConfig.from_dict(config)
 
-    def test_meter_config_custom_values(self):
-        """Test MeterConfig with custom values."""
-        self.assertEqual(self.config.meter_type, "software")
-        self.assertEqual(self.config.sampling_rate_hz, 1000)
-        self.assertEqual(self.config.measurement_duration_s, 10.0)
-        self.assertEqual(self.config.channels, ["cpu", "memory", "disk"])
-        self.assertEqual(self.config.calibration_file, "calibration.json")
-        self.assertTrue(self.config.baseline_measurement)
 
-    def test_meter_config_calculate_buffer_size(self):
-        """Test buffer size calculation."""
-        buffer_size = self.config.calculate_buffer_size()
-
-        expected_size = int(1000 * 10.0)  # sampling_rate * duration
-        self.assertEqual(buffer_size, expected_size)
-
-    def test_meter_config_validate_channels(self):
-        """Test channel validation."""
-        valid_channels = ["cpu", "memory", "network", "disk"]
-        result = self.config.validate_channels(valid_channels)
-        self.assertTrue(result)
-
-        invalid_channels = ["invalid_channel"]
-        result = self.config.validate_channels(invalid_channels)
-        self.assertFalse(result)
-
-    def test_meter_config_to_dict(self):
-        """Test dictionary serialization."""
-        config_dict = self.config.to_dict()
-
-        expected_keys = ['meter_type', 'sampling_rate_hz', 'measurement_duration_s',
-                        'channels', 'calibration_file', 'baseline_measurement']
-        for key in expected_keys:
-            self.assertIn(key, config_dict)
-
-    def test_meter_config_from_dict(self):
-        """Test creation from dictionary."""
-        config_dict = {
-            'meter_type': 'external',
-            'sampling_rate_hz': 2000,
-            'measurement_duration_s': 20.0,
-            'channels': ['temperature', 'voltage'],
-            'calibration_file': 'external_cal.json',
-            'baseline_measurement': False
-        }
-
-        config = MeterConfig.from_dict(config_dict)
-
-        self.assertEqual(config.meter_type, 'external')
-        self.assertEqual(config.sampling_rate_hz, 2000)
-        self.assertEqual(config.measurement_duration_s, 20.0)
-        self.assertEqual(config.channels, ['temperature', 'voltage'])
-
-    def test_meter_config_from_dict_accepts_manifest_type_alias(self):
-        """Manifest-style meter.type should normalize to meter_type."""
-        config = MeterConfig.from_dict({"type": "null"})
-
-        self.assertEqual(config.meter_type, "null")
-
-    def test_meter_config_from_dict_defaults_null_when_type_is_none(self):
-        """Explicit YAML null meter types should still select the null meter."""
-        config = MeterConfig.from_dict({"meter_type": None})
-
-        self.assertEqual(config.meter_type, "null")
 
 
 class TestExperimentManifest(unittest.TestCase):
@@ -388,13 +372,13 @@ class TestExperimentManifest(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.workload_configs = [
-            WorkloadConfig(name="body_workload", params={'joints': 6}),
-            WorkloadConfig(name="brain_workload", params={'channels': 100})
+            WorkloadConfig(name="body", params={'J': 6}),
+            WorkloadConfig(name="brain", params={'K': 100})
         ]
 
         self.energy_config = EnergyCoefficientsConfig(flops_pj=2.0)
         self.scaling_config = ScalingConfig(parameter_range=(1, 10), n_points=5)
-        self.meter_config = MeterConfig(meter_type="software")
+        self.meter_config = MeterConfig(meter_type="null")
 
         self.manifest = ExperimentManifest(
             experiment_name="test_experiment",
@@ -478,25 +462,6 @@ class TestExperimentManifest(unittest.TestCase):
         for key in expected_keys:
             self.assertIn(key, manifest_dict)
 
-    def test_experiment_manifest_from_dict(self):
-        """Test creation from dictionary."""
-        manifest_dict = {
-            'experiment_name': 'dict_experiment',
-            'description': 'Created from dict',
-            'workload_configs': [WorkloadConfig(name="test").to_dict()],
-            'energy_coefficients': EnergyCoefficientsConfig().to_dict(),
-            'scaling_config': ScalingConfig(parameter_range=(1, 5)).to_dict(),
-            'meter_config': MeterConfig(meter_type="hardware").to_dict(),
-            'output_directory': './dict_results',
-            'random_seed': 123
-        }
-
-        manifest = ExperimentManifest.from_dict(manifest_dict)
-
-        self.assertEqual(manifest.experiment_name, 'dict_experiment')
-        self.assertEqual(manifest.description, 'Created from dict')
-        self.assertEqual(manifest.output_directory, './dict_results')
-        self.assertEqual(manifest.random_seed, 123)
 
     def test_experiment_manifest_create_from_workloads(self):
         """Test creation from workload list."""
@@ -519,107 +484,8 @@ class TestExperimentManifest(unittest.TestCase):
 class TestExperimentConfigIntegration(unittest.TestCase):
     """Test integration between experiment configuration components."""
 
-    def test_complete_experiment_setup(self):
-        """Test complete experiment setup workflow."""
-        # Create all configuration components
-        workload = WorkloadConfig(
-            name="comprehensive_test",
-            duration_s=5.0,
-            repeats=3,
-            params={'joints': 8, 'channels': 200, 'horizon': 10},
-            mode="closed_form"
-        )
 
-        energy_coeffs = EnergyCoefficientsConfig(
-            flops_pj=1.5,
-            baseline_w=0.8
-        )
 
-        scaling = ScalingConfig(
-            parameter_range=(1, 50),
-            n_points=10,
-            scaling_type="power_law"
-        )
-
-        meter = MeterConfig(
-            meter_type="software",
-            sampling_rate_hz=2000,
-            channels=["cpu", "memory", "power"]
-        )
-
-        # Create experiment manifest
-        manifest = ExperimentManifest(
-            experiment_name="integration_test",
-            description="Complete integration test",
-            workload_configs=[workload],
-            energy_coefficients=energy_coeffs,
-            scaling_config=scaling,
-            meter_config=meter,
-            output_directory="./integration_results",
-            random_seed=42
-        )
-
-        # Validate the complete setup
-        is_valid, errors = manifest.validate()
-
-        self.assertTrue(is_valid)
-        self.assertEqual(len(errors), 0)
-
-        # Test serialization
-        manifest_dict = manifest.to_dict()
-        self.assertIsInstance(manifest_dict, dict)
-
-        # Test round-trip
-        restored_manifest = ExperimentManifest.from_dict(manifest_dict)
-        self.assertEqual(restored_manifest.experiment_name, manifest.experiment_name)
-
-    def test_configuration_parameter_ranges(self):
-        """Test that configuration parameters handle valid ranges."""
-        # Test WorkloadConfig parameter validation
-        valid_workload = WorkloadConfig(
-            name="valid",
-            duration_s=1.0,  # Positive duration
-            repeats=1,       # At least 1 repeat
-            params={}
-        )
-        self.assertIsInstance(valid_workload, WorkloadConfig)
-
-        # Test ScalingConfig parameter validation
-        valid_scaling = ScalingConfig(
-            parameter_range=(0.1, 100.0),  # Valid positive range
-            n_points=5  # Reasonable number of points
-        )
-        self.assertIsInstance(valid_scaling, ScalingConfig)
-
-        # Test MeterConfig parameter validation
-        valid_meter = MeterConfig(
-            meter_type="software",
-            sampling_rate_hz=100,  # Reasonable sampling rate
-            measurement_duration_s=1.0  # Reasonable duration
-        )
-        self.assertIsInstance(valid_meter, MeterConfig)
-
-    def test_configuration_edge_cases(self):
-        """Test configuration handling of edge cases."""
-        # Test with minimal configurations
-        minimal_workload = WorkloadConfig(name="minimal")
-        self.assertEqual(minimal_workload.duration_s, 2.0)  # default
-        self.assertEqual(minimal_workload.repeats, 5)      # default
-
-        minimal_manifest = ExperimentManifest(
-            experiment_name="minimal",
-            workload_configs=[minimal_workload]
-        )
-        is_valid, errors = minimal_manifest.validate()
-        self.assertTrue(is_valid)
-
-        # Test with extreme values
-        extreme_workload = WorkloadConfig(
-            name="extreme",
-            duration_s=0.001,  # Very short duration
-            repeats=1000      # Many repeats
-        )
-        self.assertIsInstance(extreme_workload, WorkloadConfig)
 
     def test_configuration_error_handling(self):
         """Test error handling in configuration classes."""
@@ -633,14 +499,6 @@ class TestExperimentConfigIntegration(unittest.TestCase):
         self.assertFalse(is_valid)
         self.assertGreater(len(errors), 0)
 
-        # Test WorkloadConfig with invalid data
-        # These should still create valid objects (validation is separate)
-        invalid_workload = WorkloadConfig(
-            name="",
-            duration_s=-1.0,  # Negative duration
-            repeats=-1       # Negative repeats
-        )
-        self.assertIsInstance(invalid_workload, WorkloadConfig)
 
 
 if __name__ == '__main__':

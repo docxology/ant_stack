@@ -206,6 +206,7 @@ class TestSpectralData(unittest.TestCase):
         # For linear baseline, the corrected spectrum should be flatter
         self.assertIsInstance(corrected, SpectralData)
         self.assertEqual(corrected.num_points, spectral_data.num_points)
+        np.testing.assert_allclose(corrected.intensities, 0.0, atol=1e-14)
 
 
 class TestPeakFinder(unittest.TestCase):
@@ -502,8 +503,9 @@ class TestSpectroscopyFunctions(unittest.TestCase):
 
         overlap_metrics = calculate_spectral_overlap(spectrum1, spectrum2)
 
-        # Orthogonal spectra should have zero correlation
-        self.assertAlmostEqual(overlap_metrics['pearson_correlation'], 0.0, places=6)
+        # Centered Pearson differs from cosine orthogonality.
+        self.assertAlmostEqual(overlap_metrics['pearson_correlation'], -0.25, places=6)
+        self.assertEqual(overlap_metrics['cosine_similarity'], 0.0)
 
     def test_generate_spectral_plots_with_matplotlib(self):
         """Test spectral plot generation with matplotlib available."""
@@ -741,3 +743,69 @@ class TestSpectroscopyRobustness(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+import pytest
+
+
+def test_overlap_centered_scale_invariant_and_undefined():
+    anti = calculate_spectral_overlap([1, 0], [0, 1])
+    assert anti['pearson_correlation'] == pytest.approx(-1)
+    assert anti['cosine_similarity'] == 0
+    for scale in (1e-200, 1e-7, 1, 1e200):
+        result = calculate_spectral_overlap(np.array([1, 2, 3]) * scale, [2, 4, 6])
+        assert result['pearson_correlation'] == pytest.approx(1)
+        assert result['cosine_similarity'] == pytest.approx(1)
+    assert calculate_spectral_overlap([1, 1], [2, 2])['pearson_correlation'] is None
+    zero = calculate_spectral_overlap([0, 0], [1, 2])
+    assert zero['pearson_correlation'] is None
+    assert zero['cosine_similarity'] is None
+    assert zero['spectral_angle'] is None
+    for bad in ([1, np.nan], [1, np.inf], [[1, 2]]):
+        with pytest.raises(ValueError):
+            calculate_spectral_overlap(bad, [1, 2])
+
+
+def test_comparison_rejects_unaligned_physical_axes():
+    analyzer = CHCAnalyzer()
+    left = SpectralData([400, 800, 1200], [0, 1, 0])
+    right = SpectralData([2000, 2400, 2800], [0, 1, 0])
+    with pytest.raises(ValueError, match="wavenumber grid"):
+        analyzer.compare_spectra(left, right)
+    reversed_spectrum = SpectralData([1200, 800, 400], [0, 1, 0])
+    assert analyzer.compare_spectra(left, reversed_spectrum)['similarity_score'] == pytest.approx(1)
+    result = analyzer.compare_spectra(SpectralData([400, 800], [0, 0]), SpectralData([400, 800], [1, 2]))
+    assert result['similarity_score'] is None
+
+
+def test_linear_baseline_full_subtraction_and_axis_pairing():
+    spectrum = SpectralData([1200, 400, 800], [3, 1, 2])
+    np.testing.assert_array_equal(spectrum.wavenumbers, [400, 800, 1200])
+    np.testing.assert_array_equal(spectrum.intensities, [1, 2, 3])
+    np.testing.assert_allclose(spectrum.baseline_correction().intensities, [0, 0, 0], atol=1e-14)
+    np.testing.assert_allclose(SpectralData([400, 800, 1200], [1, 4, 3]).baseline_correction().intensities, [0, 2, 0])
+    with pytest.raises(ValueError, match="duplicate"):
+        SpectralData([400, 400, 800], [1, 2, 3])
+
+
+def test_true_prominence_width_and_physical_axis_units():
+    finder = PeakFinder(min_distance=1)
+    spectrum = SpectralData([400, 410, 420, 430, 440, 450, 460], [0, 1, 2, 3, 2, 1, 0])
+    peaks, properties = finder.find_peaks(spectrum)
+    np.testing.assert_array_equal(peaks, [3])
+    np.testing.assert_allclose(properties['widths'], [3])
+    np.testing.assert_allclose(properties['prominences'], [3])
+    summary = finder.analyze_peaks(spectrum)
+    np.testing.assert_allclose(summary['peak_widths'], [30])
+    np.testing.assert_allclose(summary['peak_prominences'], [3])
+    assert summary['peak_width_units'] == 'cm^-1'
+    # Interpolate sample crossing positions onto a nonuniform physical axis.
+    uneven = SpectralData([400, 410, 420, 430, 450, 480, 500], [0, 1, 2, 3, 2, 1, 0])
+    np.testing.assert_allclose(finder.analyze_peaks(uneven)['peak_widths'], [50])
+
+
+def test_missing_peak_backend_is_explicit(monkeypatch):
+    import antstack_core.cohereants.spectroscopy as spectroscopy
+    monkeypatch.setattr(spectroscopy, 'scipy_find_peaks', None)
+    with pytest.raises(RuntimeError, match='scipy.signal'):
+        PeakFinder().analyze_peaks(SpectralData([400, 800, 1200], [0, 1, 0]))

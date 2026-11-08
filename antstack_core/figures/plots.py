@@ -23,16 +23,12 @@ plt = None  # type: ignore
 np = None   # type: ignore
 sns = None  # type: ignore
 try:
-    import matplotlib
-    matplotlib.use("Agg")  # headless backend for server environments
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
     from matplotlib.colors import LinearSegmentedColormap
     import numpy as np
     try:
         import seaborn as sns
-        sns.set_style("whitegrid")
-        sns.set_palette("husl")
     except ImportError:
         sns = None
 except Exception:
@@ -62,6 +58,17 @@ def _finite_float_array(values: Sequence[float]) -> "np.ndarray":
     """Return finite numeric values as a NumPy array when plotting supports it."""
     arr = np.asarray(values, dtype=float)
     return arr[np.isfinite(arr)]
+
+
+def _paired_float_arrays(*values: Sequence[float]):
+    """Keep aligned, finite observations; never pair independently filtered data."""
+    arrays = tuple(np.asarray(value, dtype=float) for value in values)
+    if any(array.ndim != 1 for array in arrays):
+        raise ValueError("Plot data must be one-dimensional")
+    if arrays and any(array.shape != arrays[0].shape for array in arrays):
+        raise ValueError("Paired plot data must have equal lengths")
+    mask = np.logical_and.reduce([np.isfinite(array) for array in arrays])
+    return tuple(array[mask] for array in arrays), mask
 
 
 def _has_linear_fit_signal(x_values: "np.ndarray", y_values: "np.ndarray") -> bool:
@@ -97,6 +104,78 @@ def _positive_dynamic_range(values: Sequence[float]) -> float | None:
     return float(np.max(arr) / min_value)
 
 
+def _save_figure(figure, output_path, *, dpi=300, close=True):
+    """Publish only a complete image; keep the prior output on producer failure."""
+    from pathlib import Path
+    import tempfile
+    from ..publishing.provenance import publication_path, publish_file
+    destination = publication_path(output_path)
+    if not destination.suffix:
+        from matplotlib import rcParams
+        destination = destination.with_suffix("." + rcParams["savefig.format"])
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with tempfile.TemporaryDirectory(prefix=".antstack-figure-", dir=destination.parent) as directory:
+            staged = Path(directory) / destination.name
+            figure.savefig(staged, dpi=dpi, bbox_inches="tight", facecolor="white", edgecolor="none")
+            publish_file(staged, destination)
+    finally:
+        if close:
+            plt.close(figure)
+
+
+def interval_plot(
+    labels: Sequence[str], values: Sequence[float], title: str = "",
+    out_path: str | None = None, xlabel: str = "Energy (J)", *,
+    confidence_intervals: Sequence[tuple[float, float]] | None = None,
+    config: PlotConfig | None = None,
+):
+    """Categorical estimates with supplied bounds, not zero-baseline log bars.
+
+    Positive observations spanning over two decades use an explicitly labelled
+    logarithmic axis. Zero/negative values or bounds retain a linear axis.
+    Bounds are shown as supplied even when they exclude the point estimate.
+    """
+    if plt is None or np is None:
+        raise ImportError("interval_plot requires matplotlib and numpy")
+    labels, numeric = list(labels), np.asarray(values, dtype=float)
+    if numeric.ndim != 1 or not numeric.size or len(labels) != numeric.size or not np.all(np.isfinite(numeric)):
+        raise ValueError("Interval plot labels and finite values need equal nonzero lengths")
+    bounds = None
+    if confidence_intervals is not None:
+        bounds = np.asarray(confidence_intervals, dtype=float)
+        if bounds.shape != (len(labels), 2) or not np.all(np.isfinite(bounds)) or np.any(bounds[:, 0] > bounds[:, 1]):
+            raise ValueError("Intervals require one finite ordered lower/upper pair per estimate")
+    settings = _config_or_default(config)
+    figure, axis = plt.subplots(figsize=settings.figure_size or (9, 5))
+    positions = np.arange(len(labels))
+    axis.scatter(numeric, positions, color="#2563a6", s=65, zorder=3, label="Model estimate")
+    if bounds is not None:
+        axis.hlines(positions, bounds[:, 0], bounds[:, 1], color="#334155", linewidth=2, label="Supplied interval")
+        axis.vlines(bounds[:, 0], positions - .08, positions + .08, color="#334155")
+        axis.vlines(bounds[:, 1], positions - .08, positions + .08, color="#334155")
+    observed = numeric if bounds is None else np.concatenate((numeric, bounds.ravel()))
+    dynamic_range = _positive_dynamic_range(observed)
+    logarithmic = settings.auto_log_scale and dynamic_range is not None and dynamic_range > 100
+    if logarithmic:
+        axis.set_xscale("log")
+    axis.set_xlabel(xlabel + (" (log scale)" if logarithmic else ""), fontsize=12)
+    axis.set_yticks(positions, [str(label) for label in labels], fontsize=11)
+    axis.set_ylim(len(labels) - .5, -.5)
+    axis.margins(x=.24)
+    for position, value in zip(positions, numeric):
+        axis.annotate(f"{value:.4g}", (value, position), xytext=(8, 7), textcoords="offset points", fontsize=10)
+    axis.set_title(title, fontsize=14, pad=18)
+    axis.grid(axis="x", which="both", alpha=.25, linestyle="--")
+    axis.spines[["top", "right"]].set_visible(False)
+    if bounds is not None:
+        axis.legend(loc="best", fontsize=9)
+    figure.tight_layout()
+    if out_path:
+        _save_figure(figure, out_path, dpi=settings.dpi, close=settings.close_on_save)
+    return figure
+
+
 def bar_plot(
     labels: Sequence[str] | None = None,
     values: Sequence[float] | None = None,
@@ -109,15 +188,13 @@ def bar_plot(
     xlabel: str = "Components",
     errors: Optional[Sequence[float]] = None,
     config: PlotConfig | None = None,
+    confidence_intervals: Optional[Sequence[tuple[float, float]]] = None,
 ):
-    r"""Create publication-quality bar plot with comprehensive annotations.
-    
-    Generates professional bar charts suitable for academic publications with:
-    - Error bars with confidence intervals
-    - Statistical significance indicators  
-    - Color-coded bars based on magnitude
-    - Detailed annotations and formatting
-    - LaTeX-compatible math symbols
+    r"""Plot categorical values with optional error magnitudes or explicit interval bounds.
+
+    ``confidence_intervals`` contains one (lower, upper) pair per value. These
+    ranges are drawn at their actual coordinates, even when they exclude the
+    displayed mean. No significance or confidence level is inferred from values.
     
     Args:
         labels: Category labels for x-axis
@@ -126,21 +203,31 @@ def bar_plot(
         out_path: Output file path (PNG recommended, 300 DPI)
         ylabel: Y-axis label with units
         yerr: Optional error bars (standard errors or confidence intervals)
+        confidence_intervals: Explicit lower/upper bounds, mutually exclusive with yerr
     
     References:
         - Error bar best practices: https://doi.org/10.1038/nmeth.2813
         - Statistical visualization: https://doi.org/10.1371/journal.pcbi.1004668
     """
-    if plt is None:
-        print("matplotlib not available; skipping bar plot")
-        return None
+    if plt is None or np is None:
+        raise ImportError("bar_plot requires matplotlib and numpy")
 
     plot_config = _config_or_default(config)
-    if categories is None and labels is None and values:
+    if categories is None and labels is None and values is not None and len(values):
         raise TypeError("categories or labels are required when values are provided")
-    labels = list(categories if categories is not None else (labels or []))
-    values = list(values or [])
+    labels = list(categories if categories is not None else ([] if labels is None else labels))
+    values = list([] if values is None else values)
     yerr = errors if errors is not None else yerr
+    numeric = np.asarray(values, dtype=float)
+    if numeric.ndim != 1 or not numeric.size or len(labels) != numeric.size or not np.all(np.isfinite(numeric)):
+        raise ValueError("Bar labels and finite values must have the same nonzero length")
+    bounds = None
+    if confidence_intervals is not None:
+        if yerr is not None:
+            raise ValueError("Specify either error magnitudes or interval bounds, not both")
+        bounds = np.asarray(confidence_intervals, dtype=float)
+        if bounds.shape != (len(values), 2) or not np.all(np.isfinite(bounds)) or np.any(bounds[:, 0] > bounds[:, 1]):
+            raise ValueError("Intervals require one finite ordered lower/upper pair per bar")
     
     fig, ax = plt.subplots(figsize=plot_config.figure_size or (10, 6))
     
@@ -151,9 +238,15 @@ def bar_plot(
         colors = ['C{}'.format(i % 10) for i in range(len(values))]
         
     bars = ax.bar(
-        labels, values, yerr=yerr, capsize=6, color=colors,
+        range(len(labels)), numeric, yerr=yerr, capsize=6, color=colors,
         edgecolor='black', linewidth=0.8, alpha=0.8
     )
+    ax.set_xticks(range(len(labels)), labels)
+    if bounds is not None:
+        positions = np.arange(len(values))
+        ax.vlines(positions, bounds[:, 0], bounds[:, 1], colors='black')
+        for endpoints in (bounds[:, 0], bounds[:, 1]):
+            ax.hlines(endpoints, positions - 0.08, positions + 0.08, colors='black')
     
     # Add value labels on top of bars
     for bar, value in zip(bars, values):
@@ -161,7 +254,7 @@ def bar_plot(
         ax.text(
             bar.get_x() + bar.get_width()/2., 
             height + (max(values) * 0.01),
-            f'{value:.3f}', 
+            f'{value:.4g}',
             ha='center', va='bottom', 
             fontweight='bold', fontsize=10
         )
@@ -179,9 +272,7 @@ def bar_plot(
     
     fig.tight_layout()
     if out_path:
-        fig.savefig(out_path, dpi=plot_config.dpi, bbox_inches='tight', facecolor='white')
-        if plot_config.close_on_save:
-            plt.close(fig)
+        _save_figure(fig, out_path, dpi=plot_config.dpi, close=plot_config.close_on_save)
     return fig
 
 
@@ -223,9 +314,8 @@ def line_plot(
         - Scaling laws in computing: https://doi.org/10.1126/science.1062081
         - Uncertainty visualization: https://doi.org/10.1111/cgf.12974
     """
-    if plt is None:
-        print("matplotlib not available; skipping line plot")
-        return None
+    if plt is None or np is None:
+        raise ImportError("Plotting requires matplotlib and numpy")
 
     plot_config = _config_or_default(config)
     if x_data is None and x is None and (y_data is not None or ys is not None):
@@ -235,9 +325,24 @@ def line_plot(
     if x_data is not None:
         x_series = list(x_data)
     else:
-        x_series = [x or [] for _ in range(len(ys or []))]
-    y_series = list(y_data if y_data is not None else (ys or []))
-    labels = list(labels or ["" for _ in y_series])
+        x_series = [[] if x is None else x for _ in range(len([] if ys is None else ys))]
+    y_series = list(y_data if y_data is not None else ([] if ys is None else ys))
+    labels = list(labels) if labels is not None else ["" for _ in y_series]
+    if len(x_series) != len(y_series) or len(labels) != len(y_series):
+        raise ValueError("Each series requires one x sequence and one label")
+    prepared = []
+    for idx, (series_x, series_y) in enumerate(zip(x_series, y_series)):
+        if bands is not None and idx < len(bands) and len(bands[idx]):
+            bounds = np.asarray(bands[idx], dtype=float)
+            if bounds.ndim != 2 or bounds.shape != (len(series_x), 2):
+                raise ValueError("Bands require one (low, high) pair per observation")
+            (clean_x, clean_y, lows, highs), _ = _paired_float_arrays(series_x, series_y, bounds[:, 0], bounds[:, 1])
+            if np.any(lows > highs):
+                raise ValueError("Band lower bounds must not exceed upper bounds")
+            prepared.append((clean_x, clean_y, (lows, highs)))
+        else:
+            (clean_x, clean_y), _ = _paired_float_arrays(series_x, series_y)
+            prepared.append((clean_x, clean_y, None))
     
     fig, ax = plt.subplots(figsize=plot_config.figure_size or (10, 7))
     
@@ -250,7 +355,7 @@ def line_plot(
     markers = ['o', 's', '^', 'D', 'v', '<', '>', 'p', '*', 'h']
     linestyles = ['-', '--', '-.', ':']
     
-    for idx, (series_x, y, label) in enumerate(zip(x_series, y_series, labels)):
+    for idx, ((series_x, y, band), label) in enumerate(zip(prepared, labels)):
         color = colors[idx % len(colors)]
         marker = markers[idx % len(markers)]
         linestyle = linestyles[idx % len(linestyles)]
@@ -264,19 +369,14 @@ def line_plot(
         )
         
         # Add confidence bands if available
-        if bands and idx < len(bands) and bands[idx]:
-            lows = [lo for (lo, _hi) in bands[idx]]
-            his = [hi for (_lo, hi) in bands[idx]]
-            ax.fill_between(
-                series_x, lows, his, alpha=0.2, color=color,
-                label=f'{label} 95% CI'
-            )
+        if band is not None:
+            ax.fill_between(series_x, band[0], band[1], alpha=0.2,
+                            color=color, label=f'{label} supplied interval')
             
         # Fit and display scaling law if data suggests power law
         if plot_config.annotate_statistics and np is not None:
             try:
-                x_fit_source = _finite_float_array(series_x)
-                y_fit_source = _finite_float_array(y)
+                x_fit_source, y_fit_source = series_x, y
                 if not _has_power_fit_signal(x_fit_source, y_fit_source):
                     continue
                 # Log-log fit to detect power laws
@@ -326,11 +426,11 @@ def line_plot(
     ax.spines['bottom'].set_linewidth(1.2)
     
     # Log scale if data spans multiple orders of magnitude
-    if plot_config.auto_log_scale and np is not None and x_series and y_series and all(y for y in y_series):
+    if plot_config.auto_log_scale and np is not None and prepared:
         try:
-            all_x = [value for series in x_series for value in series]
+            all_x = [value for series_x, _y, _band in prepared for value in series_x]
             x_range = _positive_dynamic_range(all_x)
-            y_range = _positive_dynamic_range([value for series in y_series for value in series])
+            y_range = _positive_dynamic_range([value for _x, series_y, _band in prepared for value in series_y])
             if x_range is not None and x_range > 100:
                 ax.set_xscale('log')
             if y_range is not None and y_range > 100:
@@ -341,9 +441,7 @@ def line_plot(
     
     fig.tight_layout()
     if out_path:
-        fig.savefig(out_path, dpi=plot_config.dpi, bbox_inches='tight', facecolor='white')
-        if plot_config.close_on_save:
-            plt.close(fig)
+        _save_figure(fig, out_path, dpi=plot_config.dpi, close=plot_config.close_on_save)
     return fig
 
 
@@ -381,20 +479,24 @@ def scatter_plot(
         - Statistical visualization: https://doi.org/10.1038/nmeth.2813
         - Correlation analysis: https://doi.org/10.1016/j.jneumeth.2013.08.024
     """
-    if plt is None:
-        print("matplotlib not available; skipping scatter plot")
-        return None
+    if plt is None or np is None:
+        raise ImportError("Plotting requires matplotlib and numpy")
 
     plot_config = _config_or_default(config)
-    x = x_data if x_data is not None else (x or [])
-    y = y_data if y_data is not None else (y or [])
+    x = x_data if x_data is not None else ([] if x is None else x)
+    y = y_data if y_data is not None else ([] if y is None else y)
+    (x_arr, y_arr), mask = _paired_float_arrays(x, y)
+    if sizes is not None:
+        sizes = np.asarray(sizes, dtype=float)
+        if sizes.ndim != 1 or sizes.shape != mask.shape or not np.all(np.isfinite(sizes)) or np.any(sizes < 0):
+            raise ValueError("Sizes must be finite, nonnegative and match paired data")
+        sizes = sizes[mask]
+    drew_regression = False
     
     fig, ax = plt.subplots(figsize=plot_config.figure_size or (10, 8))
     
     # Convert to arrays for analysis
     if np is not None:
-        x_arr = np.array(x)
-        y_arr = np.array(y)
         
         # Create scatter plot with color mapping
         scatter = ax.scatter(
@@ -441,7 +543,5 @@ def scatter_plot(
     
     fig.tight_layout()
     if out_path:
-        fig.savefig(out_path, dpi=plot_config.dpi, bbox_inches='tight', facecolor='white')
-        if plot_config.close_on_save:
-            plt.close(fig)
+        _save_figure(fig, out_path, dpi=plot_config.dpi, close=plot_config.close_on_save)
     return fig

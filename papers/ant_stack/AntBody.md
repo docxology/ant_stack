@@ -1,6 +1,6 @@
-# AntBody
+# AntBody: Proposed Morphology and Sensorimotor Interfaces {#antbody}
 
-`AntBody` is a physics-based model of ant morphology, biomechanics, and sensors. It adapts the `FlyBody` MuJoCo simulator to ant-specific leg kinematics, exoskeletal properties, and antennae/mandible actuation (portable to PyBullet). It emits the raw sensorimotor stream to `AntBrain` and executes motor commands. The objective is not photorealism but functional fidelity: reproduce contact dynamics, gradient sensing, and actuation latencies that pose the same control problems real ants solve.
+The proposed `AntBody` would couple morphology, biomechanics, actuation, and sensors through explicit interfaces. `FlyBody` and MuJoCo provide design references; this repository does not implement a FlyBody-to-ant adapter, a MuJoCo/PyBullet dynamics solver, or an executed sensorimotor stream. Its implemented Body workload functions estimate analytical operation counts and assumed energy costs. Reproducing ant contact dynamics, gradient sensing, and actuation latencies remains an evaluation objective.
 
 ```mermaid
 graph TD
@@ -81,7 +81,9 @@ graph TD
 
 Goal: a functionally accurate ant nestmate body posing the same control problems a real ant brain evolved to solve.
 
-## Interfaces (I/O Contract)
+## Proposed Interfaces (I/O Contract)
+
+All rates, latency/drift budgets, step sizes, and noise ranges below are engineering assumptions or acceptance targets, not measured performance or species-specific data.
 
 - **Observation o_t ($100\,\mathrm{Hz}$; SI units unless noted):**
   - Chemosensors: K channels/antenna, normalized [0,1]; gradient and absolute concentration
@@ -97,7 +99,7 @@ Goal: a functionally accurate ant nestmate body posing the same control problems
 
 Strict units and update rates enable drop-in replacement of bodies and simplify benchmarking across engines.
 
-## Configuration
+## Configuration Assumptions and Illustrative Defaults {#configuration}
 
 - Dynamics: position or torque control
 - Terrain: flat, rough, slope
@@ -105,28 +107,20 @@ Strict units and update rates enable drop-in replacement of bodies and simplify 
 - Pheromone field: on/off, diffusion $D$, decay $\lambda$
 - Energy model (optional): per-actuator energy and baseline metabolism for efficiency metrics
 - Contact/friction: Coulomb friction coefficients ($\mu_s, \mu_k$) and restitution per material
-- Sensor/actuator calibration: per-channel offset/gain with auto-calibration routines and logs
+- Proposed sensor/actuator calibration inputs: per-channel offset/gain and instrument logs; no completed auto-calibration campaign is claimed.
 - Batch mode: offline rollout/export of o_t, a_t, and internal state for dataset generation
 
-Recommended defaults: 3--4 DOF/leg, $\Delta t = 1$ ms, $100\,\mathrm{Hz}$ control, Gaussian sensor noise $\sigma \in [0.01, 0.05]$.
+Illustrative assumed defaults: 3–4 DOF per modeled leg, physics step $\Delta t=1$ ms, 100 Hz control, Gaussian normalized-channel noise $\sigma\in[0.01,0.05]$. Stability and task suitability require evaluation; these are not physiological measurements.
 
 ### Section Summary
 
-- Concrete physics/sensing substrate with explicit I/O rates and units
-- Built-in stabilization simplifies higher-level policies and improves robustness
+- Proposed physics/sensing substrate with explicit I/O targets and units
+- Low-level stabilization and robustness require implemented-controller evaluation
 - Parameterized terrain, control, noise, and stigmergy for reproducible experiments
 
 ## Further Technical Notes and References
 
-- **Dynamics and Engines**
-  - Typical stable physics step: $\Delta t \approx 1$ ms (1 kHz) with a $100\,\mathrm{Hz}$ control loop, as used in MuJoCo and similar engines.
-  - Engines: MuJoCo ([site](\href{https://mujoco.org/}{MuJoCo Physics Engine}); Todorov et al., IROS 2012: [IEEE Explore](\href{https://ieeexplore.ieee.org/}{IEEE Xplore}document/6386109)), PyBullet ([site](https://pybullet.org/wordpress/)).
-- **Leg Kinematics and Gaits**
-  - Practical hexapod configurations use 3--4 DOF per leg (e.g., hip yaw/pitch, knee, optional ankle) to reproduce tripod gaits and turning.
-  - Tripod gait overview and insect walking control: Cruse (1990) review ([Springer](https://link.springer.com/article/10.1007/BF00696943)) and summary ([Wikipedia](https://en.wikipedia.org/wiki/Tripod_gait)).
-- **Sensors**
-  - Polarization compass via ocelli/sky light: Wehner (2003) annual review on desert ant navigation ([Annual Reviews](https://www.annualreviews.org/doi/10.1146/annurev.ento.48.091801.112645)).
-  - Optic flow and landmark guidance in insects: Seelig & Jayaraman (2015) for orientation integration ([Nature](https://www.nature.com/articles/nature14581)).
-- **Pheromone Field (Environment Model)**
-  - Diffusion--decay dynamics follow Fick’s law with evaporation; see Fick’s laws ([Wikipedia](https://en.wikipedia.org/wiki/Fick%27s_laws_of_diffusion)) and ant colony trail models ([Wikipedia](https://en.wikipedia.org/wiki/Ant_colony_optimization_algorithms)).
-  - Contact modeling: Coulomb friction and restitution parameterization; terrain moisture can modulate slip
+- **Dynamics and engines:** [MuJoCo](https://mujoco.org/) and [PyBullet](https://pybullet.org/wordpress/) are possible simulation tools; a 1 ms step and 100 Hz control are proposed settings, not universal stability guarantees or benchmarks from those tools.
+- **Leg kinematics and gaits:** Three or four modeled DOF per leg is an engineering design option, not a calibrated ant morphology.
+- **Sensory/navigation context:** [Seelig and Jayaraman (2015), Neural dynamics for landmark orientation and angular path integration](https://doi.org/10.1038/nature14446), studies fly heading circuitry. It is not ant-specific evidence or proof of this controller's timing.
+- **Pheromone field:** Diffusion–decay is a proposed environment abstraction; specify space/time units, deposition, boundary conditions and numerical stability before using it to infer biological behavior.

@@ -1,13 +1,4 @@
-"""CLI subprocess tests for the three console-script entrypoints.
-
-Real subprocess execution against the project venv interpreters — no mocks.
---help / --validate-only paths are used so runs stay fast and side-effect free.
-
-The default subprocess timeout is generous (420s): each CLI invocation imports
-the full antstack_core package, which on a heavily loaded machine (parallel
-agent/pytest runs) can exceed two minutes before main() starts.
-"""
-
+"""Real CLI validation rejects bad inputs and never produces data in validation mode."""
 from __future__ import annotations
 
 import subprocess
@@ -17,67 +8,30 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _run(script: str, *args: str, timeout: int = 420) -> subprocess.CompletedProcess:
-    python = Path(sys.executable)
-    # Prefer the project venv console-script environment when present.
-    venv_python = PROJECT_ROOT / ".venv" / "bin" / "python"
-    interpreter = venv_python if venv_python.is_file() else python
-    return subprocess.run(
-        [str(interpreter), "-m", "antstack_core.cli." + script, *args],
-        capture_output=True,
-        text=True,
-        cwd=PROJECT_ROOT,
-        timeout=timeout,
-    )
+def _run(script, *args):
+    return subprocess.run([sys.executable, "-m", "antstack_core.cli." + script, *map(str, args)],
+                          cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=120)
 
 
-class TestAntstackBuild:
-    def test_help_exits_zero_and_documents_flags(self) -> None:
-        result = _run("build", "--help")
-        assert result.returncode == 0, result.stderr
-        for flag in ("--paper", "--validate-only", "--no-tests", "--project-root"):
-            assert flag in result.stdout
-
-    def test_module_help_matches_console_script_contract(self) -> None:
-        """python -m antstack_core.cli.build --help is the console-script target."""
-        result = _run("build", "--help")
-        assert "Modular Scientific Publication Build System" in result.stdout
+def test_ce_validation_has_no_output_side_effects(tmp_path):
+    output = tmp_path / "unused"
+    result = _run("ce", PROJECT_ROOT / "papers/complexity_energetics/manifest.example.yaml", "--validate-only", "--out", output)
+    assert result.returncode == 0, result.stderr
+    assert not output.exists()
 
 
-class TestAntstackCe:
-    def test_help_exits_zero_and_documents_flags(self) -> None:
-        result = _run("ce", "--help")
-        assert result.returncode == 0, result.stderr
-        for flag in ("--out", "--validate-only", "--verbose"):
-            assert flag in result.stdout
-
-    def test_validate_only_rejects_missing_manifest(self, tmp_path: Path) -> None:
-        result = _run("ce", str(tmp_path / "ghost.yaml"), "--validate-only")
-        assert result.returncode != 0
-
-    def test_validate_only_accepts_example_manifest(self) -> None:
-        manifest = PROJECT_ROOT / "papers" / "complexity_energetics" / "manifest.example.yaml"
-        if not manifest.is_file():
-            import pytest
-            pytest.skip("example manifest not present")
-        result = _run(
-            "ce", str(manifest), "--validate-only",
-            "--out", str(PROJECT_ROOT / "papers" / "complexity_energetics" / "out"),
-        )
-        assert result.returncode == 0, result.stderr
+def test_run_all_validation_has_no_output_side_effects(tmp_path):
+    output = tmp_path / "unused"
+    result = _run("run_all", "--config", PROJECT_ROOT / "configs/run_all_antstack.example.yaml",
+                  "--out", output, "--run-id", "validation-only", "--validate-only")
+    assert result.returncode == 0, result.stderr
+    assert not output.exists()
 
 
-class TestRunAllAntstack:
-    def test_help_exits_zero_and_documents_flags(self) -> None:
-        result = _run("run_all", "--help")
-        assert result.returncode == 0, result.stderr
-        for flag in ("--config", "--out", "--run-id", "--validate-only", "--tasks"):
-            assert flag in result.stdout
-
-    def test_validate_only_accepts_example_config(self) -> None:
-        config = PROJECT_ROOT / "configs" / "run_all_antstack.example.yaml"
-        if not config.is_file():
-            import pytest
-            pytest.skip("example config not present")
-        result = _run("run_all", "--config", str(config), "--validate-only")
-        assert result.returncode == 0, result.stderr
+def test_ce_rejects_zero_repeats_without_producing_an_output(tmp_path):
+    manifest = tmp_path / "invalid.yaml"
+    manifest.write_text("experiment_name: boundary\nseed: 7\nworkloads:\n  brain:\n    name: brain\n    duration_s: 0.01\n    repeats: 0\n    mode: closed_form\n")
+    output = tmp_path / "out"
+    result = _run("ce", manifest, "--out", output, "--validate-only")
+    assert result.returncode != 0
+    assert not output.exists()

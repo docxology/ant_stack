@@ -1,9 +1,9 @@
-### Table: Energy Coefficients (Device-Calibrated) {#tab:energy_coefficients}
+### Table: Assumed Energy Coefficients (Not Device-Calibrated) {#tab:energy_coefficients}
 
-| Component | Coefficient | Value | Units | Reference |
-|-----------|-------------|-------|-------|-----------|
-| FLOPs | $e_{\text{FLOP}}$ | 1.0 | pJ/FLOP | (Peng et al., 2019) |
-| SRAM | $e_{\text{SRAM}}$ | 0.10 | pJ/byte | (Micron Technology, 2023) |
-| DRAM | $e_{\text{DRAM}}$ | 20.0 | pJ/byte | (Micron Technology, 2023) |
-| Spikes | $E_{\text{spk}}$ | 1.0 | aJ/spike | (Kim et al., 2024) |
-| Baseline | $P_{\text{baseline}}$ | 0 | mW | System idle power |
+| Component | Value | Units | Basis |
+|-----------|-------|-------|-------|
+| FLOPs | 1 | pJ/FLOP | Default model assumption, not measured calibration |
+| SRAM | 0.1 | pJ/byte | Default model assumption, not measured calibration |
+| DRAM | 20 | pJ/byte | Default model assumption, not measured calibration |
+| Spikes | 1 | aJ/spike | Default model assumption, not measured calibration |
+| Idle baseline per isolated module | 0.5 | W | Default model assumption, not measured calibration |

@@ -26,7 +26,6 @@ import json
 import sys
 import os
 from pathlib import Path
-import yaml
 
 # Add the new core package to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -267,50 +266,6 @@ class TestCoreFigures(unittest.TestCase):
             pass
 
 
-class TestPaperConfiguration(unittest.TestCase):
-    """Test paper configuration and validation system."""
-    
-    def test_paper_config_loading(self):
-        """Test paper configuration file loading and validation."""
-        # Test ant_stack configuration
-        ant_stack_config = Path("papers/ant_stack/paper_config.yaml")
-        if ant_stack_config.exists():
-            with open(ant_stack_config, 'r') as f:
-                config = yaml.safe_load(f)
-            
-            # Validate required sections
-            self.assertIn('paper', config)
-            self.assertIn('content', config)
-            self.assertIn('build', config)
-            
-            # Validate paper metadata
-            paper_info = config['paper']
-            self.assertEqual(paper_info['name'], 'ant_stack')
-            self.assertIn('title', paper_info)
-            self.assertIn('author', paper_info)
-            
-            # Validate content structure
-            content = config['content']
-            self.assertIn('files', content)
-            self.assertIsInstance(content['files'], list)
-        
-        # Test complexity_energetics configuration  
-        ce_config = Path("papers/complexity_energetics/paper_config.yaml")
-        if ce_config.exists():
-            with open(ce_config, 'r') as f:
-                config = yaml.safe_load(f)
-                
-            # Validate computational analysis features
-            self.assertIn('analysis', config)
-            analysis = config['analysis']
-            self.assertIn('generated_figures', analysis)
-            
-            # Validate energy coefficients
-            self.assertIn('energy_coefficients', config)
-            coeffs = config['energy_coefficients']
-            self.assertIn('e_flop_pj', coeffs)
-            self.assertIn('baseline_w', coeffs)
-            self.assertEqual(coeffs['baseline_w'], 0.50)  # Should match paper config
 
 
 class TestIntegrationWorkflow(unittest.TestCase):

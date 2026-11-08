@@ -17,6 +17,20 @@ from dataclasses import dataclass, asdict
 from typing import Dict, Any, Optional, Tuple
 import math
 
+from numbers import Real
+
+
+def _require_nonnegative(name: str, value: float) -> None:
+    """Reject nonfinite or negative physical quantities; zero is meaningful."""
+    if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value) or value < 0:
+        raise ValueError(f"{name} must be finite and non-negative")
+
+
+def _require_positive(name: str, value: float) -> None:
+    _require_nonnegative(name, value)
+    if value == 0:
+        raise ValueError(f"{name} must be positive")
+
 
 @dataclass(frozen=True)
 class EnergyCoefficients:
@@ -48,6 +62,10 @@ class EnergyCoefficients:
     
     # System baseline power
     baseline_w: float = 0.50  # Matches paper config (was 0.0)
+
+    def __post_init__(self) -> None:
+        for name, value in asdict(self).items():
+            _require_nonnegative(name, value)
     
     def to_dict(self) -> Dict[str, float]:
         """Convert to dictionary for serialization and analysis."""
@@ -65,6 +83,7 @@ class EnergyCoefficients:
         Note: This is a rough approximation. Actual scaling depends on
         circuit design, voltage scaling, and process variations.
         """
+        _require_positive("node_nm", node_nm)
         # Rough scaling based on technology trends
         scale_factor = (node_nm / 7.0) ** 1.5  # Empirical approximation
         
@@ -98,9 +117,16 @@ class ComputeLoad:
     # Additional optional metrics
     memory_bandwidth_gb_s: float = 0.0  # Memory bandwidth utilization
     cache_hit_rate: float = 0.95        # Cache hit rate (0.0 to 1.0)
+
+    def __post_init__(self) -> None:
+        for name, value in asdict(self).items():
+            _require_nonnegative(name, value)
+        if self.cache_hit_rate > 1:
+            raise ValueError("cache_hit_rate must be in [0, 1]")
     
     def scale(self, factor: float) -> 'ComputeLoad':
         """Scale all load components by a constant factor."""
+        _require_nonnegative("factor", factor)
         return ComputeLoad(
             flops=self.flops * factor,
             sram_bytes=self.sram_bytes * factor,
@@ -136,6 +162,11 @@ class EnergyBreakdown:
     
     # Uncertainty quantification
     total_uncertainty: float = 0.0  # Total uncertainty estimate (J)
+
+    def __post_init__(self) -> None:
+        for name, value in asdict(self).items():
+            _require_nonnegative(name, value)
+        _require_nonnegative("total energy", self.total)
     
     @property
     def total_compute(self) -> float:
@@ -205,6 +236,9 @@ def estimate_detailed_energy(
         - Energy modeling methodology: https://doi.org/10.1145/2485922.2485949
         - System-level energy analysis: https://doi.org/10.1109/MC.2003.1250885
     """
+    _require_nonnegative("duration_s", duration_s)
+    _require_nonnegative("actuation_energy", actuation_energy)
+    _require_nonnegative("sensing_energy", sensing_energy)
     # Digital computation energy
     compute_flops_j = pj_to_j(load.flops * coeffs.flops_pj)
     
@@ -366,7 +400,7 @@ def integrate_power_to_energy(power_watts: list[float], timestamps_s: list[float
     """Compute energy in Joules by trapezoidal integration of power over time.
 
     Lists must be the same length (≥ 2) and timestamps strictly increasing.
-    Returns 0.0 for invalid inputs.
+    Raises ValueError for invalid physical samples or time axes.
     
     Args:
         power_watts: List of power measurements in watts
@@ -377,14 +411,18 @@ def integrate_power_to_energy(power_watts: list[float], timestamps_s: list[float
     """
     n = len(power_watts)
     if n < 2 or n != len(timestamps_s):
-        return 0.0
+        raise ValueError("Power and timestamp sequences must have equal lengths >= 2")
+    for power in power_watts:
+        _require_nonnegative("power_watts", power)
+    if not all(math.isfinite(t) for t in timestamps_s):
+        raise ValueError("Timestamps must be finite")
     e = 0.0
     for i in range(n - 1):
         dt = timestamps_s[i + 1] - timestamps_s[i]
         if dt <= 0:
-            continue
-        p_avg = max(0.0, (power_watts[i] + power_watts[i + 1]) / 2.0)
-        e += p_avg * dt
+            raise ValueError("Timestamps must be strictly increasing")
+        e += (power_watts[i] + power_watts[i + 1]) / 2.0 * dt
+    _require_nonnegative("integrated energy", e)
     return e
 
 
@@ -403,6 +441,7 @@ def estimate_compute_energy(load: ComputeLoad, coeffs: EnergyCoefficients) -> fl
     e += pj_to_j(coeffs.sram_pj_per_byte) * load.sram_bytes
     e += pj_to_j(coeffs.dram_pj_per_byte) * load.dram_bytes
     e += aj_to_j(coeffs.spike_aj) * load.spikes
+    _require_nonnegative("compute energy", e)
     return e
 
 
@@ -417,9 +456,11 @@ def add_baseline_energy(energy_j: float, duration_s: float, coeffs: EnergyCoeffi
     Returns:
         Total energy including baseline
     """
-    if coeffs.baseline_w <= 0.0 or duration_s <= 0.0:
-        return energy_j
-    return energy_j + coeffs.baseline_w * duration_s
+    _require_nonnegative("energy_j", energy_j)
+    _require_nonnegative("duration_s", duration_s)
+    total = energy_j + coeffs.baseline_w * duration_s
+    _require_nonnegative("total energy", total)
+    return total
 
 
 def cost_of_transport(energy_j: float, mass_kg: float, distance_m: float) -> float:
@@ -434,10 +475,11 @@ def cost_of_transport(energy_j: float, mass_kg: float, distance_m: float) -> flo
         distance_m: Distance traveled in meters
         
     Returns:
-        Cost of Transport (dimensionless), or 0 for invalid inputs
+        Cost of Transport (dimensionless); invalid domains raise ValueError
     """
-    if energy_j <= 0.0 or mass_kg <= 0.0 or distance_m <= 0.0:
-        return 0.0
+    _require_nonnegative("energy_j", energy_j)
+    _require_positive("mass_kg", mass_kg)
+    _require_positive("distance_m", distance_m)
     return energy_j / (mass_kg * GRAVITY_M_S2 * distance_m)
 
 
@@ -457,6 +499,10 @@ def calculate_landauer_limit(bits_erased: float, temperature_k: float = 300.0) -
         - Landauer's principle: https://doi.org/10.1147/rd.53.0183
         - Quantum limits of computation: https://doi.org/10.1103/PhysRevLett.85.441
     """
+    _require_nonnegative("bits_erased", bits_erased)
+    _require_positive("temperature_k", temperature_k)
     k_boltzmann = 1.380649e-23  # J/K (Boltzmann constant)
-    return bits_erased * k_boltzmann * temperature_k * math.log(2)
+    energy = bits_erased * k_boltzmann * temperature_k * math.log(2)
+    _require_nonnegative("Landauer energy", energy)
+    return energy
 

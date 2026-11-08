@@ -28,6 +28,46 @@ from antstack_core.analysis.energy import (
     calculate_landauer_limit, GRAVITY_M_S2
 )
 
+class TestPhysicalDomains(unittest.TestCase):
+    def test_all_coefficients_reject_nonfinite_and_negative_values(self):
+        for field in EnergyCoefficients.__dataclass_fields__:
+            for bad in (-1.0, float('nan'), float('inf'), -float('inf')):
+                with self.subTest(field=field, bad=bad), self.assertRaises(ValueError):
+                    EnergyCoefficients(**{field: bad})
+            self.assertEqual(getattr(EnergyCoefficients(**{field: 0.0}), field), 0.0)
+
+    def test_load_and_breakdown_domains(self):
+        for cls in (ComputeLoad, EnergyBreakdown):
+            for field in cls.__dataclass_fields__:
+                for bad in (-1.0, float('nan'), float('inf')):
+                    with self.subTest(cls=cls, field=field, bad=bad), self.assertRaises(ValueError):
+                        cls(**{field: bad})
+        with self.assertRaises(ValueError):
+            ComputeLoad(cache_hit_rate=1.01)
+        with self.assertRaises(ValueError):
+            ComputeLoad().scale(-1)
+
+    def test_invalid_duration_physics_and_temperature(self):
+        for bad in (-1.0, float('nan'), float('inf')):
+            for keyword in ('duration_s', 'actuation_energy', 'sensing_energy'):
+                with self.subTest(keyword=keyword, bad=bad), self.assertRaises(ValueError):
+                    estimate_detailed_energy(ComputeLoad(), EnergyCoefficients(), **{keyword: bad})
+            with self.assertRaises(ValueError):
+                add_baseline_energy(0, bad, EnergyCoefficients())
+            with self.assertRaises(ValueError):
+                calculate_landauer_limit(bad)
+        for temperature in (0, -1, float('nan'), float('inf')):
+            with self.assertRaises(ValueError):
+                calculate_landauer_limit(1, temperature)
+
+    def test_invalid_power_is_not_reported_as_zero_energy(self):
+        for bad in (-1.0, float('nan'), float('inf')):
+            with self.assertRaises(ValueError):
+                integrate_power_to_energy([1, bad], [0, 1])
+        with self.assertRaises(ValueError):
+            integrate_power_to_energy([1, 1], [0, float('nan')])
+
+
 
 class TestEnergyCoefficients(unittest.TestCase):
     """Test EnergyCoefficients class functionality."""
@@ -319,18 +359,10 @@ class TestPowerIntegration(unittest.TestCase):
 
     def test_integrate_power_to_energy_edge_cases(self):
         """Test edge cases for power integration."""
-        # Empty inputs
-        self.assertEqual(integrate_power_to_energy([], []), 0.0)
-
-        # Single point
-        self.assertEqual(integrate_power_to_energy([1.0], [0.0]), 0.0)
-
-        # Mismatched lengths
-        self.assertEqual(integrate_power_to_energy([1.0], [0.0, 1.0]), 0.0)
-
-        # Negative timestamps (should still work)
-        energy = integrate_power_to_energy([1.0, 2.0], [1.0, 0.0])
-        self.assertEqual(energy, 0.0)  # dt negative, skipped
+        for power, times in (([], []), ([1.0], [0.0]), ([1.0], [0.0, 1.0]), ([1.0, 2.0], [1.0, 0.0]), ([1.0, 2.0], [0.0, 0.0])):
+            with self.subTest(power=power, times=times), self.assertRaises(ValueError):
+                integrate_power_to_energy(power, times)
+        self.assertEqual(integrate_power_to_energy([1.0, 2.0], [-1.0, 0.0]), 1.5)
 
 
 class TestCostOfTransport(unittest.TestCase):
@@ -352,14 +384,9 @@ class TestCostOfTransport(unittest.TestCase):
         # Zero energy
         self.assertEqual(cost_of_transport(0.0, 1.0, 1.0), 0.0)
 
-        # Zero mass
-        self.assertEqual(cost_of_transport(1.0, 0.0, 1.0), 0.0)
-
-        # Zero distance
-        self.assertEqual(cost_of_transport(1.0, 1.0, 0.0), 0.0)
-
-        # Negative values
-        self.assertEqual(cost_of_transport(-1.0, 1.0, 1.0), 0.0)
+        for energy, mass, distance in ((1, 0, 1), (1, 1, 0), (-1, 1, 1), (1, float('nan'), 1), (1, 1, float('inf'))):
+            with self.subTest(energy=energy, mass=mass, distance=distance), self.assertRaises(ValueError):
+                cost_of_transport(energy, mass, distance)
 
 
 class TestLandauerLimit(unittest.TestCase):
@@ -373,7 +400,7 @@ class TestLandauerLimit(unittest.TestCase):
         limit = calculate_landauer_limit(bits, temp_k)
         expected = bits * 1.380649e-23 * temp_k * math.log(2)
 
-        self.assertAlmostEqual(limit, expected, places=10)
+        self.assertTrue(math.isclose(limit, expected, rel_tol=1e-14))
 
     def test_landauer_limit_room_temperature(self):
         """Test Landauer limit at room temperature."""

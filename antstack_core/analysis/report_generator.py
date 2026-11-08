@@ -94,7 +94,7 @@ class ReportGenerator:
                 self._write_detailed_analysis(f, evidence, case_studies)
 
             if self.include_methodology:
-                self._write_methodology(f)
+                self._write_methodology(f, evidence)
 
             if self.include_references:
                 self._write_references(f)
@@ -107,27 +107,26 @@ class ReportGenerator:
     def _write_executive_summary(self, f, evidence: EmpiricalEvidence, case_studies: List[CaseStudy]):
         """Write executive summary section."""
         f.write("## Executive Summary\n\n")
-        f.write("This report presents comprehensive empirical analysis of computational complexity ")
-        f.write("and energy consumption in embodied AI systems. All findings are based on ")
-        f.write("rigorous statistical analysis with full uncertainty quantification and ")
-        f.write("reproducibility validation.\n\n")
-
-        # Key Findings
-        f.write("### Key Empirical Findings\n\n")
+        f.write("This report summarizes the supplied computational-complexity and energy data. ")
+        f.write(f"Data source: {evidence.data_source}; source kind: {evidence.source_kind}. ")
+        f.write("Descriptive precision does not establish significance, external validation, or replication.\n\n")
+        f.write("### Supplied Hypothesis-Test Findings\n\n")
 
         # Statistical significance
         significant_findings = self._extract_significant_findings(evidence)
         if significant_findings:
-            f.write("**Statistically Significant Results:**\n")
+            f.write("**Supplied statistically significant tests (not independently verified):**\n")
             for finding in significant_findings:
                 f.write(f"{finding}\n")
             f.write("\n")
+        else:
+            f.write("No qualifying hypothesis-test records were supplied.\n\n")
 
         # Quality Assessment
         f.write("### Data Quality Assessment\n\n")
         f.write("**Validation Checks:**\n")
         for check, passed in evidence.validation_checks.items():
-            status = "✓ PASS" if passed else "✗ FAIL"
+            status = "NOT PERFORMED / UNKNOWN" if passed is None else ("PASS" if passed is True else "FAIL")
             f.write(f"- {check.replace('_', ' ').title()}: {status}\n")
 
         f.write("\n**Quality Metrics:**\n")
@@ -146,26 +145,28 @@ class ReportGenerator:
         # Case Studies
         self._write_case_studies(f, case_studies)
 
+    @staticmethod
+    def _format_stat(value):
+        return f"{value:g}" if isinstance(value, (int, float)) and math.isfinite(value) else "N/A"
+
+    @classmethod
+    def _format_interval(cls, interval):
+        if interval is None or any(value is None or not math.isfinite(value) for value in interval):
+            return "N/A"
+        return f"[{cls._format_stat(interval[0])}, {cls._format_stat(interval[1])}]"
+
     def _write_raw_data_summary(self, f, evidence: EmpiricalEvidence):
-        """Write raw data summary table."""
+        """Show unavailable singleton sampling statistics rather than invented precision."""
+        confidence = evidence.analysis_parameters.get("statistics", {}).get("confidence_level", 0.95)
         f.write("### Raw Data Summary\n\n")
-        f.write("| Parameter | N | Mean | Std | 95% CI |\n")
+        f.write(f"| Parameter | N | Mean | Std | {100 * confidence:g}% percentile-bootstrap CI |\n")
         f.write("|-----------|---|------|-----|--------|\n")
-
         for key, values in evidence.raw_measurements.items():
-            n = len(values)
-            mean_key = f"{key}_mean"
-            std_key = f"{key}_std"
-            ci_key = f"{key}_95ci"
-
-            if mean_key in evidence.statistical_metrics:
-                mean_val = evidence.statistical_metrics[mean_key]
-                std_val = evidence.statistical_metrics[std_key]
-                ci_low, ci_high = evidence.confidence_intervals[ci_key]
-
-                f.write(f"| {key} | {n} | {mean_val:.3f} | {std_val:.3f} | [{ci_low:.3f}, {ci_high:.3f}] |\n")
-
-        f.write("\n")
+            summary = evidence.get_parameter_summary(key)
+            std = summary["std"] if len(values) > 1 else None
+            interval = summary["confidence_interval"] if len(values) > 1 else None
+            f.write(f"| {key} | {len(values)} | {self._format_stat(summary['mean'])} | {self._format_stat(std)} | {self._format_interval(interval)} |\n")
+        f.write("\nN/A: sampling uncertainty cannot be estimated from a singleton. Degenerate intervals for repeated constants describe only the supplied resampling distribution.\n\n")
 
     def _write_case_studies(self, f, case_studies: List[CaseStudy]):
         """Write case studies section."""
@@ -214,20 +215,21 @@ class ReportGenerator:
                 else:
                     f.write(f"  - Value: {result_data}\n")
 
-    def _write_methodology(self, f):
-        """Write methodology section."""
-        f.write("## Methodology\n\n")
-        f.write("### Statistical Methods\n\n")
-        f.write("- **Bootstrap Analysis:** 1000 samples with bias correction\n")
-        f.write("- **Confidence Intervals:** 95% confidence level\n")
-        f.write("- **Uncertainty Quantification:** Standard error propagation\n")
-        f.write("- **Validation:** Cross-validation and independent testing\n\n")
-
-        f.write("### Reproducibility Standards\n\n")
-        f.write("- **Data Availability:** All raw data provided\n")
-        f.write("- **Software:** Open-source implementation\n")
-        f.write("- **Parameters:** Complete parameter documentation\n")
-        f.write("- **Validation:** Independent replication verified\n\n")
+    def _write_methodology(self, f, evidence: Optional[EmpiricalEvidence] = None):
+        """Describe recorded methods only; never infer validation from a template."""
+        f.write("## Methodology\n\n### Statistical Methods\n\n")
+        method = evidence.analysis_parameters.get("statistics", {}) if evidence else {}
+        if method:
+            f.write(f"- Interval method: {method.get('interval_method', 'not recorded')}\n")
+            f.write(f"- Resamples: {method.get('bootstrap_samples', 'not recorded')}\n")
+            confidence = method.get("confidence_level")
+            f.write(f"- Confidence level: {100 * confidence:g}%\n" if confidence is not None else "- Confidence level: not recorded\n")
+            f.write(f"- Local random seed: {method.get('random_seed', 'not recorded')}\n")
+        else:
+            f.write("Statistical interval methods were not recorded.\n")
+        f.write("\nStandard errors, where available, estimate sampling variation in the supplied values only. ")
+        f.write("Quality scores are descriptive heuristics, not power or hypothesis tests. ")
+        f.write("Cross-validation and independent replication are not established by this report; consult supplied validation records.\n\n")
 
     def _write_references(self, f):
         """Write references section."""
@@ -239,21 +241,20 @@ class ReportGenerator:
         f.write("- Energy scaling analysis: https://ieeexplore.ieee.org/document/8845760\n")
 
     def _extract_significant_findings(self, evidence: EmpiricalEvidence) -> List[str]:
-        """Extract statistically significant findings."""
-        significant_findings = []
-        for key, metrics in evidence.statistical_metrics.items():
-            if "mean" in key and key.replace("_mean", "_95ci") in evidence.confidence_intervals:
-                ci_key = key.replace("_mean", "_95ci")
-                ci_low, ci_high = evidence.confidence_intervals[ci_key]
-                mean_val = metrics
-
-                if ci_high - ci_low < 0.1 * abs(mean_val):  # Narrow confidence interval
-                    significant_findings.append(
-                        f"- **{key.replace('_mean', '')}**: {mean_val:.3f} "
-                        f"(95% CI: [{ci_low:.3f}, {ci_high:.3f}])"
-                    )
-
-        return significant_findings
+        """Select explicit supplied tests, never classify narrow CIs as significance."""
+        findings = []
+        for name, record in evidence.hypothesis_tests.items():
+            if not isinstance(record, dict):
+                continue
+            p_value = record.get("p_value")
+            alpha = record.get("alpha")
+            if (record.get("testable") is True and record.get("null_hypothesis")
+                    and record.get("method")
+                    and isinstance(p_value, (int, float)) and math.isfinite(p_value)
+                    and isinstance(alpha, (int, float)) and math.isfinite(alpha)
+                    and 0 <= p_value < alpha < 1):
+                findings.append(f"- **{name}**: p={p_value:g}, alpha={alpha:g}; {record['method']}; null: {record['null_hypothesis']}")
+        return findings
 
     def _save_supporting_data(self,
                             evidence: EmpiricalEvidence,
@@ -272,6 +273,10 @@ class ReportGenerator:
                 "experiment_id": evidence.experiment_id,
                 "timestamp": evidence.timestamp,
                 "raw_measurements": evidence.raw_measurements,
+                "data_source": evidence.data_source,
+                "source_kind": evidence.source_kind,
+                "software_versions": evidence.software_versions,
+                "hardware_specifications": evidence.hardware_specifications,
                 "measurement_uncertainty": evidence.measurement_uncertainty
             }, f, indent=2, default=str)
 
@@ -282,7 +287,9 @@ class ReportGenerator:
                 "statistical_metrics": evidence.statistical_metrics,
                 "confidence_intervals": evidence.confidence_intervals,
                 "validation_checks": evidence.validation_checks,
-                "quality_metrics": evidence.quality_metrics
+                "quality_metrics": evidence.quality_metrics,
+                "hypothesis_tests": evidence.hypothesis_tests,
+                "analysis_parameters": evidence.analysis_parameters,
             }, f, indent=2, default=str)
 
         # Save case studies
@@ -321,17 +328,21 @@ class ReportGenerator:
             f.write(f"- **Parameters Analyzed:** {len(evidence.raw_measurements)}\n")
             f.write(f"- **Case Studies:** {len(case_studies)}\n")
             f.write(f"- **Quality Score:** {evidence.get_quality_score():.3f}\n")
-            f.write(f"- **Validation Checks Passed:** {sum(evidence.validation_checks.values())}/{len(evidence.validation_checks)}\n\n")
+            passed = sum(value is True for value in evidence.validation_checks.values())
+            unknown = sum(value is None for value in evidence.validation_checks.values())
+            f.write(f"- **Validation Checks Passed:** {passed}/{len(evidence.validation_checks)}; unknown/unperformed: {unknown}\n\n")
 
             # Parameter summary
             f.write("## Parameter Summary\n\n")
-            f.write("| Parameter | Mean | Uncertainty | 95% CI |\n")
+            confidence = evidence.analysis_parameters.get("statistics", {}).get("confidence_level", 0.95)
+            f.write(f"| Parameter | Mean | Uncertainty | {100 * confidence:g}% percentile-bootstrap CI |\n")
             f.write("|-----------|------|-------------|--------|\n")
 
             for param in evidence.raw_measurements.keys():
                 summary = evidence.get_parameter_summary(param)
                 if summary:
-                    f.write(f"| {param} | {summary['mean']:.3f} | {summary['uncertainty']:.3f} | [{summary['confidence_interval'][0]:.3f}, {summary['confidence_interval'][1]:.3f}] |\n")
+                    interval = summary['confidence_interval'] if summary['n_measurements'] > 1 else None
+                    f.write(f"| {param} | {self._format_stat(summary['mean'])} | {self._format_stat(summary['uncertainty'])} | {self._format_interval(interval)} |\n")
 
             f.write("\n")
 

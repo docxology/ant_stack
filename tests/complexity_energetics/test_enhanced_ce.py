@@ -33,6 +33,37 @@ from antstack_core.analysis.workloads import (
     calculate_active_inference_complexity, enhanced_body_workload_closed_form,
     enhanced_brain_workload_closed_form, enhanced_mind_workload_closed_form
 )
+def test_strategy_budgets_control_actual_work_and_all_energy_components(tmp_path, monkeypatch):
+    from antstack_core.analysis import ce_active_inference as active
+    monkeypatch.setattr(active, 'bar_plot', lambda *args, **kwargs: None)
+    result = active.analyze_bounded_rationality(12, 4, 16, 6, tmp_path)
+    counts = {'No Bounds': 4 ** 12, 'Policy Sampling': 1000, 'Hierarchical': 1000, 'Conservative': 100}
+    per_policy_j = 2950e-12 + 156 * (.8 * .1 + .2 * 20) * 1e-12
+    for name, count in counts.items():
+        factor = 1.5 if name == 'Hierarchical' else 1.0
+        assert result[name]['effective_policies'] == count
+        assert result[name]['flops'] == count * 2950 * factor
+        assert math.isclose(result[name]['energy_total'], .5 * .01 + count * factor * per_policy_j, rel_tol=1e-14)
+    assert result['Policy Sampling']['flops'] == 10 * result['Conservative']['flops']
+    assert result['No Bounds']['model'] != result['Policy Sampling']['model']
+
+
+def test_comparative_adapters_use_only_supported_distinct_models(tmp_path, monkeypatch):
+    from antstack_core.analysis import ce_contact_dynamics as contact
+    from antstack_core.analysis import ce_neural_networks as neural
+    monkeypatch.setattr(contact, 'line_plot', lambda *args, **kwargs: None)
+    monkeypatch.setattr(neural, 'line_plot', lambda *args, **kwargs: None)
+    solvers = contact.analyze_solver_comparison([4, 8, 12], tmp_path)
+    assert set(solvers) == {'pgs', 'si', 'ldlt', 'plots'}
+    assert solvers['pgs']['flops'][-1] == 17280
+    assert solvers['si']['flops'][-1] == 6264
+    assert solvers['ldlt']['flops'][-1] == 52488
+    patterns = neural.analyze_connectivity_patterns([1000, 10000, 100000], .02, tmp_path)
+    assert set(patterns) == {'random', 'structured', 'plots'}
+    assert patterns['random']['flops'][1] == 40000
+    assert math.isclose(patterns['structured']['flops'][1], 200 * math.log(10000), rel_tol=1e-14)
+
+
 
 
 class TestEnhancedEstimators(unittest.TestCase):
@@ -188,13 +219,11 @@ class TestEnhancedWorkloads(unittest.TestCase):
         flops_large, _, _ = calculate_contact_complexity(20, 12, "pgs")
         self.assertGreater(flops_large, flops_small)
 
-        # Test different solvers
-        flops_lcp, _, _ = calculate_contact_complexity(10, 12, "lcp")
-        flops_mlcp, _, _ = calculate_contact_complexity(10, 12, "mlcp")
-
-        # Different solvers should be callable and return valid results
-        self.assertGreaterEqual(flops_lcp, 0)
-        self.assertGreaterEqual(flops_mlcp, 0)
+        self.assertEqual(calculate_contact_complexity(10, 12, 'si'), (12 * 10 * 20 + 10 ** 3 / 3, 10 ** 2 * 8 + 12 * 12 * 8, 1))
+        self.assertEqual(calculate_contact_complexity(10, 12, 'ldlt'), ((10 + 3 * 12) ** 3 / 3, (10 + 3 * 12) ** 2 * 8, 1))
+        for unsupported in ('lcp', 'mlcp'):
+            with self.assertRaises(ValueError):
+                calculate_contact_complexity(10, 12, unsupported)
         
         # Test edge cases
         flops_zero, memory_zero, _ = calculate_contact_complexity(0, 1, "pgs")
@@ -207,7 +236,7 @@ class TestEnhancedWorkloads(unittest.TestCase):
         sparsity = 0.02
         
         # Test different connectivity patterns
-        patterns = ["random", "small_world", "scale_free", "biological"]
+        patterns = ['random', 'structured']
         
         for pattern in patterns:
             flops, memory, spikes = calculate_sparse_neural_complexity(
@@ -243,17 +272,11 @@ class TestEnhancedWorkloads(unittest.TestCase):
         self.assertGreater(flops, 0)
         self.assertGreater(memory, 0)
         
-        # Test scaling with horizon (should be exponential but bounded)
-        flops_short, _ = calculate_active_inference_complexity(2, 3, 10, 4)
-        flops_long, _ = calculate_active_inference_complexity(8, 3, 10, 4)
-        self.assertGreater(flops_long, flops_short)
-        
-        # Test bounded rationality (large policy spaces should be limited)
-        flops_huge, _ = calculate_active_inference_complexity(10, 5, 10, 4)
-        # With our implementation, large horizons still create large FLOP counts
-        # but the function should not crash and should return reasonable values
-        self.assertGreater(flops_huge, 0)  # Should be positive
-        self.assertLess(flops_huge, 10**15)  # Should not be astronomically large
+        # This API enumerates the full tree; it is not the budgeted policy model.
+        flops_huge, memory_huge = calculate_active_inference_complexity(10, 5, 10, 4)
+        nodes = sum(5 ** depth for depth in range(11))
+        self.assertEqual(flops_huge, nodes * (10 * 10 * 10 + 4 * 3 * 5 + (10 + 4) * 3))
+        self.assertEqual(memory_huge, nodes * 14 * 8 + 10 * 10 * 8 + 3 * 4 * 8)
         
         # Test edge cases
         flops_zero, memory_zero = calculate_active_inference_complexity(0, 3, 10, 4)
@@ -279,7 +302,7 @@ class TestEnhancedWorkloads(unittest.TestCase):
         # Test enhanced brain workload
         brain_params = {
             "K": 128, "N_KC": 50000, "rho": 0.02, "H": 64, "hz": 100,
-            "connectivity_pattern": "biological"
+            'connectivity_pattern': 'random'
         }
         brain_load = enhanced_brain_workload_closed_form(duration, brain_params)
         
@@ -396,10 +419,6 @@ class TestIntegration(unittest.TestCase):
         # Energy should increase with sparsity (more active neurons)
         self.assertGreater(energy_values[-1], energy_values[0])
         
-        # Should be roughly linear relationship
-        scaling = analyze_scaling_relationship(sparsity_values, energy_values)
-        if 'scaling_exponent' in scaling:
-            self.assertAlmostEqual(scaling['scaling_exponent'], 1.0, delta=0.5)
 
 
 if __name__ == '__main__':

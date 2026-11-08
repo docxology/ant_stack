@@ -1,97 +1,27 @@
-# Common Pipeline Scripts
+# Publication Pipeline Wrappers: Validation Is Not Repair or Release
 
-Shared infrastructure and build system scripts used across all papers and analyses.
+These project-owned helpers delegate to package-owned paper, formatting and provenance APIs. Caller-owned manuscript/config files and native renderers remain prerequisites; installed `antstack-build` does not import this scripts directory.
 
-## Purpose
+## Build Configured Sources and Run Tests Separately
 
-This directory contains the core build system, validation tools, and infrastructure scripts that support the entire Ant Stack research pipeline, including:
-
-- Modular paper building system
-- Cross-reference validation and repair
-- Citation and formatting tools
-- Test suite execution
-- Build automation and deployment
-
-## Scripts
-
-### Build System
-- `build_core.py` - Modular paper builder with validation and testing
-- `build_papers.sh` - Legacy build script for compatibility
-- `unified_build.py` - Unified build system for all papers
-
-### Validation and Testing
-- `run_validation_suite.py` - Comprehensive test suite execution
-- `test_ce_runner.py` - Test runner for complexity-energetics components
-
-### Text Processing and Formatting
-- `comprehensive_formatting_fix.py` - Automated document formatting
-- `update_paper_key_numbers.py` - Automated key-number placeholder updates for paper sections
-- Cross-reference validation and repair is handled automatically by the build system
-- `diagnose_crossref_issue.py` - Diagnostic tools for cross-reference issues
-
-### Pipeline Utilities
-- `trace_pipeline.py` - Pipeline execution tracing and debugging
-
-## Key Features
-
-- **Modular Build System**: Supports multiple papers with shared infrastructure
-- **Automated Validation**: Cross-reference checking, citation validation, format compliance
-- **Comprehensive Testing**: Unit tests, integration tests, performance benchmarks
-- **Build Optimization**: Parallel processing, caching, incremental builds
-- **Error Recovery**: Automated repair tools for common issues
-
-## Usage
-
-### Building Papers
 ```bash
-# Build specific paper with validation
+uv run antstack-build --validate-only
 uv run antstack-build --paper complexity_energetics
-
-# Build all papers
 uv run antstack-build
-
-# Validation only mode
-uv run antstack-build --validate-only
+uv run pytest -q
+uv run ruff check .
 ```
 
-### Validation and Repair
-```bash
-# Fix cross-references automatically
-uv run antstack-build --validate-only
+All-paper validation regenerates ignored `build_report.md`; it does not produce PDFs or certify earlier products. Actual build failure is nonzero. Tests are not implicitly run by paper building. `build_papers.sh` is a thin checkout launcher, not another build engine.
 
-# Run comprehensive validation
-python scripts/common_pipeline/run_validation_suite.py
+## Preserve Scientific Targets Instead of Guessing Repairs
 
-# Format documents
-python scripts/common_pipeline/comprehensive_formatting_fix.py
-```
+The reference manager checks declared keys/counters; it cannot infer a missing citation, scientific identity or intended figure. Fix unresolved targets at their authoritative sources. Explicit formatting or key-number tools are author-invoked mutations, not an automatic build repair pass. Key-number updates act on declared placeholders, not arbitrary matching literals.
 
-### Testing
-```bash
-# Run all tests
-python scripts/common_pipeline/run_validation_suite.py --test
+## Use One Source of Truth for Commands and Evidence
 
-# Run specific test suite
-python scripts/common_pipeline/test_ce_runner.py
-```
+- [PDF rendering](../../PDF_RENDERING_GUIDE.md): supported syntax, toolchain, ordered-source/resource context and actual render proof.
+- [Validation](../../docs/validation.md): native gates, installed-wheel smoke and separate remote main/tag/release observations.
+- [Reproducibility](../../docs/reproducibility.md): fresh canonical families, current byte identities and owned projections.
 
-## Dependencies
-
-- `antstack_core` package
-- pandoc for document processing
-- LaTeX distribution (xelatex) for PDF generation
-- Standard Python scientific libraries
-- pytest for testing framework
-
-## Configuration
-
-Build system uses YAML configuration files in each paper directory:
-- `paper_config.yaml` - Paper-specific settings
-- `manifest.example.yaml` - Analysis parameters and energy coefficients
-
-## Output
-
-- PDF documents in paper directories
-- Validation reports and error logs
-- Test results and coverage reports
-- Build artifacts and intermediate files
+Raw TeX/templates are trusted author input, not a sandbox. No browser-sandbox bypass, implicit remote render upload, fabricated result, registry publisher or deployment permission is supplied by these wrappers.

@@ -18,6 +18,7 @@ Following .cursorrules principles:
 
 import unittest
 import math
+import random
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -330,7 +331,7 @@ class TestScalingAnalyzer(unittest.TestCase):
 
         regime_info = self.analyzer.detect_scaling_regime(none_result)
         self.assertEqual(regime_info["regime"], "invalid")
-        self.assertEqual(regime_info["confidence"], 0.0)
+        self.assertIsNone(regime_info["confidence"])
 
     def test_compare_scaling_regimes(self):
         """Test comparison of scaling regimes."""
@@ -391,159 +392,17 @@ class TestScalingAnalyzer(unittest.TestCase):
         self.assertIn("error", comparison)
         self.assertEqual(comparison["error"], "No valid scaling results")
 
-    def test_generate_scaling_report(self):
-        """Test scaling report generation."""
-        scaling_result = ScalingResult(
-            parameter_name="complexity",
-            parameter_values=[1, 2, 4, 8],
-            response_values=[1, 1.5, 2.0, 2.5],
-            scaling_exponent=0.8,
-            intercept=0.2,
-            r_squared=0.95,
-            regime="sub-linear",
-            confidence_interval=(0.7, 0.9),
-            p_value=0.001,
-            valid=True
-        )
 
-        report = self.analyzer.generate_scaling_report(scaling_result)
-
-        self.assertIsInstance(report, str)
-        self.assertIn("Scaling Analysis Report: complexity", report)
-        self.assertIn("Exponent: 0.800000", report)
-        self.assertIn("R²: 0.950000", report)
-        self.assertIn("Regime: sub-linear", report)
-        self.assertIn("95% CI: [0.700000, 0.900000]", report)
-        self.assertIn("P-value: 0.001000", report)
-        self.assertIn("Interpretation:", report)
-        self.assertIn("Recommendations:", report)
-
-    def test_generate_scaling_report_invalid(self):
-        """Test scaling report generation with invalid result."""
-        invalid_result = ScalingResult(
-            parameter_name="complexity",
-            parameter_values=[1, 2],
-            response_values=[1, 2],
-            valid=False
-        )
-
-        report = self.analyzer.generate_scaling_report(invalid_result)
-
-        self.assertIsInstance(report, str)
-        self.assertIn("INVALID", report)
-        self.assertIn("insufficient data", report)
-
-    def test_interpret_regime(self):
-        """Test regime interpretation."""
-        # Test different regimes
-        regimes_to_test = [
-            ("constant", 0.05),
-            ("linear", 1.0),
-            ("quadratic", 2.0),
-            ("cubic", 3.0),
-            ("sub-linear", 0.5),
-            ("super-linear", 1.5)
-        ]
-
-        for regime, exponent in regimes_to_test:
-            interpretation = self.analyzer._interpret_regime(regime, exponent)
-            self.assertIsInstance(interpretation, str)
-            # The formatted exponent (3 decimal places) must appear in the text.
-            self.assertIn(f"{exponent:.3f}", interpretation)
-            self.assertNotIn(".3f", interpretation)  # format spec, not literal text
-
-        # Test unknown regime
-        interpretation = self.analyzer._interpret_regime("unknown", 2.5)
-        self.assertIsInstance(interpretation, str)
-        self.assertIn("Unknown scaling regime", interpretation)
-
-    def test_generate_scaling_recommendations(self):
-        """Test scaling recommendations generation."""
-        test_cases = [
-            # (regime, exponent, r_squared, expected_keywords)
-            ("constant", 0.05, 0.95, ["minimal impact", "low optimization"]),
-            ("linear", 1.0, 0.95, ["balanced resource"]),
-            ("sub-linear", 0.5, 0.95, ["efficiency gains", "scaling up"]),
-            ("super-linear", 1.5, 0.95, ["bottlenecks", "high optimization"]),
-            ("quadratic", 2.0, 0.95, ["algorithmic improvements"]),
-            ("cubic", 3.0, 0.95, ["fundamental algorithmic redesign"]),
-        ]
-
-        for regime, exponent, r_squared, expected_keywords in test_cases:
-            result = ScalingResult(
-                parameter_name="test",
-                parameter_values=[1, 2, 4],
-                response_values=[1, 2, 4],
-                scaling_exponent=exponent,
-                regime=regime,
-                r_squared=r_squared,
-                valid=True
-            )
-
-            recommendations = self.analyzer._generate_scaling_recommendations(result)
-
-            self.assertIsInstance(recommendations, str)
-            for keyword in expected_keywords:
-                self.assertIn(keyword, recommendations)
-
-        # Test high exponent warning
-        high_exp_result = ScalingResult(
-            parameter_name="test",
-            parameter_values=[1, 2, 4],
-            response_values=[1, 2, 4],
-            scaling_exponent=2.5,
-            regime="super-linear",
-            r_squared=0.95,
-            valid=True
-        )
-
-        recommendations = self.analyzer._generate_scaling_recommendations(high_exp_result)
-        self.assertIn("Exponential scaling", recommendations)
-
-        # Test low r_squared warning
-        low_r2_result = ScalingResult(
-            parameter_name="test",
-            parameter_values=[1, 2, 4],
-            response_values=[1, 2, 4],
-            scaling_exponent=1.0,
-            regime="linear",
-            r_squared=0.5,
-            valid=True
-        )
-
-        recommendations = self.analyzer._generate_scaling_recommendations(low_r2_result)
-        self.assertIn("Low R²", recommendations)
-
-    def test_generate_scaling_recommendations_invalid(self):
-        """Test scaling recommendations with invalid result."""
-        invalid_result = ScalingResult(
-            parameter_name="test",
-            parameter_values=[1, 2],
-            response_values=[1, 2],
-            valid=False
-        )
-
-        recommendations = self.analyzer._generate_scaling_recommendations(invalid_result)
-        self.assertIn("Insufficient data", recommendations)
-
-    def test_bootstrap_confidence_intervals(self):
-        """Test bootstrap confidence interval calculation."""
-        if not HAS_NUMPY or not HAS_SCIPY:
-            self.skipTest("NumPy and SciPy required for bootstrap tests")
-
-        # Create test data with known relationship
-        x_vals = [1, 2, 3, 4, 5]
-        y_vals = [1, 2, 3, 4, 5]  # Perfect linear relationship
-
-        result = self.analyzer.analyze_single_parameter_scaling(
-            x_vals, y_vals, "test_param", "test_response"
-        )
-
-        # Should have confidence interval if bootstrap succeeds
-        if result.valid:
-            # Confidence interval might be None if bootstrap fails
-            # but we can't predict that with certainty
-            self.assertIsInstance(result.confidence_interval, (tuple, type(None)))
+    def test_paired_bootstrap_is_required_and_not_an_inferential_p_value(self):
+        analyzer = ScalingAnalyzer(bootstrap_samples=100, random_seed=7)
+        result = analyzer.analyze_single_parameter_scaling([1, 10, 100], [1, 100, 10000])
+        self.assertTrue(result.valid)
+        self.assertGreater(result.bootstrap_valid_samples, 0)
+        self.assertEqual(result.confidence_interval, (2, 2))
+        self.assertIsNone(result.p_value)
+        more = ScalingAnalyzer(bootstrap_samples=1000, random_seed=7).analyze_single_parameter_scaling([1, 10, 100], [1, 100, 10000])
+        self.assertEqual(more.confidence_interval, (2, 2))
+        self.assertIsNone(more.p_value)
 
     def test_scaling_analysis_with_numpy_fallback(self):
         """Test scaling analysis when NumPy operations might fail."""
@@ -561,6 +420,56 @@ class TestScalingAnalyzer(unittest.TestCase):
         # Result should be created even if analysis fails
         self.assertIsInstance(result, ScalingResult)
         self.assertEqual(result.parameter_name, "constant_param")
+
+
+    def test_constant_and_polynomial_regimes_remain_aligned(self):
+        analyzer = ScalingAnalyzer(bootstrap_samples=100)
+        constant = analyzer.analyze_single_parameter_scaling([1, 10, 100], [3, 3, 3], "constant")
+        quadratic = analyzer.analyze_single_parameter_scaling([1, 10, 100], [1, 100, 10000], "quadratic")
+        cubic = analyzer.analyze_single_parameter_scaling([1, 10, 100], [1, 1000, 1000000], "cubic")
+        self.assertEqual(constant.confidence_interval, (0, 0))
+        self.assertEqual(constant.regime, "constant")
+        self.assertEqual(cubic.scaling_exponent, 3)
+        self.assertEqual(cubic.regime, "cubic")
+        self.assertEqual(analyzer.detect_scaling_regime(cubic)["regime"], "cubic")
+        self.assertIsNone(analyzer.detect_scaling_regime(cubic)["confidence"])
+        comparison = analyzer.compare_scaling_regimes({"constant": constant, "quadratic": quadratic})
+        self.assertEqual(comparison["exponent_range"], (0, 2))
+        self.assertEqual(comparison["most_challenging"]["parameter"], "quadratic")
+        self.assertEqual(comparison["most_challenging"]["exponent"], 2)
+        only_constant = analyzer.compare_scaling_regimes({"constant": constant})
+        self.assertEqual(only_constant["exponent_range"], (0, 0))
+
+    def test_marginal_correlation_is_not_an_interaction(self):
+        result = ScalingAnalyzer(bootstrap_samples=50).analyze_multi_parameter_scaling(
+            "x", [1, 2, 4, 8], {"z": [2, 4, 8, 16]}, [1, 4, 16, 64]
+        )
+        self.assertIsNone(result.interaction_effects)
+        self.assertAlmostEqual(result.parameter_correlations["z"], 1)
+        self.assertNotIn("x", result.parameter_correlations)
+
+    def test_scaling_local_rng_and_invalid_domains(self):
+        state = random.getstate()
+        numpy_state = np.random.get_state()
+        analyzer = ScalingAnalyzer(bootstrap_samples=30, random_seed=7)
+        first = analyzer.analyze_single_parameter_scaling([1, 2, 4, 8], [1, 3, 5, 10])
+        second = analyzer.analyze_single_parameter_scaling([1, 2, 4, 8], [1, 3, 5, 10])
+        self.assertEqual(first.confidence_interval, second.confidence_interval)
+        self.assertEqual(random.getstate(), state)
+        after = np.random.get_state()
+        self.assertTrue(np.array_equal(numpy_state[1], after[1]))
+        self.assertEqual(numpy_state[2:], after[2:])
+        for bad in [float("nan"), float("inf"), -1, 0]:
+            with self.subTest(value=bad):
+                result = analyzer.analyze_single_parameter_scaling([1, 2, bad], [1, 2, 3])
+                self.assertFalse(result.valid)
+                self.assertIsNotNone(result.error)
+        for count in [0, -1, 2.5, True]:
+            with self.subTest(count=count), self.assertRaises(ValueError):
+                ScalingAnalyzer(bootstrap_samples=count)
+        for confidence in [0, 1, float("nan")]:
+            with self.subTest(confidence=confidence), self.assertRaises(ValueError):
+                ScalingAnalyzer(confidence_level=confidence)
 
 
 if __name__ == '__main__':

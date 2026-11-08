@@ -1,62 +1,40 @@
-# Unified Workflow Guide
+# Workflow Map: Analysis, Canonical Generations and Configured Manuscripts
 
-This guide summarizes the current end-to-end Ant Stack workflows for development, canonical output generation, compatibility paper artifacts, and publication validation.
+This navigation guide connects the three supported workflows; it does not define a second build system. Implementation lives in the installed package.
 
 ```mermaid
 flowchart TD
-    Setup["uv sync --extra dev\nbun install"] --> Validate["pytest, ruff, folder docs"]
-    Validate --> RunAll["run-all-antstack"]
-    RunAll --> Canonical["outputs/<run_id>"]
-    Validate --> CE["antstack-ce"]
-    CE --> Compat["papers/complexity_energetics/out\nassets\nGenerated.md"]
-    Compat --> Build["antstack-build --validate-only"]
-    Canonical --> Review["manifest and provenance review"]
-    Build --> Paper["optional PDF build"]
+    Inputs["Caller-owned manifests and paper sources"] --> CE["antstack-ce: fresh explicit --out"]
+    Inputs --> Run["run-all-antstack: selected tasks"]
+    Inputs --> Build["antstack-build: selected --project-root"]
+    CE --> Family["Analytical CSV, Markdown, assets and provenance"]
+    Run --> Canonical["Completed outputs/run_id manifest v2"]
+    Run --> Projection["Optional explicit paper projection"]
+    Build --> Validate["--validate-only: source checks, no PDF"]
+    Build --> Render["Actual configured analysis and PDF render"]
 ```
 
-## Development Workflow
+## Choose the Product Before Running a Command
+
+| Product | Owning contract |
+|---|---|
+| Standalone model result family in a fresh destination | [Getting started](docs/getting_started.md), [API contracts](docs/public_api_contracts.md) |
+| Canonical generation and current-invocation paper projection | [Reproducibility](docs/reproducibility.md) |
+| Full configured manuscript PDF from caller-owned ordered sources | [PDF rendering guide](PDF_RENDERING_GUIDE.md) |
+| Test/build/install/render acceptance and source-bound receipts | [Validation](docs/validation.md) |
+| Empirical interpretation and proposed study design | [Scientific validation](docs/scientific_validation.md) |
+
+Standalone CE generation does not implicitly update a paper. The default run-all example does enable explicit paper projection and preserves the prior tree; select a caller-owned config with projection disabled when that publication is not intended. A canonical generated-results PDF is not the full manuscript, and copied `historical_paper` files are not new renders.
+
+## Use Native Commands with Explicit Ownership
 
 ```bash
-uv sync --extra dev
-bun install
-uv run pytest --collect-only -q
-uv run pytest -q
-uv run ruff check .
-uv run python tools/ensure_folder_docs.py --check
-```
-
-## Canonical Output Workflow
-
-```bash
+uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
+uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/ce-workflow-run
 uv run run-all-antstack --config configs/run_all_antstack.example.yaml --validate-only
-uv run run-all-antstack --config configs/run_all_antstack.example.yaml
+uv run antstack-build --project-root . --validate-only
 ```
 
-Outputs are written under `outputs/<run_id>/` and include data, statistics, visualizations, animations, reports, papers, logs, manifests, and provenance.
+The generation destination must be fresh. Validation is not generation or render proof. All-paper build validation regenerates the ignored local `build_report.md`; run-all validation creates no run layout. Full commands, provisioning and safe staging procedures belong in their owning guides above.
 
-## Complexity Energetics Compatibility Workflow
-
-```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out
-```
-
-This keeps the existing complexity energetics paper build contract intact by updating paper-local outputs and assets.
-
-## Paper Workflow
-
-```bash
-uv run antstack-build --validate-only
-uv run antstack-build
-```
-
-Use full PDF builds only when Pandoc and LaTeX dependencies are available.
-
-## Bun Script Equivalents
-
-```bash
-bun run test:collect
-bun run test
-bun run lint
-bun run validate
-bun run run:all
-```
+Bun scripts are convenience entrypoints from `package.json`, not another scientific implementation. `bun run ce` intentionally needs appended `--out FRESH_ROOT`; it has no reusable overwrite destination.

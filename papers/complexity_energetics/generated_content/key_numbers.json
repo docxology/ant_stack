@@ -1,27 +1,40 @@
 {
-  "per_decision_energy": {
-    "body_mj": 3.91428e-05,
-    "brain_mj": 0.0039165640001,
-    "mind_mj": 1.075049792,
-    "total_mj": 1.0790054988000999
+  "assumed_energy_coefficients": {
+    "baseline_w": 0.5,
+    "body_per_joint_w": 2.0,
+    "body_sensor_w_per_channel": 0.005,
+    "dram_pj_per_byte": 20.0,
+    "flops_pj": 1.0,
+    "spike_aj": 1.0,
+    "sram_pj_per_byte": 0.1
   },
   "computational_load": {
-    "body_flops": 12442.0,
-    "brain_flops": 3265236.0,
-    "mind_flops": 1074867392,
-    "body_memory_kb": 260.75,
-    "brain_memory_kb": 6360.625,
-    "mind_memory_kb": 1781.25
+    "body_flops": 89543,
+    "body_memory_kb": 9.8359375,
+    "brain_flops": 1005236.0,
+    "brain_memory_kb": 591.09375,
+    "mind_flops": 2950000.0,
+    "mind_memory_kb": 152.34375
   },
+  "model_family": "enhanced_analytical",
+  "per_decision_energy": {
+    "body_mj": 5.0001406584,
+    "brain_mj": 5.0028725248001,
+    "mind_mj": 5.00358648,
+    "total_mj": 15.0065996632001
+  },
+  "provenance": "Enhanced analytical workload model, not canonical base-run evidence. Compute-plus-idle energy with assumed default EnergyCoefficients; no mechanical work, sensing power, device calibration or empirical validation. Mind max_policies=1000. Fits describe the displayed deterministic sweep, not independent samples.",
   "scaling_exponents": {
-    "body_energy": 0.010332084517543904,
-    "body_r_squared": 0.9270830326591676,
-    "body_regime": "sub-linear"
+    "body_energy": 1.744797328218564e-05,
+    "body_r_squared": 0.8063642167402655,
+    "body_regime": "constant"
   },
+  "schema_version": 1,
   "system_parameters": {
+    "baseline_power_mw": 500.0,
     "control_frequency_hz": 100,
     "decision_period_ms": 10,
-    "baseline_power_mw": 0.0,
-    "total_power_w": 0.10790054988000998
+    "total_power_boundary": "sum of isolated module compute-plus-idle estimates, not whole-device power",
+    "total_power_w": 1.5006599663200102
   }
 }

@@ -22,13 +22,13 @@ import random
 from typing import Dict, List, Tuple, Optional, Any, Sequence
 from pathlib import Path
 
+from .plots import _paired_float_arrays, _has_linear_fit_signal, _save_figure
+
 # Optional plotting dependencies (graceful degradation)
 plt = None  # type: ignore
 np = None   # type: ignore
 sns = None  # type: ignore
 try:
-    import matplotlib
-    matplotlib.use("Agg")  # headless backend for server environments
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
     from matplotlib.colors import LinearSegmentedColormap, ListedColormap
@@ -36,8 +36,6 @@ try:
     import numpy as np
     try:
         import seaborn as sns
-        sns.set_style("whitegrid")
-        sns.set_palette("husl")
     except ImportError:
         sns = None
 except Exception:
@@ -54,9 +52,8 @@ def complexity_entropy_diagram(
 ) -> str:
     """Create complexity-entropy diagram for intrinsic computation analysis.
     
-    Generates publication-quality complexity-entropy diagrams that visualize
-    the relationship between system complexity and entropy, enabling identification
-    of optimal operating regimes and phase transitions.
+    Generates descriptive complexity-entropy points. No structural regime or
+    phase transition can be inferred from this visualization alone.
     
     Args:
         complexity_values: Lempel-Ziv complexity values
@@ -73,16 +70,21 @@ def complexity_entropy_diagram(
         - Complexity-entropy analysis: https://arxiv.org/abs/0806.4789
         - Intrinsic computation: https://doi.org/10.1038/nature10872
     """
-    if plt is None:
-        print("matplotlib not available; skipping complexity-entropy diagram")
-        return "fig:unavailable"
+    if plt is None or np is None:
+        raise ImportError("Plotting requires matplotlib and numpy")
+    values = [complexity_values, entropy_values]
+    if time_points is not None:
+        values.append(time_points)
+    clean, _ = _paired_float_arrays(*values)
+    complexity_values, entropy_values = (list(value) for value in clean[:2])
+    time_points = list(clean[2]) if time_points is not None else None
     
     fig, ax = plt.subplots(figsize=(12, 10))
     
     # Create scatter plot with color mapping
     if np is not None and len(complexity_values) > 0:
         # Color by density or trajectory
-        if time_points and len(time_points) == len(complexity_values):
+        if time_points is not None and len(time_points):
             scatter = ax.scatter(complexity_values, entropy_values, 
                                c=time_points, cmap='viridis', s=100, 
                                alpha=0.7, edgecolors='black', linewidth=0.5)
@@ -90,8 +92,8 @@ def complexity_entropy_diagram(
             cbar.set_label('Time', fontsize=12, fontweight='bold')
         else:
             # Density-based coloring
-            from scipy.stats import gaussian_kde
             try:
+                from scipy.stats import gaussian_kde
                 xy = np.vstack([complexity_values, entropy_values])
                 density = gaussian_kde(xy)(xy)
                 scatter = ax.scatter(complexity_values, entropy_values, 
@@ -99,7 +101,7 @@ def complexity_entropy_diagram(
                                    alpha=0.7, edgecolors='black', linewidth=0.5)
                 cbar = plt.colorbar(scatter, ax=ax)
                 cbar.set_label('Point Density', fontsize=12, fontweight='bold')
-            except ImportError:
+            except (ImportError, ValueError, np.linalg.LinAlgError):
                 scatter = ax.scatter(complexity_values, entropy_values, 
                                    c='blue', s=100, alpha=0.7, 
                                    edgecolors='black', linewidth=0.5)
@@ -108,30 +110,6 @@ def complexity_entropy_diagram(
                            c='blue', s=100, alpha=0.7, 
                            edgecolors='black', linewidth=0.5)
     
-    # Add theoretical boundaries
-    if np is not None:
-        # Maximum entropy line (uniform distribution)
-        max_entropy = np.log2(len(complexity_values)) if len(complexity_values) > 1 else 1.0
-        ax.axhline(y=max_entropy, color='red', linestyle='--', alpha=0.7, 
-                  linewidth=2, label=f'Max Entropy = {max_entropy:.2f}')
-        
-        # Complexity-entropy relationship regions
-        x_range = np.linspace(0, 1, 100)
-        
-        # Ordered regime (low complexity, low entropy)
-        ordered_region = 0.1 * x_range
-        ax.plot(x_range, ordered_region, 'g--', alpha=0.5, linewidth=1, 
-               label='Ordered Regime')
-        
-        # Random regime (high entropy, variable complexity)
-        random_entropy = np.full_like(x_range, max_entropy * 0.8)
-        ax.plot(x_range, random_entropy, 'orange', linestyle='--', alpha=0.5, 
-               linewidth=1, label='Random Regime')
-        
-        # Complex regime (high complexity, medium entropy)
-        complex_region = 0.3 * x_range + 0.2
-        ax.plot(x_range, complex_region, 'purple', linestyle='--', alpha=0.5, 
-               linewidth=1, label='Complex Regime')
     
     # Enhanced styling
     ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
@@ -141,26 +119,19 @@ def complexity_entropy_diagram(
     # Add grid and legend
     ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     ax.set_axisbelow(True)
-    ax.legend(loc='best', frameon=True, fancybox=True, shadow=True)
-    
-    # Set axis limits
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, max(entropy_values) * 1.1 if entropy_values else 1)
     
     # Improve layout
     plt.tight_layout()
     
     # Save with high DPI for publication quality
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    plt.close()
+    _save_figure(fig, out_path)
     
     # Generate comprehensive caption
     detailed_caption = f"Complexity-entropy diagram showing the relationship between system complexity and entropy. "
     if np is not None and len(complexity_values) > 0:
         detailed_caption += f"Data points span complexity range {min(complexity_values):.3f} to {max(complexity_values):.3f} "
         detailed_caption += f"and entropy range {min(entropy_values):.3f} to {max(entropy_values):.3f}. "
-    detailed_caption += "Theoretical boundaries separate ordered, complex, and random regimes. "
-    detailed_caption += "Optimal operating points typically lie in the complex regime with balanced complexity and entropy."
+    detailed_caption += "These descriptive points do not establish structural regimes or phase transitions."
     
     # Add to figure manager if provided
     if figure_manager:
@@ -198,15 +169,20 @@ def network_visualization(
     Returns:
         Figure ID for cross-referencing
     """
-    if plt is None:
-        print("matplotlib not available; skipping network visualization")
-        return "fig:unavailable"
+    if plt is None or np is None:
+        raise ImportError("Plotting requires matplotlib and numpy")
     
-    if not adjacency_matrix or len(adjacency_matrix) == 0:
-        print("Empty adjacency matrix; skipping network visualization")
-        return "fig:unavailable"
+    if len(adjacency_matrix) == 0:
+        raise ValueError("Network visualization requires at least one node")
     
     n_nodes = len(adjacency_matrix)
+    matrix = np.asarray(adjacency_matrix, dtype=float)
+    if matrix.shape != (n_nodes, n_nodes) or not np.all(np.isfinite(matrix)) or np.any(matrix < 0):
+        raise ValueError("Adjacency matrix must be square, finite and nonnegative")
+    if not np.allclose(matrix, matrix.T) or np.any(np.diag(matrix) != 0):
+        raise ValueError("Network plot requires an undirected loop-free adjacency matrix")
+    if node_labels is not None and len(node_labels) != n_nodes:
+        raise ValueError("Node labels must match the adjacency matrix")
     if node_labels is None:
         node_labels = [f"Node {i}" for i in range(n_nodes)]
     
@@ -227,7 +203,7 @@ def network_visualization(
     # Calculate node sizes based on centrality
     node_sizes = _calculate_node_centrality(adjacency_matrix)
     max_size = max(node_sizes) if node_sizes else 1
-    node_sizes = [300 + 200 * (size / max_size) for size in node_sizes]
+    node_sizes = [300 + 200 * (size / max_size) if max_size > 0 else 300 for size in node_sizes]
     
     # Draw edges
     for i in range(n_nodes):
@@ -238,7 +214,7 @@ def network_visualization(
                 
                 # Edge width based on connection strength
                 edge_width = 0.5 + 2.0 * adjacency_matrix[i][j]
-                edge_alpha = 0.3 + 0.7 * adjacency_matrix[i][j]
+                edge_alpha = min(1.0, 0.3 + 0.7 * adjacency_matrix[i][j])
                 
                 ax.plot([x1, x2], [y1, y2], 'k-', alpha=edge_alpha, 
                        linewidth=edge_width, zorder=1)
@@ -249,7 +225,7 @@ def network_visualization(
         color_intensity = node_sizes[i] / max(node_sizes) if node_sizes else 0.5
         color = plt.cm.viridis(color_intensity)
         
-        circle = plt.Circle((x, y), 0.1, color=color, alpha=0.8, zorder=2)
+        circle = plt.Circle((x, y), 0.1 * math.sqrt(node_sizes[i] / 300), color=color, alpha=0.8, zorder=2)
         ax.add_patch(circle)
         
         # Node labels
@@ -275,8 +251,7 @@ def network_visualization(
     plt.tight_layout()
     
     # Save with high DPI for publication quality
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    plt.close()
+    _save_figure(fig, out_path)
     
     # Generate comprehensive caption
     detailed_caption = f"Network visualization showing structural relationships between {n_nodes} nodes. "
@@ -298,17 +273,13 @@ def thermodynamic_phase_diagram(
     temperature_values: List[float],
     pressure_values: List[float],
     efficiency_values: List[float],
-    title: str = "Thermodynamic Phase Diagram",
+    title: str = "Temperature-Pressure Efficiency Map",
     out_path: str = "phase_diagram.png",
     figure_manager: Optional[Any] = None
 ) -> str:
-    """Create thermodynamic phase diagram with efficiency heat map.
-    
-    Generates publication-quality phase diagrams that visualize:
-    - Thermodynamic efficiency across temperature-pressure space
-    - Phase boundaries and critical points
-    - Optimal operating regions
-    - Efficiency gradients and contours
+    """Plot supplied efficiency values in temperature-pressure coordinates.
+
+    Interpolation is descriptive, not evidence of thermodynamic phases.
     
     Args:
         temperature_values: Temperature values (K)
@@ -321,13 +292,15 @@ def thermodynamic_phase_diagram(
     Returns:
         Figure ID for cross-referencing
     """
-    if plt is None:
-        print("matplotlib not available; skipping phase diagram")
-        return "fig:unavailable"
+    if plt is None or np is None:
+        raise ImportError("Plotting requires matplotlib and numpy")
     
-    if not temperature_values or not pressure_values or not efficiency_values:
-        print("Insufficient data for phase diagram")
-        return "fig:unavailable"
+    (temperature_values, pressure_values, efficiency_values), _ = _paired_float_arrays(
+        temperature_values, pressure_values, efficiency_values)
+    if np.any(temperature_values <= 0) or np.any(pressure_values < 0):
+        raise ValueError("Temperature must be positive and pressure nonnegative")
+    if len(temperature_values) == 0:
+        raise ValueError("Phase visualization requires finite paired observations")
     
     fig, ax = plt.subplots(figsize=(12, 10))
     
@@ -340,11 +313,13 @@ def thermodynamic_phase_diagram(
             T_mesh, P_mesh = np.meshgrid(T_unique, P_unique)
             
             # Interpolate efficiency values
-            from scipy.interpolate import griddata
             try:
+                from scipy.interpolate import griddata
                 points = np.column_stack((temperature_values, pressure_values))
                 efficiency_grid = griddata(points, efficiency_values, 
                                         (T_mesh, P_mesh), method='cubic')
+                if not np.any(np.isfinite(efficiency_grid)):
+                    raise ValueError("No finite interpolation")
                 
                 # Create contour plot
                 contour = ax.contourf(T_mesh, P_mesh, efficiency_grid, 
@@ -359,7 +334,7 @@ def thermodynamic_phase_diagram(
                 cbar = plt.colorbar(contour, ax=ax)
                 cbar.set_label('Thermodynamic Efficiency', fontsize=12, fontweight='bold')
                 
-            except ImportError:
+            except (ImportError, ValueError, RuntimeError):
                 # Fallback to scatter plot
                 scatter = ax.scatter(temperature_values, pressure_values, 
                                    c=efficiency_values, cmap='viridis', 
@@ -381,27 +356,6 @@ def thermodynamic_phase_diagram(
         cbar = plt.colorbar(scatter, ax=ax)
         cbar.set_label('Thermodynamic Efficiency', fontsize=12, fontweight='bold')
     
-    # Add theoretical phase boundaries
-    if np is not None and len(temperature_values) > 1:
-        T_range = np.linspace(min(temperature_values), max(temperature_values), 100)
-        
-        # Critical temperature line (example)
-        critical_T = np.mean(temperature_values)
-        ax.axvline(x=critical_T, color='red', linestyle='--', alpha=0.7, 
-                  linewidth=2, label=f'Critical T = {critical_T:.1f} K')
-        
-        # Optimal efficiency region
-        if len(efficiency_values) > 0:
-            max_efficiency = max(efficiency_values)
-            threshold = 0.8 * max_efficiency
-            
-            # Highlight high-efficiency region
-            high_eff_mask = [eff >= threshold for eff in efficiency_values]
-            if any(high_eff_mask):
-                high_T = [T for i, T in enumerate(temperature_values) if high_eff_mask[i]]
-                high_P = [P for i, P in enumerate(pressure_values) if high_eff_mask[i]]
-                ax.scatter(high_T, high_P, c='red', s=150, alpha=0.8, 
-                          marker='*', label='High Efficiency Region', zorder=5)
     
     # Enhanced styling
     ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
@@ -411,21 +365,18 @@ def thermodynamic_phase_diagram(
     # Add grid and legend
     ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     ax.set_axisbelow(True)
-    ax.legend(loc='best', frameon=True, fancybox=True, shadow=True)
     
     # Improve layout
     plt.tight_layout()
     
     # Save with high DPI for publication quality
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    plt.close()
+    _save_figure(fig, out_path)
     
     # Generate comprehensive caption
-    detailed_caption = f"Thermodynamic phase diagram showing efficiency distribution across temperature-pressure space. "
+    detailed_caption = "Descriptive temperature-pressure map of supplied efficiency values. "
     if len(efficiency_values) > 0:
         detailed_caption += f"Efficiency ranges from {min(efficiency_values):.3f} to {max(efficiency_values):.3f}. "
-    detailed_caption += "Contour lines indicate efficiency gradients, with optimal operating regions highlighted. "
-    detailed_caption += "Critical temperature line separates different thermodynamic phases."
+    detailed_caption += "Where fitting is singular, observed points are shown without interpolation. No phase boundary or critical point is inferred."
     
     # Add to figure manager if provided
     if figure_manager:
@@ -459,14 +410,12 @@ def multi_scale_visualization(
     Returns:
         Figure ID for cross-referencing
     """
-    if plt is None:
-        print("matplotlib not available; skipping multi-scale visualization")
-        return "fig:unavailable"
+    if plt is None or np is None:
+        raise ImportError("Plotting requires matplotlib and numpy")
     
     n_scales = len(data_dict)
     if n_scales == 0:
-        print("No data provided for multi-scale visualization")
-        return "fig:unavailable"
+        raise ValueError("Multi-scale visualization requires model data")
     
     # Create subplot grid
     n_cols = min(3, n_scales)
@@ -487,14 +436,13 @@ def multi_scale_visualization(
         
         # Plot data for this scale
         if 'x' in scale_data and 'y' in scale_data:
-            x_data = scale_data['x']
-            y_data = scale_data['y']
+            (x_data, y_data), _ = _paired_float_arrays(scale_data['x'], scale_data['y'])
             
             # Scatter plot with trend line
             ax.scatter(x_data, y_data, alpha=0.6, s=50, edgecolors='black', linewidth=0.5)
             
             # Add trend line
-            if np is not None and len(x_data) > 1:
+            if np is not None and _has_linear_fit_signal(x_data, y_data):
                 try:
                     coeffs = np.polyfit(x_data, y_data, 1)
                     x_trend = np.linspace(min(x_data), max(x_data), 100)
@@ -525,14 +473,12 @@ def multi_scale_visualization(
     plt.tight_layout()
     
     # Save with high DPI for publication quality
-    plt.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    plt.close()
+    _save_figure(fig, out_path)
     
     # Generate comprehensive caption
     detailed_caption = f"Multi-scale analysis showing {n_scales} different analytical scales. "
     detailed_caption += f"Scales analyzed: {', '.join(scale_names)}. "
-    detailed_caption += "Each panel shows data relationships with trend lines and R² values. "
-    detailed_caption += "Cross-scale correlations reveal emergent properties and system behavior."
+    detailed_caption += "Panels show paired observations, with descriptive linear fits only when identifiable. No cross-scale interaction is inferred."
     
     # Add to figure manager if provided
     if figure_manager:

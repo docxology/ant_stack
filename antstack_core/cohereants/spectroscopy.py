@@ -38,6 +38,11 @@ class SpectralData:
             raise ValueError("Wavenumbers must stay within 300-6000 cm^-1")
         if np.any(self.intensities < 0):
             raise ValueError("Intensities must be non-negative")
+        order = np.argsort(self.wavenumbers)
+        self.wavenumbers = self.wavenumbers[order]
+        self.intensities = self.intensities[order]
+        if np.any(np.diff(self.wavenumbers) == 0):
+            raise ValueError("Spectral axis cannot contain duplicate wavenumbers")
 
     @property
     def num_points(self) -> int:
@@ -68,14 +73,15 @@ class SpectralData:
         if method != "linear":
             raise ValueError("Only linear baseline correction is supported")
         if self.num_points < 2:
-            corrected = self.intensities.copy()
+            corrected = np.zeros_like(self.intensities)
         else:
             baseline = np.interp(
                 self.wavenumbers,
                 [self.wavenumbers[0], self.wavenumbers[-1]],
                 [self.intensities[0], self.intensities[-1]],
             )
-            corrected = np.maximum(self.intensities - baseline + np.min(baseline), 0.0)
+            # Subtract the full endpoint line, retaining nonnegative residuals.
+            corrected = np.maximum(self.intensities - baseline, 0.0)
         return SpectralData(self.wavenumbers.copy(), corrected, self.species)
 
 
@@ -87,27 +93,20 @@ class PeakFinder:
         self.min_distance = int(min_distance)
 
     def find_peaks(self, spectral_data: SpectralData) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-        intensities = spectral_data.intensities
-        if intensities.size < 3 or np.allclose(intensities, intensities[0]):
-            return np.array([], dtype=int), {"prominences": np.array([]), "widths": np.array([])}
-        threshold = float(np.min(intensities) + self.threshold_factor * (np.max(intensities) - np.min(intensities)))
-        if scipy_find_peaks is not None:
-            distance = max(1, min(self.min_distance, max(1, intensities.size // 2)))
-            peaks, props = scipy_find_peaks(intensities, height=threshold, distance=distance)
-            props.setdefault("prominences", intensities[peaks] - np.median(intensities))
-            props.setdefault("widths", np.ones(peaks.size))
-            return peaks.astype(int), props
+        """Return prominence and half-prominence widths (in sample intervals).
 
-        peaks = []
-        for idx in range(1, intensities.size - 1):
-            if intensities[idx] > threshold and intensities[idx] > intensities[idx - 1] and intensities[idx] > intensities[idx + 1]:
-                if not peaks or idx - peaks[-1] >= self.min_distance:
-                    peaks.append(idx)
-        peak_arr = np.asarray(peaks, dtype=int)
-        return peak_arr, {
-            "prominences": intensities[peak_arr] - np.median(intensities) if peak_arr.size else np.array([]),
-            "widths": np.ones(peak_arr.size),
-        }
+        SciPy is required for its defined plateau, prominence and width semantics;
+        the API fails explicitly when that optional scientific backend is absent.
+        """
+        if scipy_find_peaks is None:
+            raise RuntimeError("Peak measurements require scipy.signal")
+        intensities = spectral_data.intensities
+        threshold = float(np.min(intensities) + self.threshold_factor * np.ptp(intensities))
+        peaks, props = scipy_find_peaks(
+            intensities, height=threshold, distance=max(1, self.min_distance),
+            prominence=(None, None), width=(None, None), rel_height=0.5,
+        )
+        return peaks.astype(int), props
 
     def analyze_peaks(self, spectral_data: SpectralData) -> dict[str, object]:
         peaks, props = self.find_peaks(spectral_data)
@@ -116,8 +115,12 @@ class PeakFinder:
             "peak_indices": peaks,
             "peak_wavenumbers": spectral_data.wavenumbers[peaks],
             "peak_intensities": spectral_data.intensities[peaks],
-            "peak_widths": np.asarray(props.get("widths", np.ones(peaks.size))),
-            "peak_prominences": np.asarray(props.get("prominences", np.array([]))),
+            "peak_widths": np.interp(props["right_ips"], np.arange(spectral_data.num_points), spectral_data.wavenumbers)
+                           - np.interp(props["left_ips"], np.arange(spectral_data.num_points), spectral_data.wavenumbers),
+            "peak_width_units": "cm^-1",
+            "peak_width_definition": "full width at half prominence",
+            "peak_prominences": np.asarray(props["prominences"]),
+            "peak_prominence_units": "input intensity units",
         }
 
 
@@ -185,11 +188,13 @@ class CHCAnalyzer:
         }
 
     def compare_spectra(self, spectrum1: SpectralData, spectrum2: SpectralData) -> dict[str, object]:
+        if not np.array_equal(spectrum1.wavenumbers, spectrum2.wavenumbers):
+            raise ValueError("Spectra must share the same wavenumber grid; align explicitly before comparison")
         overlap = calculate_spectral_overlap(spectrum1.intensities, spectrum2.intensities)
         peaks1 = self.peak_finder.analyze_peaks(spectrum1)["peak_wavenumbers"]
         peaks2 = self.peak_finder.analyze_peaks(spectrum2)["peak_wavenumbers"]
         return {
-            "similarity_score": float(overlap["cosine_similarity"]),
+            "similarity_score": overlap["cosine_similarity"],
             "overlap_metrics": overlap,
             "peak_differences": np.setdiff1d(np.round(peaks1, 1), np.round(peaks2, 1)).tolist(),
         }
@@ -209,28 +214,29 @@ def identify_chc_compounds(peak_wavenumbers: Iterable[float]) -> list[dict[str, 
     return list(grouped.values())
 
 
-def calculate_spectral_overlap(spectrum1: Iterable[float], spectrum2: Iterable[float]) -> dict[str, float]:
-    """Calculate correlation, cosine similarity, and spectral angle between spectra."""
+def calculate_spectral_overlap(spectrum1: Iterable[float], spectrum2: Iterable[float]) -> dict[str, float | None]:
+    """Centered Pearson and uncentered cosine on an already aligned grid.
+
+    Undefined correlations (constant samples) and angles/cosines (zero vectors)
+    are None rather than invented similarity values. Rescaling does not change
+    either metric; finite one-dimensional observations are required.
+    """
     a = np.asarray(spectrum1, dtype=float)
     b = np.asarray(spectrum2, dtype=float)
-    if a.size != b.size or a.size == 0:
-        raise ValueError("Spectra must be non-empty arrays of equal length")
-    denom = float(np.linalg.norm(a) * np.linalg.norm(b))
-    if denom and abs(float(np.dot(a, b))) < 1e-12:
-        pearson = 0.0
-    elif np.allclose(a, a[0]) or np.allclose(b, b[0]):
-        pearson = 1.0 if np.allclose(a, b) else 0.0
-    else:
-        pearson = float(np.corrcoef(a, b)[0, 1])
-        if abs(pearson) < 1e-12:
-            pearson = 0.0
-    cosine = float(np.dot(a, b) / denom) if denom else 0.0
-    cosine = float(np.clip(cosine, -1.0, 1.0))
-    return {
-        "pearson_correlation": pearson,
-        "cosine_similarity": cosine,
-        "spectral_angle": float(np.arccos(cosine)),
-    }
+    if a.ndim != 1 or b.ndim != 1 or a.size != b.size or a.size == 0:
+        raise ValueError("Spectra must be non-empty one-dimensional arrays of equal length")
+    if not np.all(np.isfinite(a)) or not np.all(np.isfinite(b)):
+        raise ValueError("Spectra must contain finite intensities")
+    # First scale to avoid underflow/overflow without an intensity-unit cutoff.
+    a = a / np.max(np.abs(a)) if np.any(a) else a
+    b = b / np.max(np.abs(b)) if np.any(b) else b
+    centered_a, centered_b = a - np.mean(a), b - np.mean(b)
+    centered_norm = float(np.linalg.norm(centered_a) * np.linalg.norm(centered_b))
+    pearson = float(np.clip(np.dot(centered_a, centered_b) / centered_norm, -1, 1)) if centered_norm else None
+    norm = float(np.linalg.norm(a) * np.linalg.norm(b))
+    cosine = float(np.clip(np.dot(a, b) / norm, -1, 1)) if norm else None
+    return {"pearson_correlation": pearson, "cosine_similarity": cosine,
+            "spectral_angle": float(np.arccos(cosine)) if cosine is not None else None}
 
 
 def analyze_chc_spectra(

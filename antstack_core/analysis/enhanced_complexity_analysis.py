@@ -55,7 +55,7 @@ class ComplexityMetrics:
     
     # Information-theoretic measures
     entropy: float = 0.0
-    mutual_information: float = 0.0
+    mutual_information: Optional[float] = None
     information_density: float = 0.0
     
     # Structural complexity
@@ -67,6 +67,7 @@ class ComplexityMetrics:
     # Thermodynamic measures
     thermodynamic_efficiency: float = 0.0
     entropy_production_rate: float = 0.0
+    entropy_change: float = 0.0  # J/K per cycle
     free_energy: float = 0.0
     
     # Scaling measures
@@ -80,382 +81,182 @@ class ComplexityMetrics:
     kurtosis: float = 0.0
 
 
-@dataclass
-class AgentBasedModel:
-    """Agent-based model for emergent behavior analysis."""
-    
-    agents: List[Dict[str, Any]]
-    interactions: List[Tuple[int, int, float]]  # (agent1, agent2, strength)
-    environment_params: Dict[str, float]
-    time_steps: int = 1000
-    
-    def simulate(self, seed: Optional[int] = None) -> Dict[str, List[float]]:
-        """Simulate agent interactions and return emergent metrics."""
-        if seed is not None:
-            random.seed(seed)
-            if HAS_NUMPY:
-                np.random.seed(seed)
-        
-        # Initialize agent states
-        n_agents = len(self.agents)
-        states = [agent.get('initial_state', 0.0) for agent in self.agents]
-        energies = [agent.get('initial_energy', 1.0) for agent in self.agents]
-        
-        # Track emergent properties
-        emergent_metrics = {
-            'total_energy': [],
-            'state_variance': [],
-            'interaction_strength': [],
-            'clustering_coefficient': [],
-            'entropy': []
-        }
-        
-        for t in range(self.time_steps):
-            # Update agent states based on interactions
-            new_states = states.copy()
-            new_energies = energies.copy()
-            
-            for agent1, agent2, strength in self.interactions:
-                if agent1 < n_agents and agent2 < n_agents:
-                    # Simple interaction model
-                    state_diff = states[agent2] - states[agent1]
-                    energy_transfer = strength * state_diff * 0.01
-                    
-                    new_states[agent1] += energy_transfer
-                    new_states[agent2] -= energy_transfer
-                    new_energies[agent1] += abs(energy_transfer)
-                    new_energies[agent2] += abs(energy_transfer)
-            
-            states = new_states
-            energies = new_energies
-            
-            # Calculate emergent metrics
-            emergent_metrics['total_energy'].append(sum(energies))
-            state_variance = float(np.var(states)) if HAS_NUMPY and states else self._variance(states)
-            emergent_metrics['state_variance'].append(state_variance)
-            emergent_metrics['interaction_strength'].append(sum(abs(s) for _, _, s in self.interactions))
-            emergent_metrics['clustering_coefficient'].append(self._calculate_clustering(states))
-            emergent_metrics['entropy'].append(self._calculate_entropy(states))
-        
-        return emergent_metrics
-    
-    def _variance(self, values: List[float]) -> float:
-        """Calculate variance without numpy."""
-        if len(values) < 2:
-            return 0.0
-        mean_val = sum(values) / len(values)
-        return sum((x - mean_val) ** 2 for x in values) / (len(values) - 1)
-    
-    def _calculate_clustering(self, states: List[float]) -> float:
-        """Calculate clustering coefficient for agent states."""
-        if len(states) < 3:
-            return 0.0
-        
-        # Simple clustering based on state similarity
-        threshold = 0.1
-        clusters = 0
-        total_pairs = 0
-        
-        for i in range(len(states)):
-            for j in range(i + 1, len(states)):
-                total_pairs += 1
-                if abs(states[i] - states[j]) < threshold:
-                    clusters += 1
-        
-        return clusters / total_pairs if total_pairs > 0 else 0.0
-    
-    def _calculate_entropy(self, states: List[float]) -> float:
-        """Calculate Shannon entropy of agent states."""
-        if not states:
-            return 0.0
-        
-        # Discretize states into bins
-        n_bins = min(10, len(states))
-        if HAS_NUMPY:
-            try:
-                hist, _ = np.histogram(states, bins=n_bins)
-                probs = hist / len(states)
-            except (ValueError, TypeError):
-                # Fallback if numpy histogram fails
-                min_state = min(states)
-                max_state = max(states)
-                bin_width = (max_state - min_state) / n_bins if max_state > min_state else 1.0
-
-                hist = [0] * n_bins
-                for state in states:
-                    bin_idx = min(int((state - min_state) / bin_width), n_bins - 1)
-                    hist[bin_idx] += 1
-
-                probs = [h / len(states) for h in hist]
-        else:
-            # Simple binning without numpy
-            min_state = min(states)
-            max_state = max(states)
-            bin_width = (max_state - min_state) / n_bins if max_state > min_state else 1.0
-
-            hist = [0] * n_bins
-            for state in states:
-                bin_idx = min(int((state - min_state) / bin_width), n_bins - 1)
-                hist[bin_idx] += 1
-
-            probs = [h / len(states) for h in hist]
-        
-        # Calculate entropy
-        entropy = 0.0
-        for p in probs:
-            if p > 0:
-                entropy -= p * math.log2(p)
-        
-        return entropy
 
 
 class NetworkComplexityAnalyzer:
-    """Advanced network complexity analysis for system interactions."""
-    
+    """Metrics for finite nonnegative undirected graphs; self-loops are ignored.
+
+    Paths are unweighted distances between distinct nodes (infinity if disconnected).
+    Default modularity uses connected components, not an inferred optimal partition.
+    Information measures sample an oriented edge in proportion to its weight:
+    entropy is H(source), mutual_information is I(source; destination), in bits.
+    """
+
     def __init__(self):
-        """Initialize network complexity analyzer."""
-        self.backend_capabilities = {
-            "numpy": HAS_NUMPY,
-            "scipy": HAS_SCIPY,
-        }
+        self.backend_capabilities = {"numpy": HAS_NUMPY, "scipy": HAS_SCIPY}
         self.last_metrics: Optional[ComplexityMetrics] = None
-    
-    def analyze_network_complexity(self, adjacency_matrix: List[List[float]]) -> ComplexityMetrics:
-        """Analyze network complexity using multiple metrics.
-        
-        Args:
-            adjacency_matrix: Square matrix representing network connections
-            
-        Returns:
-            ComplexityMetrics with network analysis results
-        """
-        if not adjacency_matrix or len(adjacency_matrix) == 0:
-            self.last_metrics = ComplexityMetrics()
-            return self.last_metrics
-        
-        n_nodes = len(adjacency_matrix)
-        
-        # Convert to numpy array if available
-        if HAS_NUMPY:
-            adj_matrix = np.array(adjacency_matrix)
-        else:
-            adj_matrix = adjacency_matrix
-        
-        # Calculate network density
-        density = self._calculate_density(adj_matrix)
-        
-        # Calculate clustering coefficient
-        clustering = self._calculate_clustering_coefficient(adj_matrix)
-        
-        # Calculate average path length
-        path_length = self._calculate_path_length(adj_matrix)
-        
-        # Calculate modularity (simplified)
-        modularity = self._calculate_modularity(adj_matrix)
-        
-        # Calculate information-theoretic measures
-        entropy = self._calculate_network_entropy(adj_matrix)
-        mutual_info = self._calculate_mutual_information(adj_matrix)
-        
-        metrics = ComplexityMetrics(
-            network_density=density,
-            clustering_coefficient=clustering,
-            path_length=path_length,
-            modularity=modularity,
-            entropy=entropy,
-            mutual_information=mutual_info
+
+    def _matrix(self, adjacency_matrix):
+        matrix = [[float(value) for value in row] for row in adjacency_matrix]
+        n = len(matrix)
+        if any(len(row) != n for row in matrix):
+            raise ValueError("Adjacency matrix must be square")
+        if any(not math.isfinite(value) or value < 0 for row in matrix for value in row):
+            raise ValueError("Edge weights must be finite and nonnegative")
+        if any(matrix[i][j] != matrix[j][i] for i in range(n) for j in range(i)):
+            raise ValueError("Undirected adjacency matrix must be symmetric")
+        for i in range(n):
+            matrix[i][i] = 0.0
+        return matrix
+
+    def analyze_network_complexity(self, adjacency_matrix: List[List[float]],
+                                   communities: Optional[Sequence[Any]] = None) -> ComplexityMetrics:
+        matrix = self._matrix(adjacency_matrix)
+        self.last_metrics = ComplexityMetrics(
+            network_density=self._calculate_density(matrix),
+            clustering_coefficient=self._calculate_clustering_coefficient(matrix),
+            path_length=self._calculate_path_length(matrix),
+            modularity=self._calculate_modularity(matrix, communities),
+            entropy=self._calculate_network_entropy(matrix),
+            mutual_information=self._calculate_mutual_information(matrix),
         )
-        self.last_metrics = metrics
-        return metrics
-    
+        return self.last_metrics
+
     def _calculate_density(self, adj_matrix) -> float:
-        """Calculate network density."""
-        if HAS_NUMPY:
-            n = adj_matrix.shape[0]
-            return np.sum(adj_matrix > 0) / (n * (n - 1))
-        else:
-            n = len(adj_matrix)
-            edges = sum(1 for row in adj_matrix for val in row if val > 0)
-            return edges / (n * (n - 1))
-    
+        matrix = self._matrix(adj_matrix)
+        n = len(matrix)
+        return sum(value > 0 for row in matrix for value in row) / (n * (n - 1)) if n > 1 else 0.0
+
     def _calculate_clustering_coefficient(self, adj_matrix) -> float:
-        """Calculate average clustering coefficient."""
-        if not HAS_NUMPY:
-            return 0.0  # Simplified without numpy
-        
-        n = adj_matrix.shape[0]
-        clustering_coeffs = []
-        
-        for i in range(n):
-            neighbors = np.where(adj_matrix[i] > 0)[0]
-            k = len(neighbors)
-            
-            if k < 2:
-                clustering_coeffs.append(0.0)
-                continue
-            
-            # Count triangles
-            triangles = 0
-            for j in neighbors:
-                for k in neighbors:
-                    if j < k and adj_matrix[j, k] > 0:
-                        triangles += 1
-            
-            # Clustering coefficient for node i
-            max_possible = k * (k - 1) / 2
-            clustering_coeffs.append(triangles / max_possible if max_possible > 0 else 0.0)
-        
-        return np.mean(clustering_coeffs)
-    
+        matrix = self._matrix(adj_matrix)
+        coefficients = []
+        for row in matrix:
+            neighbors = [j for j, value in enumerate(row) if value > 0]
+            degree = len(neighbors)
+            links = sum(matrix[j][k] > 0 for index, j in enumerate(neighbors) for k in neighbors[index + 1:])
+            coefficients.append(2 * links / (degree * (degree - 1)) if degree > 1 else 0.0)
+        return sum(coefficients) / len(matrix) if matrix else 0.0
+
     def _calculate_path_length(self, adj_matrix) -> float:
-        """Calculate average shortest path length."""
-        if not HAS_NUMPY:
-            return 0.0  # Simplified without numpy
-        
-        n = adj_matrix.shape[0]
-        
-        # Floyd-Warshall algorithm for shortest paths
-        dist = np.full((n, n), np.inf)
-        np.fill_diagonal(dist, 0)
-        
-        # Initialize with direct connections
-        for i in range(n):
-            for j in range(n):
-                if adj_matrix[i, j] > 0:
-                    dist[i, j] = 1
-        
-        # Floyd-Warshall
-        for k in range(n):
-            for i in range(n):
-                for j in range(n):
-                    dist[i, j] = min(dist[i, j], dist[i, k] + dist[k, j])
-        
-        # Calculate average path length (excluding infinite distances)
-        finite_distances = dist[dist != np.inf]
-        return np.mean(finite_distances) if len(finite_distances) > 0 else 0.0
-    
-    def _calculate_modularity(self, adj_matrix) -> float:
-        """Calculate network modularity (simplified)."""
-        if not HAS_NUMPY:
-            return 0.0  # Simplified without numpy
-        
-        n = adj_matrix.shape[0]
-        m = np.sum(adj_matrix) / 2  # Total edges (undirected)
-        
-        if m == 0:
-            return 0.0
-        
-        # Simple community detection (random assignment for now)
-        communities = np.random.randint(0, 2, n)  # Binary communities
-        
-        modularity = 0.0
-        for i in range(n):
-            for j in range(n):
-                if adj_matrix[i, j] > 0:
-                    expected = (np.sum(adj_matrix[i]) * np.sum(adj_matrix[j])) / (2 * m)
-                    modularity += (adj_matrix[i, j] - expected) * (1 if communities[i] == communities[j] else 0)
-        
-        return modularity / (2 * m)
-    
-    def _calculate_network_entropy(self, adj_matrix) -> float:
-        """Calculate Shannon entropy of network structure."""
-        if not HAS_NUMPY:
-            return 0.0  # Simplified without numpy
-        
-        # Calculate degree distribution
-        degrees = np.sum(adj_matrix > 0, axis=1)
-        
-        # Normalize to probabilities
-        total_degrees = np.sum(degrees)
-        if total_degrees == 0:
-            return 0.0
-        
-        probs = degrees / total_degrees
-        
-        # Calculate entropy
-        entropy = -np.sum(probs * np.log2(probs + 1e-10))
-        return entropy
-    
-    def _calculate_mutual_information(self, adj_matrix) -> float:
-        """Calculate mutual information between node pairs."""
-        if not HAS_NUMPY:
-            return 0.0  # Simplified without numpy
-        
-        n = adj_matrix.shape[0]
+        matrix = self._matrix(adj_matrix)
+        n = len(matrix)
         if n < 2:
             return 0.0
-        
-        # Calculate mutual information between all pairs
-        mutual_info_sum = 0.0
-        pair_count = 0
-        
-        for i in range(n):
-            for j in range(i + 1, n):
-                # Simple mutual information based on connection strength
-                if adj_matrix[i, j] > 0:
-                    mutual_info_sum += adj_matrix[i, j]
-                pair_count += 1
-        
-        return mutual_info_sum / pair_count if pair_count > 0 else 0.0
+        total = 0
+        for source in range(n):
+            distances = {source: 0}
+            queue = [source]
+            for node in queue:
+                for target, weight in enumerate(matrix[node]):
+                    if weight > 0 and target not in distances:
+                        distances[target] = distances[node] + 1
+                        queue.append(target)
+            if len(distances) != n:
+                return math.inf
+            total += sum(distances.values())
+        return total / (n * (n - 1))
+
+    def _calculate_modularity(self, adj_matrix, communities=None) -> float:
+        """Weighted Newman modularity, including nonedges and diagonal terms."""
+        matrix = self._matrix(adj_matrix)
+        n = len(matrix)
+        if communities is None:
+            communities = [None] * n
+            for source in range(n):
+                if communities[source] is not None:
+                    continue
+                communities[source] = source
+                queue = [source]
+                for node in queue:
+                    for target, weight in enumerate(matrix[node]):
+                        if weight > 0 and communities[target] is None:
+                            communities[target] = source
+                            queue.append(target)
+        if len(communities) != n:
+            raise ValueError("Partition must label every node")
+        degrees = [sum(row) for row in matrix]
+        total = sum(degrees)
+        if total == 0:
+            return 0.0
+        return sum(matrix[i][j] - degrees[i] * degrees[j] / total
+                   for i in range(n) for j in range(n)
+                   if communities[i] == communities[j]) / total
+
+    def _calculate_network_entropy(self, adj_matrix) -> float:
+        degrees = [sum(row) for row in self._matrix(adj_matrix)]
+        total = sum(degrees)
+        return -sum((degree / total) * math.log2(degree / total)
+                    for degree in degrees if degree > 0) if total else 0.0
+
+    def _calculate_mutual_information(self, adj_matrix) -> Optional[float]:
+        matrix = self._matrix(adj_matrix)
+        degrees = [sum(row) for row in matrix]
+        total = sum(degrees)
+        if not total:
+            return None  # No edge-sampling probability distribution is defined.
+        return sum((weight / total) * math.log2(weight * total / (degrees[i] * degrees[j]))
+                   for i, row in enumerate(matrix) for j, weight in enumerate(row) if weight > 0)
 
 
 class ThermodynamicComplexityAnalyzer:
-    """Thermodynamic analysis of computational complexity and energy efficiency."""
-    
+    """Cycle-energy proxies, not a state-function thermodynamic model.
+
+    Non-FLOP energy is treated as dissipated heat. Entropy change is Q/T (J/K),
+    rate is Q/(T*duration_s) (J/K/s), and the free-energy proxy is work - T*Q/T (J).
+    """
+
     def __init__(self, temperature_k: float = 300.0):
-        """Initialize thermodynamic analyzer.
-        
-        Args:
-            temperature_k: Operating temperature in Kelvin
-        """
+        if not math.isfinite(temperature_k) or temperature_k <= 0:
+            raise ValueError("Temperature must be finite and positive")
         self.temperature_k = temperature_k
-        self.k_boltzmann = 1.380649e-23  # J/K
-    
-    def analyze_thermodynamic_efficiency(self, 
-                                       energy_breakdown: EnergyBreakdown,
+        self.k_boltzmann = 1.380649e-23
+
+    def analyze_thermodynamic_efficiency(self, energy_breakdown: EnergyBreakdown,
                                        computational_work: float,
-                                       information_processed: float) -> ComplexityMetrics:
-        """Analyze thermodynamic efficiency of computational processes.
-        
-        Args:
-            energy_breakdown: Detailed energy breakdown
-            computational_work: Computational work performed (J)
-            information_processed: Information processed (bits)
-            
-        Returns:
-            ComplexityMetrics with thermodynamic analysis
-        """
-        # Calculate thermodynamic efficiency
-        total_energy = energy_breakdown.total
-        theoretical_minimum = self._calculate_theoretical_minimum(information_processed)
-        
-        efficiency = theoretical_minimum / total_energy if total_energy > 0 else 0.0
-        
-        # Calculate entropy production rate
-        entropy_production = self._calculate_entropy_production(energy_breakdown)
-        
-        # Calculate free energy
-        free_energy = self._calculate_free_energy(computational_work, entropy_production)
-        
+                                       information_processed: float,
+                                       duration_s: float = 0.01) -> ComplexityMetrics:
+        """Analyze a cycle; work and breakdown in J, information in bits, duration in s."""
+        if not math.isfinite(duration_s) or duration_s <= 0:
+            raise ValueError("Cycle duration must be finite and positive")
+        if not math.isfinite(computational_work) or computational_work < 0:
+            raise ValueError("Computational work must be finite and nonnegative joules")
+        total = energy_breakdown.total
+        if not math.isfinite(total) or total <= 0:
+            raise ValueError("Efficiency requires finite positive total energy")
+        entropy_change = self._calculate_entropy_production(energy_breakdown)
         return ComplexityMetrics(
-            thermodynamic_efficiency=efficiency,
-            entropy_production_rate=entropy_production,
-            free_energy=free_energy
+            thermodynamic_efficiency=self._calculate_theoretical_minimum(information_processed) / total,
+            entropy_production_rate=entropy_change / duration_s,
+            entropy_change=entropy_change,
+            free_energy=self._calculate_free_energy(computational_work, entropy_change),
         )
-    
+
     def _calculate_theoretical_minimum(self, information_processed: float) -> float:
-        """Calculate theoretical minimum energy (Landauer limit)."""
+        if not math.isfinite(information_processed) or information_processed < 0:
+            raise ValueError("Information must be finite and nonnegative bits")
         return information_processed * self.k_boltzmann * self.temperature_k * math.log(2)
-    
+
     def _calculate_entropy_production(self, energy_breakdown: EnergyBreakdown) -> float:
-        """Calculate entropy production rate."""
-        # Simplified entropy production based on energy dissipation
-        dissipated_energy = energy_breakdown.total - energy_breakdown.compute_flops
-        return dissipated_energy / (self.temperature_k * 0.01)  # 10ms decision cycle
-    
-    def _calculate_free_energy(self, computational_work: float, entropy_production: float) -> float:
-        """Calculate free energy available for computation."""
-        return computational_work - self.temperature_k * entropy_production
+        """Return cycle entropy-change proxy in J/K, not a rate."""
+        dissipated = energy_breakdown.total - energy_breakdown.compute_flops
+        if not math.isfinite(dissipated) or dissipated < 0:
+            raise ValueError("Dissipated energy must be finite and nonnegative")
+        return dissipated / self.temperature_k
+
+    def _calculate_entropy_production_rate(self, energy_values: Sequence[float],
+                                           duration_s: float) -> float:
+        """Sum dissipated sample energies (J) over an explicit observation duration."""
+        if not math.isfinite(duration_s) or duration_s <= 0:
+            raise ValueError("Duration must be finite and positive")
+        if any(not math.isfinite(value) or value < 0 for value in energy_values):
+            raise ValueError("Dissipated energies must be finite and nonnegative")
+        return sum(energy_values) / (self.temperature_k * duration_s)
+
+    def _calculate_free_energy(self, computational_work: float, entropy_change: float) -> float:
+        """Return work (J) minus temperature (K) times entropy change (J/K)."""
+        if not math.isfinite(computational_work) or not math.isfinite(entropy_change):
+            raise ValueError("Work and entropy change must be finite")
+        return computational_work - self.temperature_k * entropy_change
 
 
 class ComplexityEntropyAnalyzer:
@@ -504,40 +305,32 @@ class ComplexityEntropyAnalyzer:
         return diagram
     
     def _calculate_lemple_ziv_complexity(self, sequence: List[float]) -> float:
-        """Calculate Lempel-Ziv complexity (simplified)."""
+        """LZ78 phrase count / sample count after four equal-width amplitude bins.
+
+        Parse the shortest phrase not already in the dictionary, starting with the
+        empty phrase. Count a remaining terminal phrase even if already known.
+        References: 0000 -> 0|00|0 (3/4); 0123 -> 0|1|2|3 (1).
+        This finite-length normalized count is not an entropy-rate estimator.
+        """
         if not sequence:
             return 0.0
-        
-        # Discretize sequence
-        if HAS_NUMPY:
-            # Use quantiles for discretization
-            quantiles = np.percentile(sequence, [25, 50, 75])
-            discrete = np.digitize(sequence, quantiles)
-        else:
-            # Simple discretization
-            min_val = min(sequence)
-            max_val = max(sequence)
-            if max_val == min_val:
-                discrete = [0] * len(sequence)
-            else:
-                discrete = [int(3 * (x - min_val) / (max_val - min_val)) for x in sequence]
-        
-        # Calculate LZ complexity
-        n = len(discrete)
-        if n == 0:
-            return 0.0
-        
-        # Simplified LZ complexity calculation
-        patterns = set()
-        i = 0
-        while i < n:
-            j = i + 1
-            while j <= n and tuple(discrete[i:j]) not in patterns:
-                j += 1
-            patterns.add(tuple(discrete[i:j-1]))
-            i = j - 1
-        
-        return len(patterns) / n
+        if any(not math.isfinite(value) for value in sequence):
+            raise ValueError("LZ input must be finite")
+        low, high = min(sequence), max(sequence)
+        symbols = [min(3, int(4 * (value - low) / (high - low))) if high > low else 0
+                   for value in sequence]
+        dictionary = {()}
+        phrase = ()
+        count = 0
+        for symbol in symbols:
+            phrase += (symbol,)
+            if phrase not in dictionary:
+                dictionary.add(phrase)
+                count += 1
+                phrase = ()
+        if phrase:
+            count += 1
+        return count / len(symbols)
     
     def _calculate_shannon_entropy(self, sequence: List[float]) -> float:
         """Calculate Shannon entropy of sequence."""
@@ -586,134 +379,77 @@ class ComplexityEntropyAnalyzer:
 
 
 class EnhancedBootstrapAnalyzer:
-    """Enhanced bootstrap analysis with bias correction and advanced statistics."""
-    
-    def __init__(self, n_bootstrap: int = 1000):
-        """Initialize enhanced bootstrap analyzer.
-        
-        Args:
-            n_bootstrap: Number of bootstrap samples
-        """
+    """Paired-observation percentile bootstrap with a local reproducible RNG."""
+
+    def __init__(self, n_bootstrap: int = 1000, seed: Optional[int] = 0):
+        if isinstance(n_bootstrap, bool) or not isinstance(n_bootstrap, int) or n_bootstrap < 1:
+            raise ValueError("n_bootstrap must be a positive integer")
         self.n_bootstrap = n_bootstrap
-    
-    def analyze_scaling_with_bootstrap(self, 
-                                     x_values: List[float], 
-                                     y_values: List[float],
+        self.seed = seed
+
+    def analyze_scaling_with_bootstrap(self, x_values: List[float], y_values: List[float],
                                      confidence_level: float = 0.95) -> Dict[str, Any]:
-        """Analyze scaling relationship with comprehensive bootstrap analysis.
-        
-        Args:
-            x_values: Independent variable values
-            y_values: Dependent variable values
-            confidence_level: Confidence level for intervals
-            
-        Returns:
-            Dictionary with comprehensive bootstrap analysis results
-        """
+        if not 0 < confidence_level < 1:
+            raise ValueError("Confidence level must lie strictly between zero and one")
         if len(x_values) != len(y_values) or len(x_values) < 3:
-            return {'error': 'Insufficient data for bootstrap analysis'}
-        
-        # Original scaling analysis
-        original_result = analyze_scaling_relationship(x_values, y_values)
-        
-        if not original_result.get('valid', False):
-            return original_result
-        
-        # Bootstrap analysis
-        bootstrap_exponents = []
-        bootstrap_intercepts = []
-        bootstrap_r_squared = []
-        
+            return {'valid': False, 'error': 'Insufficient data for bootstrap analysis'}
+        original = analyze_scaling_relationship(x_values, y_values)
+        if not original.get('valid', False):
+            return original
+        rng = random.Random(self.seed)
+        exponents, intercepts, r_squared = [], [], []
         for _ in range(self.n_bootstrap):
-            # Bootstrap sample
-            if HAS_NUMPY:
-                indices = np.random.choice(len(x_values), len(x_values), replace=True)
-                boot_x = [x_values[i] for i in indices]
-                boot_y = [y_values[i] for i in indices]
-            else:
-                # Simple bootstrap without numpy
-                boot_x = [random.choice(x_values) for _ in range(len(x_values))]
-                boot_y = [random.choice(y_values) for _ in range(len(y_values))]
-            
-            # Analyze bootstrap sample
-            boot_result = analyze_scaling_relationship(boot_x, boot_y)
-            if boot_result.get('valid', False):
-                bootstrap_exponents.append(boot_result.get('scaling_exponent', 0))
-                bootstrap_intercepts.append(boot_result.get('intercept', 0))
-                bootstrap_r_squared.append(boot_result.get('r_squared', 0))
-        
-        if not bootstrap_exponents:
-            return original_result
-        
-        # Calculate confidence intervals
-        alpha = 1 - confidence_level
-        lower_percentile = (alpha / 2) * 100
-        upper_percentile = (1 - alpha / 2) * 100
-        
-        if HAS_NUMPY:
-            exp_ci = np.percentile(bootstrap_exponents, [lower_percentile, upper_percentile])
-            int_ci = np.percentile(bootstrap_intercepts, [lower_percentile, upper_percentile])
-            r2_ci = np.percentile(bootstrap_r_squared, [lower_percentile, upper_percentile])
-            
-            # Bias correction
-            bias_exp = np.mean(bootstrap_exponents) - original_result.get('scaling_exponent', 0)
-            bias_int = np.mean(bootstrap_intercepts) - original_result.get('intercept', 0)
-            
-            # Corrected estimates
-            corrected_exp = original_result.get('scaling_exponent', 0) - bias_exp
-            corrected_int = original_result.get('intercept', 0) - bias_int
-            
-        else:
-            # Fallback without numpy
-            bootstrap_exponents.sort()
-            bootstrap_intercepts.sort()
-            bootstrap_r_squared.sort()
-            
-            n = len(bootstrap_exponents)
-            lower_idx = int(lower_percentile / 100 * n)
-            upper_idx = int(upper_percentile / 100 * n)
-            
-            exp_ci = [bootstrap_exponents[lower_idx], bootstrap_exponents[upper_idx]]
-            int_ci = [bootstrap_intercepts[lower_idx], bootstrap_intercepts[upper_idx]]
-            r2_ci = [bootstrap_r_squared[lower_idx], bootstrap_r_squared[upper_idx]]
-            
-            # Simple bias correction
-            bias_exp = sum(bootstrap_exponents) / len(bootstrap_exponents) - original_result.get('scaling_exponent', 0)
-            bias_int = sum(bootstrap_intercepts) / len(bootstrap_intercepts) - original_result.get('intercept', 0)
-            
-            corrected_exp = original_result.get('scaling_exponent', 0) - bias_exp
-            corrected_int = original_result.get('intercept', 0) - bias_int
-        
+            indices = [rng.randrange(len(x_values)) for _ in x_values]
+            fit = analyze_scaling_relationship([x_values[i] for i in indices],
+                                               [y_values[i] for i in indices])
+            if fit.get('valid', False):
+                exponents.append(fit['scaling_exponent'])
+                intercepts.append(fit['intercept'])
+                if fit['r_squared'] is not None:
+                    r_squared.append(fit['r_squared'])
+        if not exponents:
+            return {**original, 'valid': False, 'error': 'No valid paired bootstrap fits',
+                    'bootstrap_attempted': self.n_bootstrap, 'bootstrap_valid': 0}
+
+        def quantile(values, probability):
+            ordered = sorted(values)
+            position = probability * (len(ordered) - 1)
+            low = math.floor(position)
+            high = math.ceil(position)
+            return ordered[low] + (ordered[high] - ordered[low]) * (position - low)
+
+        alpha = (1 - confidence_level) / 2
+        intervals = {name: (quantile(values, alpha), quantile(values, 1 - alpha)) if values else None
+                     for name, values in [('exponent', exponents), ('intercept', intercepts),
+                                          ('r_squared', r_squared)]}
         return {
-            'original_result': original_result,
-            'bootstrap_exponents': bootstrap_exponents,
-            'bootstrap_intercepts': bootstrap_intercepts,
-            'bootstrap_r_squared': bootstrap_r_squared,
-            'confidence_intervals': {
-                'exponent': exp_ci,
-                'intercept': int_ci,
-                'r_squared': r2_ci
-            },
+            **original, 'valid': True, 'original_result': original,
+            'confidence_interval': intervals['exponent'],
+            'confidence_intervals': intervals,
+            'bootstrap_exponents': exponents, 'bootstrap_intercepts': intercepts,
+            'bootstrap_r_squared': r_squared,
+            'bootstrap_attempted': self.n_bootstrap, 'bootstrap_valid': len(exponents),
             'bias_corrected': {
-                'exponent': corrected_exp,
-                'intercept': corrected_int
+                'exponent': 2 * original['scaling_exponent'] - sum(exponents) / len(exponents),
+                'intercept': 2 * original['intercept'] - sum(intercepts) / len(intercepts),
             },
             'bootstrap_stats': {
-                'mean_exponent': sum(bootstrap_exponents) / len(bootstrap_exponents),
-                'std_exponent': self._calculate_std(bootstrap_exponents),
-                'mean_r_squared': sum(bootstrap_r_squared) / len(bootstrap_r_squared),
-                'std_r_squared': self._calculate_std(bootstrap_r_squared)
-            }
+                'mean_exponent': sum(exponents) / len(exponents),
+                'std_exponent': self._calculate_std(exponents),
+                'mean_r_squared': sum(r_squared) / len(r_squared) if r_squared else None,
+                'std_r_squared': self._calculate_std(r_squared) if r_squared else None,
+            },
         }
-    
+
+    def _generate_bootstrap_sample(self, values: List[float]) -> List[float]:
+        rng = random.Random(self.seed)
+        return [values[rng.randrange(len(values))] for _ in values]
+
     def _calculate_std(self, values: List[float]) -> float:
-        """Calculate standard deviation without numpy."""
         if len(values) < 2:
             return 0.0
-        
-        mean_val = sum(values) / len(values)
-        variance = sum((x - mean_val) ** 2 for x in values) / (len(values) - 1)
-        return math.sqrt(variance)
+        mean = sum(values) / len(values)
+        return math.sqrt(sum((value - mean) ** 2 for value in values) / (len(values) - 1))
 
 
 def comprehensive_complexity_analysis(energy_data: List[EnergyBreakdown],

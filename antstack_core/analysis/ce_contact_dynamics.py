@@ -14,7 +14,7 @@ def analyze_solver_comparison(contact_counts: List[int], output_dir: Path) -> Di
     """Compare different contact solver algorithms across contact counts."""
     print("Analyzing contact solver performance...")
 
-    solvers = ["pgs", "lcp", "mlcp"]
+    solvers = ["pgs", "si", "ldlt"]
     results = {}
 
     for solver in solvers:
@@ -167,14 +167,14 @@ def run(args):
             'name': 'Steep',
             'params': {
                 'J': 18, 'C': 20, 'S': 256, 'hz': 100,
-                'contact_solver': 'lcp'  # More contacts need robust solver
+                'contact_solver': 'ldlt'
             }
         },
         {
             'name': 'Soft',
             'params': {
                 'J': 18, 'C': 12, 'S': 256, 'hz': 100,
-                'contact_solver': 'mlcp'
+                'contact_solver': 'si'
             }
         }
     ]
@@ -206,8 +206,8 @@ def run(args):
     # Print key findings
     print(f"\nKey Findings:")
     print(f"- PGS scaling: {solver_results['pgs']['flops_scaling'].get('regime', 'unknown')}")
-    print(f"- LCP scaling: {solver_results['lcp']['flops_scaling'].get('regime', 'unknown')}")
-    print(f"- MLCP scaling: {solver_results['mlcp']['flops_scaling'].get('regime', 'unknown')}")
+    print(f"- SI scaling: {solver_results['si']['flops_scaling'].get('regime', 'unknown')}")
+    print(f"- LDLT scaling: {solver_results['ldlt']['flops_scaling'].get('regime', 'unknown')}")
 
     max_energy_terrain = max(terrain_results['summary']['terrain_names'],
                            key=lambda x: terrain_results[x]['energy_total'])

@@ -1,31 +1,16 @@
-# Documentation Paper
+# Ant Stack Publication Guide: Configuration, Evidence, and Rendering
 
-This paper root documents the Ant Stack publication and PDF rendering workflow. It is validated through the shared `antstack-build` command.
+This configured documentation paper explains the installed publication path and its evidence limits. It is a software guide, not an empirical embodied-AI study or a certification of publication readiness.
 
-```mermaid
-flowchart TD
-    Config["paper_config.yaml"] --> Build["uv run antstack-build --paper documentation"]
-    Build --> Assets["assets/"]
-    Build --> PDF["documentation PDF"]
-    Docs["root docs and guides"] --> Config
-```
-
-## Local Commands
+## Validate inputs separately from rendered acceptance
 
 ```bash
 uv run antstack-build --paper documentation --validate-only
-uv run antstack-build --validate-only
-```
-
-Full PDF builds require Pandoc and a XeLaTeX-capable TeX installation:
-
-```bash
 uv run antstack-build --paper documentation
 ```
 
-## Notes
+The configured source order is this overview followed by `PDF_RENDERING_GUIDE.md`. Examples in the guide are literal code examples; `mermaid_preprocessing: false` keeps them from becoming purported research diagrams. Full rendering still needs the actual Pandoc/XeLaTeX/font toolchain. A compiled file must be inspected for readable mathematics, glyphs, counter references and layout.
 
-- Keep this README focused on the documentation paper root.
-- General repository documentation lives under `docs/`.
-- Root rendering guidance lives in `PDF_RENDERING_GUIDE.md`.
-- Keep generated render intermediates under `assets/` only when they are intentional and reproducible.
+## Follow source-owned modular guidance
+
+The root README is the entry point; `docs/public_api_contracts.md`, `docs/reproducibility.md` and `docs/validation.md` own API, evidence and verification contracts. This paper owns publishing syntax and configuration. Update those sources rather than retained concatenation/prerender scratch copies or historical PDFs. Do not infer a current validation result from an old `build_report.md`.

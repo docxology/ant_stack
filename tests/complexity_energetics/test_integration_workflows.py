@@ -104,7 +104,7 @@ class TestCompleteWorkflows(unittest.TestCase):
         for K in K_values:
             params = {
                 'K': K, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100,
-                'connectivity_pattern': 'biological'
+                'connectivity_pattern': 'structured'
             }
             load = enhanced_brain_workload_closed_form(0.01, params)
             breakdown = estimate_detailed_energy(load, self.coeffs, 0.01)

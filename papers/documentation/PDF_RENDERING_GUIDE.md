@@ -1,452 +1,131 @@
-# PDF Rendering System Guide: Reliable Paper Syntax
+# Configured Scientific Publishing: Sources, Counters, and Proof
 
-## Overview
+## One installed renderer, explicit caller-owned inputs
 
-This guide documents the comprehensive PDF rendering system used across all Ant Stack papers, providing reliable syntax patterns for consistent, professional scientific publications.
+`antstack_core.publishing.paper_builder.ModularPaperBuilder` discovers `papers/<name>/paper_config.yaml`. The `antstack-build` console command works from an installed wheel; it reads caller-owned manuscript/configuration files and does not import this repository's `scripts/` directory or require pytest at runtime. `tools/render_pdf.sh` only launches the same implementation.
 
-## System Architecture
-
-### Core Components
-
-1. **Modular Build System** (`scripts/common_pipeline/build_core.py`)
-   - YAML-based paper configuration
-   - Automatic paper discovery and validation
-   - Cross-reference validation before PDF generation
-   - Quality assurance reporting
-
-2. **Legacy Render System** (`tools/render_pdf.sh`)
-   - Pandoc + XeLaTeX pipeline
-   - Mermaid diagram prerendering
-   - Unicode math symbol handling
-   - Cross-reference validation
-
-3. **Core Package** (`antstack_core/`)
-   - Figure generation and management
-   - Cross-reference validation
-   - Asset organization
-   - Publication-ready formatting
-
-## Paper Configuration System
-
-### YAML Configuration Structure
-
-Each paper requires a `paper_config.yaml` file with this structure:
+The builder uses `content.files` in its listed order, not alphabetical order. Names must stay inside the paper directory. The output is one PDF basename in the project root. Analysis, when enabled, uses the explicitly supported installed CE runner and a fresh artifact root before projecting current generated content.
 
 ```yaml
-# Paper metadata
 paper:
-  name: "paper_name"
-  title: "Paper Title"
-  subtitle: "Subtitle"
-  author: "Daniel Ari Friedman"
-  email: "daniel@activeinference.institute"
-  orcid: "0000-0001-6232-9096"
-  output_filename: "N_paper_name.pdf"
-
-# Content organization
+  title: "Analytical Model and Explicit Assumptions"
+  author: "Author"
+  output_filename: "analysis.pdf"
 content:
-  files:
-    - "Abstract.md"
-    - "Introduction.md"
-    # ... other files in build order
-
-# Asset management
-assets:
-  figures_dir: "assets/figures"
-  mermaid_dir: "assets/mermaid"
-  tmp_dir: "assets/tmp_images"
-  data_dir: "assets/data"
-
-# Build configuration
+  files: ["Abstract.md", "Methods.md", "Results.md"]
 build:
-  has_generated_content: true
-  has_computational_analysis: true
+  has_computational_analysis: false
   mermaid_preprocessing: true
   cross_reference_validation: true
-
-# LaTeX/Pandoc settings
 latex:
   document_class: "article"
   geometry: "margin=2.5cm"
   mainfont: "Latin Modern Roman"
   mathfont: "Latin Modern Math"
   bibliography: "references.bib"
-
-# Quality assurance
-validation:
-  check_cross_references: true
-  check_figure_captions: true
-  check_unicode_symbols: true
-  require_descriptive_links: true
-  validate_analysis_outputs: true
 ```
 
-## Figure Management System
+Directory signposts and metadata are not executable scientific guarantees. Validate the real configuration and inputs; then run the actual build.
 
-### Figure Format (CRITICAL)
+## Readiness is not a render
 
-**ALWAYS use this exact format:**
+```bash
+uv run antstack-build --validate-only
+uv run antstack-build --paper complexity_energetics
+uv run antstack-build --project-root cache/paper-proof
+```
+
+Validation checks configured Markdown sources, explicit reference declarations and citation-key coverage where a bibliography is configured. It writes `build_report.md` but no PDF. It cannot establish actual image decoding, counter placement, fonts, browser compatibility, citation identity, page layout or scientific validity.
+
+A staging project has its own copied `papers/` inputs and output root. It avoids replacing source projections/PDFs during proof. Failed attempts retain diagnostics; a previous PDF is preserved, never treated as a fresh result.
+
+## Put labels and detailed captions on the actual counter
+
+An image caption belongs to the figure, not an unrelated paragraph that can float onto another page. Include the relevant units, interval, assumptions and evidence class in the caption. One identifier is enough:
 
 ```markdown
-## Figure: Descriptive Title {#fig:identifier}
+![Assumed module-isolated energy, in J per workload window. These analytical values are not device measurements.](assets/energy.png){#fig:energy_budget}
 
-![Alt text](assets/figures/your_figure_name.png){#fig:identifier}
-
-**Caption:** Detailed description of the figure content, including units and key findings.
+See Figure @fig:energy_budget.
 ```
 
-*Note: This is an example figure reference. Replace `assets/figures/your_figure_name.png` with your actual figure file path.*
+Existing explicitly labeled figure/table counter headings are bound to their following actual counter. Do not attach a figure/table ID to an ordinary section and assume it creates that counter. Missing, duplicate or conflicting definitions are errors; they are not automatically retargeted to similar names.
 
-**NEVER use:**
-- `![caption](path){#fig:id}` (inline figure definitions)
-- `\includegraphics` commands in markdown
-- Missing figure IDs or captions
-
-### Figure Naming Conventions
-
-- **IDs**: Use descriptive, hierarchical names: `energy_by_workload`, `scaling_brain_K`, `response_time_comparison`
-- **Files**: Store in `assets/figures/` with descriptive names
-- **References**: Use `\ref{fig:identifier}` for cross-references
-
-### Example Figure Definition
+For sections, identify the actual heading:
 
 ```markdown
-## Figure: Energy Scaling Analysis {#fig:energy_scaling}
+## Accounting assumptions {#sec:accounting_assumptions}
 
-![Energy scaling with confidence intervals](assets/figures/your_figure_name.png){#fig:energy_scaling}
-
-**Caption:** Energy consumption scaling with system complexity K, showing 95% confidence intervals. The power law relationship E ∝ K^α is evident with α ≈ 1.2.
+See Section @sec:accounting_assumptions.
 ```
 
-*Note: This is an example figure reference. Replace `assets/figures/your_figure_name.png` with your actual figure file path.*
+Keep table captions descriptive and column units explicit. A sample count of deterministic recalculations is not an empirical sample size. Distinguish mean, total, workload window, decision interval, power and energy.
 
-## Cross-Reference System
+## Number equations deliberately; preserve literal code
 
-### Reference Types
-
-1. **Figures**: `\ref{fig:identifier}` → "Figure 1"
-2. **Equations**: `\ref{eq:identifier}` → "Equation (1)"
-3. **Sections**: `\ref{sec:identifier}` → "Section 2.1"
-4. **Tables**: `\ref{tab:identifier}` → "Table 3"
-
-### Section IDs
-
-Use descriptive IDs in section headers:
-
-```markdown
-# Introduction {#sec:introduction}
-
-## Methodology {#sec:methodology}
-
-### Data Collection {#sec:data_collection}
-```
-
-### Equation Format
+Inline math can use `$...$` or `\(...\)`; display math can use `$$...$$` or `\[...\]`. An unnumbered display does not supply an equation counter. Use a numbered environment before referring to its label:
 
 ```markdown
 \begin{equation}
-E = \sum_{i=1}^{n} \alpha_i \cdot K_i^{\beta_i}
-\label{eq:energy_scaling}
+E_{\mathrm{idle}} = P_{\mathrm{idle}} t
+\label{eq:idle_energy}
 \end{equation}
+
+See Equation @eq:idle_energy.
 ```
 
-Reference with: `\ref{eq:energy_scaling}`
+LaTeX macros are the clearest portable mathematical spelling: `$\alpha + \beta \ge 0$`. Supported Unicode math in prose/math is normalized on parsed nodes. URLs, code, resource paths and identifiers must remain unchanged. Literal code may itself contain Unicode:
 
-## Mathematics and Symbols
-
-### LaTeX Math Syntax
-
-**ALWAYS use LaTeX macros, NEVER Unicode symbols:**
-
-```markdown
-# Correct
-$\mu$, $\lambda$, $\pi$, $\epsilon$, $\Delta$, $\rho$, $\sigma$
-
-# Incorrect  
-μ, λ, π, ε, Δ, ρ, σ
+```python
+label = 'α ≤ β'
 ```
 
-### Common Symbol Mappings
+That code needs a font containing those glyphs; mathematical normalization must not rewrite it into different program text. Missing glyphs are render failures, not warnings to suppress. The selected font/toolchain and final rasterized page determine readability.
 
-| Symbol | LaTeX | Usage |
-|--------|-------|-------|
-| μ | `$\mu$` | Micrometers, mean |
-| λ | `$\lambda$` | Wavelength |
-| π | `$\pi$` | Pi constant |
-| ε | `$\epsilon$` | Epsilon |
-| Δ | `$\Delta$` | Delta, change |
-| ρ | `$\rho$` | Density, correlation |
-| σ | `$\sigma$` | Standard deviation |
-| ± | `$\pm$` | Plus-minus |
-| ≤ | `$\le$` | Less than or equal |
-| ≥ | `$\ge$` | Greater than or equal |
-| ≈ | `$\approx$` | Approximately |
-| ∝ | `$\propto$` | Proportional to |
+## Source-relative assets must remain unambiguous
 
-### Math Environments
+An image path is resolved relative to its own Markdown file. Two source directories can both contain `figure.png`; do not flatten them by basename or search the process working directory as an undocumented fallback. Images must be explicit local resources. SVG conversion requires `rsvg-convert`; conversion/producer failure must not reuse a stale PNG.
 
-```markdown
-# Inline math
-The energy is $E = mc^2$ joules.
+Document-wide references and ordered source assembly matter across module boundaries. Repeated generic headings must not make separate valid modules unrenderable, while duplicate **explicit** IDs remain errors. Give important sections stable explicit IDs and retain them when improving titles.
 
-# Display math
-$$E = \sum_{i=1}^{n} \alpha_i \cdot K_i^{\beta_i}$$
+## Mermaid needs a real, qualified local browser
 
-# Numbered equation
-\begin{equation}
-E = \sum_{i=1}^{n} \alpha_i \cdot K_i^{\beta_i}
-\label{eq:energy_scaling}
-\end{equation}
-```
+Active Mermaid fences are rendered locally with the pinned CLI. Code examples nested inside longer Markdown fences are examples, not diagrams to execute. Preserve graph labels and topology; deleting syntax or semantic edges is not a valid repair.
 
-## Hyperlinks and References
-
-### External Links
-
-Use descriptive hyperlinks with `\href{URL}{descriptive text}`:
-
-```markdown
-# Correct
-\href{https://arxiv.org/abs/2505.03764}{arXiv preprint}
-
-# Incorrect
-https://arxiv.org/abs/2505.03764
-\url{https://arxiv.org/abs/2505.03764}
-```
-
-### Internal Cross-References
-
-```markdown
-# Section references
-See \ref{sec:methodology} for details.
-
-# Figure references  
-As shown in \ref{fig:energy_scaling}, the relationship is clear.
-
-# Equation references
-From \ref{eq:energy_scaling}, we can derive...
-```
-
-## Mermaid Diagrams
-
-### Prerendering System
-
-Mermaid diagrams must be prerendered to local images:
-
-1. **Source**: Store `.mmd` files in `assets/mermaid/`
-2. **Rendered**: Convert to `.png` files in same directory
-3. **Reference**: Use standard figure format
-
-### Diagram Format
-
-```markdown
-## Figure: System Architecture {#fig:system_arch}
-
-![System architecture diagram](assets/mermaid/your_diagram_name.png){#fig:system_arch}
-
-**Caption:** High-level system architecture showing data flow between components.
-```
-
-*Note: This is an example figure reference. Replace `assets/mermaid/your_diagram_name.png` with your actual Mermaid diagram output.*
-
-### Mermaid Best Practices
+````markdown
+## Figure: Assumptions-to-output workflow {#fig:analytical_workflow}
 
 ```mermaid
-graph TD
-    A[Input Data] --> B[Processing]
-    B --> C[Output]
-    
-    style A fill:#e1f5fe
-    style B fill:#f3e5f5
-    style C fill:#e8f5e8
+flowchart LR
+    A[Declared assumptions] --> B[Analytical counters]
+    B --> C[Estimated energy]
 ```
+````
 
-## File Organization
+`ANTSTACK_MMDC` can select an explicit local CLI and `PUPPETEER_EXECUTABLE_PATH` an existing compatible browser. Keep caches/profiles local to the project. Chromium's sandbox stays enabled. There is no automatic public-service upload or Docker fallback; an explicitly supplied Kroki endpoint is a separate caller trust decision.
 
-### Directory Structure
+On macOS, an outer qualified runner can prevent Chromium from initializing its nested sandbox. Record the failure and use a separately permitted project execution environment; do not mark it green by disabling sandboxing or reusing old diagrams. Repository CI must execute the real render and retain its source/runtime-bound output for inspection.
 
-```
-papers/paper_name/
-├── paper_config.yaml          # Paper configuration
-├── Abstract.md                # Abstract
-├── Introduction.md            # Introduction
-├── Methodology.md             # Methods
-├── Results.md                 # Results
-├── Discussion.md              # Discussion
-├── Conclusion.md              # Conclusion
-├── References.md              # References
-├── Appendices.md              # Appendices
-├── assets/
-│   ├── figures/              # Generated figures
-│   ├── mermaid/              # Mermaid diagrams
-│   ├── data/                 # Data files
-│   └── tmp_images/           # Temporary images
-└── references.bib            # Bibliography
-```
+## Citations need both syntax checks and primary-source verification
 
-### File Naming Conventions
+Use keys that exist in the configured bibliography, for example `[@key]`. Undefined keys and duplicate bibliography entries are errors. Coverage does not establish that a DOI, author, year or claimed finding is correct. Verify those against primary records; never manufacture a reference from a familiar-looking name or “repair” an unresolved key by guesswork.
 
-- **Markdown files**: `PascalCase.md` (e.g., `Abstract.md`, `Introduction.md`)
-- **Figure files**: `snake_case.png` (e.g., `energy_scaling.png`)
-- **Data files**: `descriptive_name.json` (e.g., `analysis_results.json`)
+Raw TeX, Jinja templates, bibliography/resources and local endpoints are trusted author input, not a security sandbox. Do not put credentials in inputs or expect source/config snapshots to redact them.
 
-## Build System Usage
+## Distinguish analytical reports, full manuscripts, and historical copies
 
-### Command Line Interface
+The example CE manifest uses assumed prices and a null meter. Its deterministic counts, fitted curves and bootstrap summaries are model-conditional outputs, not independent observations, calibrated uncertainty, or demonstrated real-time/biological performance. Base and enhanced models must remain separately labeled.
 
-```bash
-# Build all papers
-uv run antstack-build
+Run-all `build_pdf: true` renders a generated analytical-results report. The default `build_pdf: false` copies an explicitly historical PDF. Neither operation is a fresh build of the complete configured manuscript. Use `antstack-build` for that manuscript and verify its ordered sources, current generated projection and actual bibliography.
 
-# Build specific paper
-uv run antstack-build --paper paper_name
+## Accept only an inspected, source-bound result
 
-# Validate only (no PDF generation)
-uv run antstack-build --validate-only
+1. Record exact source/package, input snapshots, dependency/runtime/tool versions and invocation.
+2. Run native tests/lint/folder checks and entrypoint validation without skipping failures.
+3. Execute actual installed CLI paths, the configured workflow and requested paper builds.
+4. Recompute artifact hashes and verify current projection agreement.
+5. Inspect PDF pages at final scale: math, glyphs, counters, captions, tables, citations, links and figures.
+6. Trace numerical graphics/tables to the same completed run; disclose synthetic data, assumptions and missing empirical validation.
+7. Record failures, unavailable tools and non-runs explicitly. Compilation is not visual acceptance or scientific certification.
 
-# Skip tests
-uv run antstack-build --no-tests
-```
-
-### Legacy System
-
-```bash
-# Build all papers
-bash tools/render_pdf.sh
-
-# Build specific paper
-bash tools/render_pdf.sh paper_name
-```
-
-## Quality Assurance
-
-### Pre-Build Validation
-
-The system automatically validates:
-
-1. **Cross-references**: All `\ref{}` commands resolve to valid IDs
-2. **Figure captions**: All figures have proper captions
-3. **Math symbols**: Unicode symbols converted to LaTeX
-4. **File structure**: All referenced files exist
-5. **Configuration**: YAML syntax and required fields
-
-### Post-Build Validation
-
-1. **PDF quality**: File size, page count, figure count
-2. **Broken references**: Detection of "Figure~??" patterns
-3. **Mermaid rendering**: All diagrams successfully converted
-4. **Cross-reference consistency**: Definitions match references
-
-### Validation Reports
-
-Build reports are generated in `build_report.md` with:
-
-- Validation results summary
-- Error details and fixes
-- Quality metrics
-- Performance statistics
-
-## Test Suite Integration
-
-### Test Categories
-
-1. **Unit Tests**: Individual component validation
-2. **Integration Tests**: Cross-module functionality
-3. **Workflow Tests**: End-to-end pipeline validation
-4. **Rendering Tests**: PDF generation and quality
-
-### Running Tests
-
-```bash
-# All tests
-uv run pytest tests/
-
-# Specific component
-uv run pytest tests/core_rendering/
-
-# With coverage
-uv run pytest --cov=antstack_core tests/
-```
-
-## Common Issues and Solutions
-
-### Math Formatting Issues
-
-**Problem**: `\mathrm allowed only in math mode`
-
-**Solution**: Ensure all math is properly wrapped in `$...$` or `$$...$$`
-
-```markdown
-# Correct
-$\mu\mathrm{m}$
-
-# Incorrect
-\(\mu\mathrm{m}\)
-```
-
-### Figure Reference Issues
-
-**Problem**: `Figure~??` in PDF
-
-**Solution**: Ensure figure IDs match exactly between definition and reference
-
-```markdown
-# Definition
-## Figure: Title {#fig:my_figure}
-
-# Reference
-\ref{fig:my_figure}
-```
-
-### Cross-Reference Issues
-
-**Problem**: Undefined references
-
-**Solution**: Use `\ref{}` instead of `\Cref{}` unless cleveref is properly configured
-
-```markdown
-# Correct
-\ref{fig:my_figure}
-
-# May cause issues
-\Cref{fig:my_figure}
-```
-
-## Best Practices Summary
-
-### DO
-
-- ✅ Use consistent figure format with IDs and captions
-- ✅ Use LaTeX macros for all math symbols
-- ✅ Use descriptive hyperlinks with `\href{}`
-- ✅ Validate cross-references before building
-- ✅ Use proper file organization
-- ✅ Test with real data (no mocks)
-- ✅ Generate comprehensive validation reports
-
-### DON'T
-
-- ❌ Use inline figure definitions
-- ❌ Use Unicode math symbols in text
-- ❌ Use naked URLs
-- ❌ Skip cross-reference validation
-- ❌ Use mock methods in tests
-- ❌ Ignore build warnings
-
-## Troubleshooting
-
-### Build Failures
-
-1. **Check math formatting**: Ensure all math is properly wrapped
-2. **Validate cross-references**: Run `--validate-only` first
-3. **Check file paths**: Ensure all referenced files exist
-4. **Review YAML syntax**: Validate configuration files
-
-### Quality Issues
-
-1. **Broken references**: Check ID matching
-2. **Missing figures**: Verify file paths and existence
-3. **Math rendering**: Convert Unicode to LaTeX
-4. **Cross-references**: Use consistent reference format
-
-This guide ensures reliable, professional PDF generation across all Ant Stack papers with consistent formatting, proper cross-referencing, and comprehensive quality assurance.
+Version metadata, a tag, a pushed main commit and a hosted repository release are distinct states. A private Node tool package is not authorization to publish to a registry. Follow the repository's actual release/write admission; never bypass a disabled class, branch protection, required checks or an exact confirmation requirement.

@@ -12,7 +12,7 @@ Following .cursorrules principles:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Dict, List, Tuple, Optional, Any, Sequence
 
 
@@ -34,7 +34,7 @@ class EmpiricalEvidence:
         measurement_uncertainty: Dict mapping parameters to uncertainty values
         statistical_metrics: Dict of computed statistical measures (means, stds, etc.)
         confidence_intervals: Dict of confidence intervals for key metrics
-        validation_checks: Dict of boolean validation checks (sufficient data, etc.)
+        validation_checks: Dict of checks; None denotes unperformed or unknown
         quality_metrics: Dict of quality scores (completeness, consistency, etc.)
         analysis_parameters: Dict of parameters used in analysis
         software_versions: Dict of software versions for reproducibility
@@ -71,13 +71,15 @@ class EmpiricalEvidence:
     confidence_intervals: Dict[str, Tuple[float, float]]
 
     # Validation results
-    validation_checks: Dict[str, bool]
+    validation_checks: Dict[str, Optional[bool]]
     quality_metrics: Dict[str, float]
 
     # Provenance
     analysis_parameters: Dict[str, Any]
     software_versions: Dict[str, str]
     hardware_specifications: Dict[str, str]
+    source_kind: str = "unspecified"
+    hypothesis_tests: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation.
@@ -111,12 +113,14 @@ class EmpiricalEvidence:
         if parameter not in self.raw_measurements:
             return None
 
+        confidence = self.analysis_parameters.get("statistics", {}).get("confidence_level", 0.95)
+        ci_key = f"{parameter}_{100 * confidence:g}ci"
         return {
             "raw_values": self.raw_measurements[parameter],
-            "uncertainty": self.measurement_uncertainty.get(parameter, 0.0),
+            "uncertainty": self.measurement_uncertainty.get(parameter),
             "mean": self.statistical_metrics.get(f"{parameter}_mean"),
             "std": self.statistical_metrics.get(f"{parameter}_std"),
-            "confidence_interval": self.confidence_intervals.get(f"{parameter}_95ci"),
+            "confidence_interval": self.confidence_intervals.get(ci_key),
             "n_measurements": len(self.raw_measurements[parameter])
         }
 
@@ -137,7 +141,9 @@ class EmpiricalEvidence:
         Returns:
             True if all validation checks pass
         """
-        return all(self.validation_checks.values())
+        return any(len(values) > 0 for values in self.raw_measurements.values()) and bool(self.validation_checks) and all(
+            value is True for value in self.validation_checks.values()
+        )
 
 
 @dataclass(frozen=True)
@@ -200,7 +206,7 @@ class CaseStudy:
 
     # Validation and reproducibility
     reproducibility_metrics: Dict[str, float]
-    validation_results: Dict[str, bool]
+    validation_results: Dict[str, Optional[bool]]
     cross_validation: Dict[str, Any]
 
     # Documentation
@@ -228,14 +234,14 @@ class CaseStudy:
         """
         return cls(**data)
 
-    def get_reproducibility_score(self) -> float:
+    def get_reproducibility_score(self) -> Optional[float]:
         """Calculate overall reproducibility score.
 
         Returns:
             Reproducibility score between 0.0 and 1.0
         """
         if not self.reproducibility_metrics:
-            return 0.0
+            return None
 
         return sum(self.reproducibility_metrics.values()) / len(self.reproducibility_metrics)
 
@@ -245,7 +251,7 @@ class CaseStudy:
         Returns:
             True if all validation checks pass
         """
-        return all(self.validation_results.values())
+        return bool(self.validation_results) and all(value is True for value in self.validation_results.values())
 
     def get_summary(self) -> Dict[str, Any]:
         """Get comprehensive summary of the case study.

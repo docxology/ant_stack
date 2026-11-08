@@ -17,12 +17,15 @@ References:
 from __future__ import annotations
 
 import time
+import math
+import platform
+from importlib.metadata import version
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 from .empirical_data import EmpiricalEvidence, CaseStudy
 from .report_generator import ReportGenerator
-from .statistical_analysis import StatisticalAnalyzer, analyze_measurement_quality
+from .statistical_analysis import StatisticalAnalyzer
 from .statistics import bootstrap_mean_ci
 from .energy import EnergyBreakdown, EnergyCoefficients
 
@@ -77,21 +80,37 @@ class VeridicalReporter:
                 raw_measurements[key] = list(values)
 
         # Perform comprehensive statistical analysis
-        analysis = analyze_measurement_quality(raw_measurements)
+        analysis = self.statistical_analyzer.analyze_measurement_quality(raw_measurements)
+        source_kind = analysis_results.get("source_kind", "unspecified")
+        if source_kind not in {"unspecified", "model", "synthetic", "empirical"}:
+            raise ValueError("source_kind must be unspecified, model, synthetic, or empirical")
+        parameters = dict(analysis_results.get("parameters", {}))
+        parameters["statistics"] = {
+            "interval_method": "percentile_bootstrap",
+            "confidence_level": self.statistical_analyzer.confidence_level,
+            "bootstrap_samples": self.statistical_analyzer.bootstrap_samples,
+            "random_seed": self.statistical_analyzer.random_seed,
+            "singleton_inference": "unavailable",
+            "quality_scores": "descriptive heuristics, not inferential validation",
+        }
+        software_versions = dict(analysis_results.get("software_versions", {}))
+        software_versions.update({"python": platform.python_version(), "numpy": version("numpy"), "scipy": version("scipy")})
 
         return EmpiricalEvidence(
             experiment_id=f"exp_{int(time.time())}",
             timestamp=time.time(),
-            data_source="computational_analysis",
+            data_source=analysis_results.get("data_source", "computational_analysis"),
             raw_measurements=raw_measurements,
             measurement_uncertainty=analysis["uncertainty"],
             statistical_metrics=analysis["statistical_metrics"],
             confidence_intervals=analysis["confidence_intervals"],
             validation_checks=analysis["validation_checks"],
             quality_metrics=analysis["quality_metrics"],
-            analysis_parameters=analysis_results.get("parameters", {}),
-            software_versions={"python": "3.8+", "numpy": "1.20+"},
-            hardware_specifications={"platform": "computational", "precision": "double"}
+            analysis_parameters=parameters,
+            software_versions=software_versions,
+            hardware_specifications=dict(analysis_results.get("hardware_specifications", {})),
+            source_kind=source_kind,
+            hypothesis_tests=dict(analysis_results.get("hypothesis_tests", {})),
         )
     
     def create_case_study(self,
@@ -146,21 +165,22 @@ class VeridicalReporter:
             "effect_sizes": analysis_results.get("effect_sizes", {})
         }
 
-        # Reproducibility metrics
-        reproducibility_metrics = {
-            "data_availability": 1.0,
-            "methodology_clarity": 0.9,
-            "software_availability": 1.0,
-            "replication_success": 0.95
-        }
-
-        # Validation results
+        # Preserve supplied records; neither data availability nor model precision
+        # establishes independent validation or a measured replication rate.
+        reproducibility_metrics = dict(analysis_results.get("reproducibility_metrics", {}))
+        for name, value in reproducibility_metrics.items():
+            if not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError(f"{name} must be a finite score between 0 and 1")
         validation_results = {
-            "internal_consistency": True,
-            "external_validation": True,
-            "statistical_robustness": True,
-            "methodological_soundness": True
+            "internal_consistency": None,
+            "external_validation": None,
+            "statistical_robustness": None,
+            "methodological_soundness": None,
         }
+        supplied_validation = analysis_results.get("validation_results", {})
+        if any(value is not None and type(value) is not bool for value in supplied_validation.values()):
+            raise ValueError("Validation results must be boolean or None (unperformed)")
+        validation_results.update(supplied_validation)
 
         # Cross-validation
         cross_validation = {
@@ -169,25 +189,16 @@ class VeridicalReporter:
             "independent_validation": analysis_results.get("independent_validation", {})
         }
 
-        # Standard limitations and implications
-        limitations = [
-            "Computational analysis based on theoretical models",
-            "Limited to specific parameter ranges tested",
-            "Assumes ideal operating conditions",
-            "Does not account for all environmental factors"
-        ]
-
-        implications = [
-            "Provides quantitative basis for system design decisions",
-            "Identifies key optimization opportunities",
-            "Establishes performance benchmarks",
-            "Enables predictive modeling for scaling"
-        ]
+        limitations = list(analysis_results.get("limitations", [
+            "Results apply only to the supplied data and tested parameter ranges",
+            "Independent validation and replication are not established unless supplied",
+        ]))
+        implications = list(analysis_results.get("implications", []))
 
         return CaseStudy(
             case_id=case_id,
             title=title,
-            description=f"Comprehensive analysis of {title} with empirical validation",
+            description=f"Analysis of {title}; validation status is reported separately",
             experimental_conditions=experimental_conditions,
             parameter_ranges=experimental_conditions["parameter_ranges"],
             control_conditions=experimental_conditions["control_parameters"],
@@ -233,6 +244,12 @@ class VeridicalReporter:
             Dictionary with quantitative summary
         """
         total_data_points = sum(len(v) for v in evidence.raw_measurements.values())
+        statistical_method = evidence.analysis_parameters.get("statistics", {})
+        confidence = statistical_method.get("confidence_level")
+        replication_rates = [
+            case.reproducibility_metrics["replication_success"]
+            for case in case_studies if "replication_success" in case.reproducibility_metrics
+        ]
 
         summary = {
             "experiment_metadata": {
@@ -244,10 +261,11 @@ class VeridicalReporter:
             },
             "statistical_summary": {
                 "parameters_analyzed": list(evidence.raw_measurements.keys()),
-                "confidence_level": "95%",
-                "bootstrap_samples": 1000,
-                "validation_checks_passed": sum(evidence.validation_checks.values()),
-                "total_validation_checks": len(evidence.validation_checks)
+                "confidence_level": f"{100 * confidence:g}%" if confidence is not None else None,
+                "bootstrap_samples": statistical_method.get("bootstrap_samples"),
+                "validation_checks_passed": sum(value is True for value in evidence.validation_checks.values()),
+                "total_validation_checks": len(evidence.validation_checks),
+                "validation_checks_unperformed": sum(value is None for value in evidence.validation_checks.values()),
             },
             "quality_assessment": {
                 "overall_quality_score": evidence.get_quality_score(),
@@ -257,10 +275,10 @@ class VeridicalReporter:
             },
             "key_findings": {},
             "reproducibility": {
-                "data_availability": "complete",
-                "methodology_documentation": "comprehensive",
-                "software_availability": "open_source",
-                "replication_success_rate": 0.95
+                "data_availability": "included" if evidence.raw_measurements else "no_data",
+                "replication_success_rate": None,
+                "supplied_case_replication_rates": replication_rates,
+                "independent_replication": "not_established_by_this_analysis",
             }
         }
 

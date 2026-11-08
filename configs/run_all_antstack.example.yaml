@@ -3,10 +3,10 @@
 #   uv run run-all-antstack --config configs/run_all_antstack.example.yaml
 
 run:
-  run_id: example-run
+  run_id: null  # A fresh ID is generated; retained historical example-run is not writable.
   seed: 123
   output_root: outputs
-  clean_run_dir: true
+  clean_run_dir: false  # True permits archived replacement of owned completed runs only.
   log_level: INFO
 
 tasks:
@@ -39,4 +39,3 @@ validation:
   required_artifact_types: [csv, json, markdown, image, animation, log, provenance]
   fail_on_missing: true
   fail_on_empty: true
-  deterministic_checksum_checks: true

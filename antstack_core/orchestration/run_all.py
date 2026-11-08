@@ -1,80 +1,79 @@
-"""Canonical run-all orchestration for Ant Stack generated artifacts."""
+"""Transactional artifact orchestration under trusted exclusive output ownership.
 
+Runs are built in fresh siblings, validated from current bytes, then published by
+rename. clean_run_dir permits replacement only of owned completed runs; the old
+tree is retained in an archive. Stable symlinks are rejected, but these checks do
+not claim isolation from hostile concurrent same-UID filesystem mutation.
+"""
 from __future__ import annotations
 
 import argparse
+import base64
 import csv
-import hashlib
 import json
 import logging
 import math
+import os
+import re
 import shutil
 import sys
+import uuid
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping
 
 import yaml
+from antstack_core.analysis import analyze_scaling_relationship, bootstrap_mean_ci
+from antstack_core.publishing.provenance import (
+    DEFAULT_DEPENDENCIES, atomic_json, build_run_provenance, capture_source_state,
+    collect_dependency_versions, file_identity, ordinary_path, publication_path,
+    preserve_tree_modes, write_provenance,
+)
+from .complexity_energetics import load_manifest_snapshot, project_result, run_manifest, scaling_curves
 
-from antstack_core.analysis import (
-    EnergyCoefficients,
-    ExperimentManifest,
-    add_baseline_energy,
-    analyze_scaling_relationship,
-    body_workload_closed_form,
-    bootstrap_mean_ci,
-    brain_workload_closed_form,
-    estimate_compute_energy,
-    mind_workload_closed_form,
-)
-from antstack_core.publishing import (
-    DEFAULT_DEPENDENCIES,
-    build_run_provenance,
-    collect_dependency_versions,
-    detect_git_state,
-    write_provenance,
-)
+TASK_NAMES = ("data", "statistics", "visualizations", "animations", "reports", "papers", "validation")
+RUN_SUBDIRECTORIES = ("data/raw", "data/derived", "statistics", "visualizations/static",
+                      "visualizations/animations", "reports", "papers", "logs", "provenance")
+DEFAULT_REQUIRED_ARTIFACT_TYPES = ("csv", "json", "markdown", "image", "animation", "log", "provenance")
 
 
-ROOT = Path(__file__).resolve().parents[2]
-TASK_NAMES = (
-    "data",
-    "statistics",
-    "visualizations",
-    "animations",
-    "reports",
-    "papers",
-    "validation",
-)
-RUN_SUBDIRECTORIES = (
-    "data/raw",
-    "data/derived",
-    "statistics",
-    "visualizations/static",
-    "visualizations/animations",
-    "reports",
-    "papers",
-    "logs",
-    "provenance",
-)
-DEFAULT_REQUIRED_ARTIFACT_TYPES = (
-    "csv",
-    "json",
-    "markdown",
-    "image",
-    "animation",
-    "log",
-    "provenance",
-)
+def _bool(value, name):
+    if type(value) is not bool:
+        raise ValueError(f"{name} must be a boolean")
+    return value
 
-LOGGER = logging.getLogger(__name__)
+
+def _integer(value, name, minimum=1):
+    if type(value) is not int or value < minimum:
+        raise ValueError(f"{name} must be an integer >= {minimum}")
+    return value
+
+
+def _positive(value, name):
+    if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+        raise ValueError(f"{name} must be positive and finite")
+    return value
+
+
+def _formats(value):
+    return (value,) if isinstance(value, str) else tuple(value)
+
+
+def _resolve_repo_path(path):
+    candidate = Path(path).expanduser()
+    return ordinary_path(candidate if candidate.is_absolute() else Path.cwd() / candidate)
+
+
+def _mapping(raw, key):
+    value = raw.get(key, {})
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{key} must be a mapping")
+    return value
 
 
 @dataclass(frozen=True)
 class ArtifactRecord:
-    """Manifest entry for one generated or projected artifact."""
-
     artifact_type: str
     path: str
     absolute_path: str
@@ -83,15 +82,16 @@ class ArtifactRecord:
     checksum: str
     bytes: int
 
-    def to_dict(self) -> dict[str, Any]:
-        """Return a JSON-serializable artifact manifest entry."""
-        return asdict(self)
+    def to_dict(self):
+        # v2 has exactly one portable address space; absolute_path is runtime-only.
+        value = asdict(self)
+        value.pop("absolute_path")
+        value["content_identity"] = f"sha256:{self.checksum}"
+        return value
 
 
 @dataclass(frozen=True)
 class TaskSelection:
-    """Boolean task switches for modular Ant Stack output generation."""
-
     data: bool = True
     statistics: bool = True
     visualizations: bool = True
@@ -101,57 +101,40 @@ class TaskSelection:
     validation: bool = True
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any] | None) -> "TaskSelection":
-        """Create task switches from a mapping, defaulting all tasks to enabled."""
-        if data is None:
-            return cls()
-        if not isinstance(data, Mapping):
-            raise TypeError("tasks must be a mapping of task names to booleans")
-        unknown = sorted(set(data) - set(TASK_NAMES))
+    def from_mapping(cls, data=None):
+        data = data or {}
+        unknown = set(data) - set(TASK_NAMES)
         if unknown:
-            raise ValueError(f"Unknown task name(s): {', '.join(unknown)}")
-        values = {name: bool(data.get(name, True)) for name in TASK_NAMES}
-        return cls(**values)
+            raise ValueError(f"Unknown task name(s): {sorted(unknown)}")
+        return cls(**{name: _bool(data.get(name, True), f"tasks.{name}") for name in TASK_NAMES})
 
     @classmethod
-    def only(cls, names: Iterable[str]) -> "TaskSelection":
-        """Create switches with only the named tasks enabled."""
-        parsed = parse_task_names(names)
-        values = {name: name in parsed for name in TASK_NAMES}
-        return cls(**values)
+    def only(cls, names):
+        selected = parse_task_names(names)
+        return cls(**{name: name in selected for name in TASK_NAMES})
 
-    def enabled(self) -> tuple[str, ...]:
-        """Return enabled task names in canonical execution order."""
-        return tuple(name for name in TASK_NAMES if bool(getattr(self, name)))
+    def enabled(self):
+        return tuple(name for name in TASK_NAMES if getattr(self, name))
 
 
 @dataclass(frozen=True)
 class RunSection:
-    """Run identity, output root, cleanup, and logging options."""
-
-    run_id: str = field(default_factory=lambda: datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ"))
+    run_id: str = field(default_factory=lambda: datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8])
     seed: int = 123
     output_root: str = "outputs"
     clean_run_dir: bool = False
     log_level: str = "INFO"
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any] | None) -> "RunSection":
-        """Create run options from a mapping."""
-        data = data or {}
-        return cls(
-            run_id=str(data.get("run_id") or cls().run_id),
-            seed=int(data.get("seed", 123)),
-            output_root=str(data.get("output_root", "outputs")),
-            clean_run_dir=bool(data.get("clean_run_dir", False)),
-            log_level=str(data.get("log_level", "INFO")).upper(),
-        )
+    def from_mapping(cls, data=None):
+        values = dict(data or {})
+        if "run_id" not in values or values["run_id"] is None:
+            values["run_id"] = cls().run_id
+        return cls(**values)
 
 
 @dataclass(frozen=True)
 class ComplexityEnergeticsSection:
-    """Complexity energetics orchestration options."""
-
     manifest: str = "papers/complexity_energetics/manifest.example.yaml"
     paper_projection: bool = True
     paper_root: str = "papers/complexity_energetics"
@@ -159,25 +142,15 @@ class ComplexityEnergeticsSection:
     pdf_sources: tuple[str, ...] = ("2_complexity_energetics.pdf",)
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any] | None) -> "ComplexityEnergeticsSection":
-        """Create complexity energetics options from a mapping."""
-        data = data or {}
-        pdf_sources = data.get("pdf_sources", ("2_complexity_energetics.pdf",))
-        if isinstance(pdf_sources, str):
-            pdf_sources = (pdf_sources,)
-        return cls(
-            manifest=str(data.get("manifest", cls.manifest)),
-            paper_projection=bool(data.get("paper_projection", True)),
-            paper_root=str(data.get("paper_root", cls.paper_root)),
-            build_pdf=bool(data.get("build_pdf", False)),
-            pdf_sources=tuple(str(path) for path in pdf_sources),
-        )
+    def from_mapping(cls, data=None):
+        values = dict(data or {})
+        if "pdf_sources" in values:
+            values["pdf_sources"] = _formats(values["pdf_sources"])
+        return cls(**values)
 
 
 @dataclass(frozen=True)
 class VisualizationSection:
-    """Visualization and animation rendering options."""
-
     output_formats: tuple[str, ...] = ("png",)
     dpi: int = 160
     figure_size: tuple[float, float] = (8.0, 5.0)
@@ -187,172 +160,128 @@ class VisualizationSection:
     animation_formats: tuple[str, ...] = ("gif", "html")
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any] | None) -> "VisualizationSection":
-        """Create visualization options from a mapping."""
-        data = data or {}
-        output_formats = data.get("output_formats", ("png",))
-        if isinstance(output_formats, str):
-            output_formats = (output_formats,)
-        animation_formats = data.get("animation_formats", ("gif", "html"))
-        if isinstance(animation_formats, str):
-            animation_formats = (animation_formats,)
-        figure_size = data.get("figure_size", (8.0, 5.0))
-        if not isinstance(figure_size, Sequence) or len(figure_size) != 2:
-            raise ValueError("visualization.figure_size must contain width and height")
-        return cls(
-            output_formats=tuple(str(fmt).lower().lstrip(".") for fmt in output_formats),
-            dpi=int(data.get("dpi", 160)),
-            figure_size=(float(figure_size[0]), float(figure_size[1])),
-            statistical_annotations=bool(data.get("statistical_annotations", True)),
-            animation_fps=int(data.get("animation_fps", 8)),
-            animation_duration_s=float(data.get("animation_duration_s", 3.0)),
-            animation_formats=tuple(str(fmt).lower().lstrip(".") for fmt in animation_formats),
-        )
+    def from_mapping(cls, data=None):
+        values = dict(data or {})
+        for name in ("output_formats", "animation_formats"):
+            if name in values:
+                values[name] = _formats(values[name])
+        if "figure_size" in values:
+            values["figure_size"] = tuple(values["figure_size"])
+        return cls(**values)
 
 
 @dataclass(frozen=True)
 class ValidationSection:
-    """Validation behavior for run-all artifacts."""
-
     required_artifact_types: tuple[str, ...] = DEFAULT_REQUIRED_ARTIFACT_TYPES
     fail_on_missing: bool = True
     fail_on_empty: bool = True
-    deterministic_checksum_checks: bool = True
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any] | None) -> "ValidationSection":
-        """Create validation options from a mapping."""
-        data = data or {}
-        required = data.get("required_artifact_types", DEFAULT_REQUIRED_ARTIFACT_TYPES)
-        if isinstance(required, str):
-            required = tuple(part.strip() for part in required.split(",") if part.strip())
-        return cls(
-            required_artifact_types=tuple(str(item) for item in required),
-            fail_on_missing=bool(data.get("fail_on_missing", True)),
-            fail_on_empty=bool(data.get("fail_on_empty", True)),
-            deterministic_checksum_checks=bool(data.get("deterministic_checksum_checks", True)),
-        )
+    def from_mapping(cls, data=None):
+        values = dict(data or {})
+        if "required_artifact_types" in values:
+            required = values["required_artifact_types"]
+            values["required_artifact_types"] = tuple(required.split(",")) if isinstance(required, str) else tuple(required)
+        return cls(**values)
 
 
 @dataclass(frozen=True)
 class RunAllConfig:
-    """Validated configuration for package-owned run-all orchestration."""
-
     config_path: Path
     run: RunSection = field(default_factory=RunSection)
     tasks: TaskSelection = field(default_factory=TaskSelection)
     complexity_energetics: ComplexityEnergeticsSection = field(default_factory=ComplexityEnergeticsSection)
     visualization: VisualizationSection = field(default_factory=VisualizationSection)
     validation: ValidationSection = field(default_factory=ValidationSection)
+    source_bytes: bytes | None = field(default=None, repr=False)
 
     @classmethod
-    def from_file(cls, path: str | Path) -> "RunAllConfig":
-        """Load and validate the run-all YAML configuration structure."""
-        config_path = _resolve_repo_path(path)
-        if not config_path.exists():
-            raise FileNotFoundError(f"Run-all config not found: {config_path}")
-        raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    def from_file(cls, path):
+        path = _resolve_repo_path(path)
+        source_bytes = path.read_bytes()
+        raw = yaml.safe_load(source_bytes)
         if not isinstance(raw, Mapping):
             raise ValueError("Run-all config must be a YAML mapping")
-        return cls(
-            config_path=config_path,
-            run=RunSection.from_mapping(_mapping(raw, "run")),
-            tasks=TaskSelection.from_mapping(_mapping(raw, "tasks")),
-            complexity_energetics=ComplexityEnergeticsSection.from_mapping(
-                _mapping(raw, "complexity_energetics")
-            ),
-            visualization=VisualizationSection.from_mapping(_mapping(raw, "visualization")),
-            validation=ValidationSection.from_mapping(_mapping(raw, "validation")),
-        ).validate()
+        return cls(path, RunSection.from_mapping(_mapping(raw, "run")),
+                   TaskSelection.from_mapping(_mapping(raw, "tasks")),
+                   ComplexityEnergeticsSection.from_mapping(_mapping(raw, "complexity_energetics")),
+                   VisualizationSection.from_mapping(_mapping(raw, "visualization")),
+                   ValidationSection.from_mapping(_mapping(raw, "validation")), source_bytes).validate()
 
-    def with_overrides(
-        self,
-        *,
-        output_root: str | None = None,
-        run_id: str | None = None,
-        tasks: Iterable[str] | None = None,
-        log_level: str | None = None,
-    ) -> "RunAllConfig":
-        """Return a copy with CLI overrides applied."""
-        run = self.run
-        if output_root is not None:
-            run = replace(run, output_root=output_root)
-        if run_id is not None:
-            run = replace(run, run_id=run_id)
-        if log_level is not None:
-            run = replace(run, log_level=log_level.upper())
-        selected_tasks = self.tasks if tasks is None else TaskSelection.only(tasks)
-        return replace(self, run=run, tasks=selected_tasks).validate()
+    def with_overrides(self, *, output_root=None, run_id=None, tasks=None, log_level=None):
+        values = {key: value for key, value in {"output_root": output_root, "run_id": run_id, "log_level": log_level}.items() if value is not None}
+        return replace(self, run=replace(self.run, **values),
+                       tasks=self.tasks if tasks is None else TaskSelection.only(tasks)).validate()
 
-    def validate(self) -> "RunAllConfig":
-        """Validate paths, task names, numeric options, and linked CE manifest."""
-        errors: list[str] = []
-        if not self.run.run_id or any(part in self.run.run_id for part in ("/", "\\")):
-            errors.append("run.run_id must be a non-empty single path segment")
-        if self.run.seed < 0:
-            errors.append("run.seed must be non-negative")
-        if self.visualization.dpi <= 0:
-            errors.append("visualization.dpi must be positive")
-        if self.visualization.figure_size[0] <= 0 or self.visualization.figure_size[1] <= 0:
-            errors.append("visualization.figure_size values must be positive")
-        if self.visualization.animation_fps <= 0:
-            errors.append("visualization.animation_fps must be positive")
-        if self.visualization.animation_duration_s <= 0:
-            errors.append("visualization.animation_duration_s must be positive")
-        invalid_formats = set(self.visualization.output_formats) - {"png", "svg", "pdf"}
-        if invalid_formats:
-            errors.append(f"unsupported visualization output format(s): {sorted(invalid_formats)}")
-        invalid_animation_formats = set(self.visualization.animation_formats) - {"gif", "html", "mp4"}
-        if invalid_animation_formats:
-            errors.append(f"unsupported animation format(s): {sorted(invalid_animation_formats)}")
-        manifest_path = _resolve_repo_path(self.complexity_energetics.manifest)
-        if not manifest_path.exists():
-            errors.append(f"complexity_energetics.manifest not found: {manifest_path}")
-        else:
-            try:
-                manifest = ExperimentManifest.load(manifest_path)
-                valid, manifest_errors = manifest.validate()
-                non_contract_errors = {"Experiment name is required"}
-                actionable = [msg for msg in manifest_errors if msg not in non_contract_errors]
-                if not valid and actionable:
-                    errors.extend(f"complexity manifest: {msg}" for msg in actionable)
-            except Exception as exc:  # pragma: no cover - exact YAML parser errors vary
-                errors.append(f"complexity_energetics.manifest is invalid: {exc}")
-        if errors:
-            raise ValueError("; ".join(errors))
+    def validate(self):
+        if not isinstance(self.run.run_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", self.run.run_id):
+            raise ValueError("run.run_id must be a safe dot-free single path segment")
+        _integer(self.run.seed, "run.seed", 0)
+        for name, value in asdict(self.tasks).items():
+            _bool(value, f"tasks.{name}")
+        for name, value in (("clean_run_dir", self.run.clean_run_dir),
+                            ("paper_projection", self.complexity_energetics.paper_projection),
+                            ("build_pdf", self.complexity_energetics.build_pdf),
+                            ("statistical_annotations", self.visualization.statistical_annotations)):
+            _bool(value, name)
+        for name in ("fail_on_missing", "fail_on_empty"):
+            _bool(getattr(self.validation, name), name)
+        _integer(self.visualization.dpi, "dpi")
+        _integer(self.visualization.animation_fps, "animation_fps")
+        _positive(self.visualization.animation_duration_s, "animation_duration_s")
+        if len(self.visualization.figure_size) != 2:
+            raise ValueError("figure_size requires width and height")
+        for size in self.visualization.figure_size:
+            _positive(size, "figure_size")
+        if not self.visualization.output_formats or set(self.visualization.output_formats) - {"png", "svg", "pdf"}:
+            raise ValueError("unsupported visualization output format")
+        if not self.visualization.animation_formats or set(self.visualization.animation_formats) - {"gif", "html", "mp4"}:
+            raise ValueError("unsupported animation format")
+        if self.run.log_level.upper() not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+            raise ValueError("Unsupported log_level")
+        source = _resolve_repo_path(self.complexity_energetics.manifest)
+        if not source.is_file():
+            raise ValueError(f"complexity_energetics.manifest not found: {source}")
+        load_manifest_snapshot(source)
+        _preflight_paths(self)
+        if self.tasks.animations and "mp4" in self.visualization.animation_formats and shutil.which("ffmpeg") is None:
+            raise ValueError("Requested MP4 requires ffmpeg")
+        if self.tasks.papers:
+            for source in self.complexity_energetics.pdf_sources:
+                if not _resolve_repo_path(source).is_file():
+                    raise ValueError(f"Requested historical PDF source is absent: {source}")
+        if self.tasks.papers and self.complexity_energetics.build_pdf:
+            for executable in ("pandoc", "xelatex"):
+                if shutil.which(executable) is None:
+                    raise ValueError(f"Requested PDF requires {executable}")
         return self
 
-    def to_dict(self) -> dict[str, Any]:
-        """Return a JSON-serializable config snapshot."""
-        return {
-            "config_path": str(self.config_path),
-            "run": asdict(self.run),
-            "tasks": asdict(self.tasks),
-            "complexity_energetics": asdict(self.complexity_energetics),
-            "visualization": asdict(self.visualization),
-            "validation": asdict(self.validation),
-        }
+    def to_dict(self):
+        payload = asdict(self)
+        payload.pop("source_bytes")
+        payload["config_path"] = str(self.config_path)
+        return payload
 
 
 @dataclass
 class RunContext:
-    """Mutable runtime state shared by orchestration tasks."""
-
     config: RunAllConfig
     run_dir: Path
     layout: dict[str, Path]
     artifacts: list[ArtifactRecord] = field(default_factory=list)
-    ce_result: Any | None = None
-    ce_summary: dict[str, Any] | None = None
-    ce_manifest: ExperimentManifest | None = None
+    ce_result: Any = None
+    ce_summary: Any = None
+    ce_manifest: Any = None
     compatibility_projected: bool = False
     log_path: Path | None = None
+    source_state: dict = field(default_factory=dict)
+    manifest_snapshot: Path | None = None
+    snapshot_data: bytes | None = None
+    generation_id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
 
 @dataclass(frozen=True)
 class RunAllResult:
-    """Result returned by programmatic run-all execution."""
-
     run_id: str
     run_dir: Path
     manifest_path: Path | None
@@ -360,884 +289,492 @@ class RunAllResult:
     artifacts: tuple[ArtifactRecord, ...]
     validate_only: bool = False
 
-    def to_dict(self) -> dict[str, Any]:
-        """Return a JSON-serializable result summary."""
-        return {
-            "run_id": self.run_id,
-            "run_dir": str(self.run_dir),
-            "manifest_path": str(self.manifest_path) if self.manifest_path else None,
-            "provenance_path": str(self.provenance_path) if self.provenance_path else None,
-            "validate_only": self.validate_only,
-            "artifacts": [artifact.to_dict() for artifact in self.artifacts],
-        }
+    def to_dict(self):
+        return {"run_id": self.run_id, "run_dir": str(self.run_dir),
+                "manifest_path": str(self.manifest_path) if self.manifest_path else None,
+                "provenance_path": str(self.provenance_path) if self.provenance_path else None,
+                "artifacts": [item.to_dict() for item in self.artifacts], "validate_only": self.validate_only}
 
 
-def parse_task_names(value: str | Iterable[str]) -> tuple[str, ...]:
-    """Parse comma-separated or iterable task names and validate them."""
-    if isinstance(value, str):
-        names = tuple(part.strip() for part in value.split(",") if part.strip())
-    else:
-        names = tuple(str(part).strip() for part in value if str(part).strip())
-    unknown = sorted(set(names) - set(TASK_NAMES))
-    if unknown:
-        raise ValueError(f"Unknown task name(s): {', '.join(unknown)}")
+def parse_task_names(value):
+    names = tuple(part.strip() for part in value.split(",") if part.strip()) if isinstance(value, str) else tuple(value)
+    if set(names) - set(TASK_NAMES):
+        raise ValueError(f"Unknown task name(s): {set(names) - set(TASK_NAMES)}")
     return tuple(name for name in TASK_NAMES if name in names)
 
 
-def create_run_layout(config: RunAllConfig) -> tuple[Path, dict[str, Path]]:
-    """Create the canonical output directory tree for a run."""
-    output_root = _resolve_repo_path(config.run.output_root)
-    run_dir = output_root / config.run.run_id
-    if config.run.clean_run_dir and run_dir.exists():
-        shutil.rmtree(run_dir)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    layout = {name: run_dir / name for name in RUN_SUBDIRECTORIES}
-    for directory in layout.values():
-        directory.mkdir(parents=True, exist_ok=True)
-    return run_dir, layout
+def _overlap(a, b):
+    return a == b or a in b.parents or b in a.parents
 
 
-def write_manifest(path: str | Path, config: RunAllConfig, artifacts: Sequence[ArtifactRecord]) -> Path:
-    """Write the run artifact manifest with checksums and config snapshot."""
-    manifest_path = Path(path)
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "schema_version": 1,
-        "run_id": config.run.run_id,
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "output_root": str(_resolve_repo_path(config.run.output_root)),
-        "source_config": str(config.config_path),
-        "tasks": config.tasks.enabled(),
-        "config": config.to_dict(),
-        "artifact_count": len(artifacts),
-        "artifacts": [artifact.to_dict() for artifact in artifacts],
-    }
-    manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    return manifest_path
+def _preflight_paths(config):
+    root = _resolve_repo_path(config.run.output_root)
+    run = publication_path(root / config.run.run_id, tree=True)
+    sources = [_resolve_repo_path(config.config_path), _resolve_repo_path(config.complexity_energetics.manifest)]
+    sources += [_resolve_repo_path(path) for path in config.complexity_energetics.pdf_sources]
+    for source in sources:
+        if _overlap(run, source):
+            raise ValueError("Run output and source namespaces overlap")
+    if run.exists():
+        if not config.run.clean_run_dir:
+            raise FileExistsError(f"Run already exists; owned replacement requires clean_run_dir=true: {run}")
+        marker = run / ".antstack-owned.json"
+        completed = run / "manifest.json"
+        if not marker.is_file() or not completed.is_file():
+            raise ValueError(f"Refusing replacement of unowned/incomplete run: {run}")
+        ownership = json.loads(marker.read_text())
+        manifest = json.loads(completed.read_text())
+        if ownership != {"owner": "ant-stack-run-all", "run_id": config.run.run_id} or manifest.get("run_id") != config.run.run_id or manifest.get("complete") is not True:
+            raise ValueError("Existing run ownership/completion is invalid")
+    if config.complexity_energetics.paper_projection:
+        projection = publication_path(_resolve_repo_path(config.complexity_energetics.paper_root), tree=True)
+        if _overlap(root, projection):
+            raise ValueError("Canonical output and projection namespaces overlap")
+        for source in sources:
+            for generated in (projection / "out", projection / "assets", projection / "Generated.md"):
+                if _overlap(source, generated):
+                    raise ValueError("Projection and source namespaces overlap")
+    return run
 
 
-def checksum_file(path: str | Path) -> str:
-    """Return the SHA-256 checksum for a file."""
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def create_run_layout(config):
+    """Create a fresh run only; orchestration stages owned replacements separately."""
+    config.validate()
+    run = publication_path(_resolve_repo_path(config.run.output_root) / config.run.run_id, tree=True)
+    run.parent.mkdir(parents=True, exist_ok=True)
+    run.mkdir(exist_ok=False)
+    return run, _layout(run)
 
 
-def run_all(
-    config_path: str | Path,
-    *,
-    output_root: str | None = None,
-    run_id: str | None = None,
-    validate_only: bool = False,
-    tasks: str | Iterable[str] | None = None,
-    log_level: str | None = None,
-) -> RunAllResult:
-    """Run all configured Ant Stack output generation tasks."""
-    task_names: tuple[str, ...] | None = None
-    if tasks is not None:
-        task_names = parse_task_names(tasks)
-    config = RunAllConfig.from_file(config_path).with_overrides(
-        output_root=output_root,
-        run_id=run_id,
-        tasks=task_names,
-        log_level=log_level,
-    )
-    run_dir = _resolve_repo_path(config.run.output_root) / config.run.run_id
-    if validate_only:
-        return RunAllResult(
-            run_id=config.run.run_id,
-            run_dir=run_dir,
-            manifest_path=None,
-            provenance_path=None,
-            artifacts=(),
-            validate_only=True,
-        )
-
-    run_dir, layout = create_run_layout(config)
-    ctx = RunContext(config=config, run_dir=run_dir, layout=layout)
-    ctx.log_path = layout["logs"] / "run_all_antstack.log"
-    _configure_logging(ctx.log_path, config.run.log_level)
-
-    LOGGER.info("Starting run-all Ant Stack workflow: run_id=%s", config.run.run_id)
-    LOGGER.info("Enabled tasks: %s", ", ".join(config.tasks.enabled()))
-
-    try:
-        _write_initial_inputs(ctx)
-        if config.tasks.data:
-            _task_data(ctx)
-        if config.tasks.statistics:
-            _task_statistics(ctx)
-        if config.tasks.visualizations:
-            _task_visualizations(ctx)
-        if config.tasks.animations:
-            _task_animations(ctx)
-        if config.tasks.reports:
-            _task_reports(ctx)
-        if config.tasks.papers:
-            _task_papers(ctx)
-        _record_artifact(ctx, ctx.log_path, "log", "logging", "run.log_level")
-        if config.tasks.validation:
-            _task_validation(ctx)
-        manifest_path, provenance_path = _write_final_metadata(ctx)
-        LOGGER.info("Completed run-all Ant Stack workflow with %d artifacts", len(ctx.artifacts))
-    finally:
-        _flush_logging()
-
-    return RunAllResult(
-        run_id=config.run.run_id,
-        run_dir=run_dir,
-        manifest_path=manifest_path,
-        provenance_path=provenance_path,
-        artifacts=tuple(ctx.artifacts),
-    )
+def _layout(root):
+    layout = {name: root / name for name in RUN_SUBDIRECTORIES}
+    for path in layout.values():
+        path.mkdir(parents=True, exist_ok=True)
+    return layout
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    """CLI entrypoint for ``run-all-antstack``."""
-    parser = argparse.ArgumentParser(description="Generate all Ant Stack outputs from one YAML config.")
-    parser.add_argument("--config", required=True, help="Path to run_all_antstack YAML config.")
-    parser.add_argument("--out", help="Override output root. Defaults to config run.output_root.")
-    parser.add_argument("--run-id", help="Override run id. Defaults to config run.run_id.")
-    parser.add_argument("--validate-only", action="store_true", help="Validate config without creating run artifacts.")
-    parser.add_argument(
-        "--tasks",
-        help="Comma-separated task list: data,statistics,visualizations,animations,reports,papers,validation.",
-    )
-    parser.add_argument("--log-level", help="Override logging level, for example INFO or DEBUG.")
-    args = parser.parse_args(argv)
-
-    try:
-        result = run_all(
-            args.config,
-            output_root=args.out,
-            run_id=args.run_id,
-            validate_only=args.validate_only,
-            tasks=args.tasks,
-            log_level=args.log_level,
-        )
-    except Exception as exc:
-        print(f"run-all-antstack failed: {exc}", file=sys.stderr)
-        return 1
-
-    if result.validate_only:
-        print(f"validated: {Path(args.config)}")
-        return 0
-    print(f"run_id: {result.run_id}")
-    print(f"run_dir: {result.run_dir}")
-    print(f"manifest: {result.manifest_path}")
-    print(f"provenance: {result.provenance_path}")
-    print(f"artifacts: {len(result.artifacts)}")
-    return 0
+def checksum_file(path):
+    return file_identity(path)["sha256"]
 
 
-def _mapping(raw: Mapping[str, Any], key: str) -> Mapping[str, Any] | None:
-    value = raw.get(key)
-    if value is None:
-        return None
-    if not isinstance(value, Mapping):
-        raise ValueError(f"{key} must be a mapping")
-    return value
 
 
-def _resolve_repo_path(path: str | Path) -> Path:
-    candidate = Path(path).expanduser()
-    if candidate.is_absolute():
-        return candidate
-    return ROOT / candidate
-
-
-def _relative_path(path: Path, base: Path = ROOT) -> str:
-    resolved = path.resolve()
-    for root in (base.resolve(), ROOT.resolve()):
-        try:
-            return str(resolved.relative_to(root))
-        except ValueError:
-            continue
-    return str(resolved)
-
-
-def _artifact_type(path: Path) -> str:
+def _artifact_type(path):
     suffix = path.suffix.lower()
-    if suffix == ".csv":
-        return "csv"
     if suffix == ".json":
-        if "provenance" in path.name or path.parent.name == "provenance":
-            return "provenance"
-        return "json"
-    if suffix in {".md", ".markdown"}:
-        return "markdown"
-    if suffix in {".png", ".svg"}:
-        return "image"
-    if suffix == ".pdf":
-        return "paper"
-    if suffix in {".gif", ".mp4", ".html"}:
-        return "animation" if path.parent.name == "animations" else "html"
-    if suffix == ".log":
-        return "log"
-    if suffix == ".yaml" or suffix == ".yml":
-        return "yaml"
-    return "artifact"
+        return "provenance" if "provenance" in path.name or path.parent.name == "provenance" else "json"
+    return {".csv": "csv", ".md": "markdown", ".png": "image", ".svg": "image", ".pdf": "paper",
+            ".gif": "animation", ".mp4": "animation", ".html": "animation", ".log": "log", ".yaml": "yaml"}.get(suffix, "artifact")
 
 
-def _record_artifact(
-    ctx: RunContext,
-    path: str | Path | None,
-    artifact_type: str | None,
-    producing_task: str,
-    source_config: str,
-) -> ArtifactRecord | None:
+def _record_artifact(ctx, path, artifact_type, producing_task, source_config):
     if path is None:
         return None
-    artifact_path = Path(path)
-    if not artifact_path.exists() or not artifact_path.is_file():
-        return None
-    absolute = artifact_path.resolve()
-    checksum = checksum_file(absolute)
-    record = ArtifactRecord(
-        artifact_type=artifact_type or _artifact_type(absolute),
-        path=_relative_path(absolute, ctx.run_dir),
-        absolute_path=str(absolute),
-        producing_task=producing_task,
-        source_config=source_config,
-        checksum=checksum,
-        bytes=absolute.stat().st_size,
-    )
-    existing = {item.absolute_path for item in ctx.artifacts}
-    if record.absolute_path not in existing:
-        ctx.artifacts.append(record)
+    path = ordinary_path(path)
+    relative = path.relative_to(ctx.run_dir).as_posix()
+    identity = file_identity(path)
+    record = ArtifactRecord(artifact_type or _artifact_type(path), relative, str(path), producing_task,
+                            source_config, identity["sha256"], identity["bytes"])
+    if any(item.path == relative for item in ctx.artifacts):
+        raise ValueError(f"Duplicate artifact identity: {relative}")
+    ctx.artifacts.append(record)
     return record
 
 
-def _write_json(path: Path, payload: Mapping[str, Any]) -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    return path
+def _write_json(path, payload):
+    return atomic_json(path, payload)
 
 
-def _copy_file(src: str | Path, dst: str | Path) -> Path:
-    src_path = Path(src)
-    dst_path = Path(dst)
-    dst_path.parent.mkdir(parents=True, exist_ok=True)
-    if src_path.resolve() != dst_path.resolve():
-        shutil.copy2(src_path, dst_path)
-    return dst_path
+def _copy_file(src, dst):
+    src, dst = ordinary_path(src), ordinary_path(dst)
+    file_identity(src)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if src != dst:
+        shutil.copy2(src, dst)
+    return dst
 
 
-def _configure_logging(path: Path, level_name: str) -> None:
-    level = getattr(logging, level_name.upper(), logging.INFO)
-    root_logger = logging.getLogger()
-    for handler in list(root_logger.handlers):
-        if getattr(handler, "_antstack_run_all", False):
-            root_logger.removeHandler(handler)
-            handler.close()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    file_handler = logging.FileHandler(path, encoding="utf-8")
-    file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
-    file_handler._antstack_run_all = True  # type: ignore[attr-defined]
-    root_logger.addHandler(file_handler)
-    root_logger.setLevel(level)
+def _configure_logging(path, level_name):
+    # An unregistered per-run logger cannot capture or reconfigure the host app.
+    logger = logging.Logger(__name__, level_name.upper())
+    logger.propagate = False
+    handler = logging.FileHandler(publication_path(path), mode="x", encoding="utf-8")
+    handler.stream.write(f"Ant Stack workflow log; configured level={level_name.upper()}\n")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
+    logger.addHandler(handler)
+    return logger
 
 
-def _flush_logging() -> None:
-    for handler in logging.getLogger().handlers:
+def _close_logging(logger):
+    for handler in tuple(logger.handlers):
+        logger.removeHandler(handler)
         try:
             handler.flush()
-        except Exception:
-            continue
+        finally:
+            handler.close()
 
 
-def _write_initial_inputs(ctx: RunContext) -> None:
-    config_copy = _copy_file(ctx.config.config_path, ctx.layout["provenance"] / "run_config.yaml")
-    _record_artifact(ctx, config_copy, "provenance", "configuration", "run_all.config")
-    manifest_source = _resolve_repo_path(ctx.config.complexity_energetics.manifest)
-    manifest_copy = _copy_file(manifest_source, ctx.layout["data/raw"] / "complexity_energetics_manifest.yaml")
-    _record_artifact(ctx, manifest_copy, "yaml", "data", "complexity_energetics.manifest")
+def _write_initial_inputs(ctx):
+    copied = ctx.layout["provenance"] / "run_config.yaml"
+    copied.write_bytes(ctx.config.source_bytes if ctx.config.source_bytes is not None else ctx.config.config_path.read_bytes())
+    _record_artifact(ctx, copied, "provenance", "configuration", "run_all.config")
+    source = _resolve_repo_path(ctx.config.complexity_energetics.manifest)
+    data = ctx.snapshot_data if ctx.snapshot_data is not None else load_manifest_snapshot(source)[0]
+    ctx.manifest_snapshot = ctx.layout["data/raw"] / "complexity_energetics_manifest.yaml"
+    ctx.manifest_snapshot.write_bytes(data)
+    load_manifest_snapshot(ctx.manifest_snapshot)
+    _record_artifact(ctx, ctx.manifest_snapshot, "yaml", "data", "complexity_energetics.manifest")
 
 
-def _ensure_ce_result(ctx: RunContext) -> None:
+def _ensure_ce_result(ctx):
     if ctx.ce_result is not None:
         return
-    from antstack_core.cli import ce as ce_cli
-
-    manifest_path = _resolve_repo_path(ctx.config.complexity_energetics.manifest)
-    out_dir = ctx.run_dir / "papers" / "complexity_energetics" / "out"
-    LOGGER.info("Running complexity energetics manifest into %s", out_dir)
-    ctx.ce_result = ce_cli.run_manifest(str(manifest_path), str(out_dir))
-    ctx.ce_manifest = ExperimentManifest.load(manifest_path)
-    summary_path = Path(ctx.ce_result.summary_path)
-    if summary_path.exists():
-        ctx.ce_summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    for output_path in getattr(ctx.ce_result, "output_paths", ()):
-        _record_artifact(
-            ctx,
-            output_path,
-            _artifact_type(Path(output_path)),
-            "complexity_energetics",
-            "complexity_energetics.manifest",
-        )
-    if ctx.config.complexity_energetics.paper_projection:
-        _project_complexity_energetics(ctx)
+    if ctx.manifest_snapshot is None:
+        raise ValueError("A validated input snapshot is required")
+    ctx.ce_result = run_manifest(str(ctx.manifest_snapshot), str(ctx.run_dir / "papers/complexity_energetics/out"),
+                                 source_state=ctx.source_state or None, statistics_seed=ctx.config.run.seed)
+    ctx.ce_manifest = load_manifest_snapshot(ctx.manifest_snapshot)[2]
+    ctx.ce_summary = json.loads(Path(ctx.ce_result.summary_path).read_text())
+    if ctx.ce_summary.get("complete") is not True:
+        raise RuntimeError("CE producer did not complete")
+    for path in ctx.ce_result.output_paths:
+        _record_artifact(ctx, path, None, "complexity_energetics", "complexity_energetics.manifest")
 
 
-def _project_complexity_energetics(ctx: RunContext) -> None:
-    if ctx.compatibility_projected:
-        return
-    paper_root = _resolve_repo_path(ctx.config.complexity_energetics.paper_root)
-    source_base = ctx.run_dir / "papers" / "complexity_energetics"
-    source_out = source_base / "out"
-    for src in sorted(source_out.glob("*")):
-        if src.is_file():
-            dst = _copy_file(src, paper_root / "out" / src.name)
-            _record_artifact(ctx, dst, _artifact_type(dst), "paper_projection", "paper_projection")
-    source_assets = source_base / "assets"
-    for src in sorted(source_assets.glob("*")):
-        if src.is_file():
-            dst = _copy_file(src, paper_root / "assets" / src.name)
-            _record_artifact(ctx, dst, _artifact_type(dst), "paper_projection", "paper_projection")
-    generated = source_base / "Generated.md"
-    if generated.exists():
-        dst = _copy_file(generated, paper_root / "Generated.md")
-        _record_artifact(ctx, dst, "markdown", "paper_projection", "paper_projection")
-    ctx.compatibility_projected = True
+def _ce_rows(ctx):
+    return list(ctx.ce_result.rows) if ctx.ce_result is not None else []
 
 
-def _task_data(ctx: RunContext) -> None:
+def _task_data(ctx):
     _ensure_ce_result(ctx)
-    result = ctx.ce_result
-    copies = [
-        (result.csv_path, ctx.layout["data/derived"] / "complexity_energetics_results.csv", "csv"),
-        (result.summary_path, ctx.layout["data/derived"] / "complexity_energetics_summary.json", "json"),
-    ]
-    for src, dst, artifact_type in copies:
-        copied = _copy_file(src, dst)
-        _record_artifact(ctx, copied, artifact_type, "data", "complexity_energetics.manifest")
+    for source, name in ((ctx.ce_result.csv_path, "results.csv"), (ctx.ce_result.summary_path, "summary.json")):
+        destination = _copy_file(source, ctx.layout["data/derived"] / f"complexity_energetics_{name}")
+        _record_artifact(ctx, destination, None, "data", "complexity_energetics.manifest")
 
 
-def _task_statistics(ctx: RunContext) -> None:
-    _ensure_ce_result(ctx)
-    rows = _ce_rows(ctx)
-    workload_summary = _summarize_workloads(rows, seed=ctx.config.run.seed)
-    workload_path = _write_json(ctx.layout["statistics"] / "workload_summary.json", workload_summary)
-    _record_artifact(ctx, workload_path, "json", "statistics", "complexity_energetics.summary")
-
-    scaling_summary = _scaling_summary(ctx)
-    scaling_path = _write_json(ctx.layout["statistics"] / "scaling_summary.json", scaling_summary)
-    _record_artifact(ctx, scaling_path, "json", "statistics", "complexity_energetics.scaling")
-
-    bootstrap_path = ctx.layout["statistics"] / "bootstrap_intervals.csv"
-    bootstrap_path.parent.mkdir(parents=True, exist_ok=True)
-    with bootstrap_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(
-            handle,
-            fieldnames=("workload", "metric", "n", "mean", "ci_low", "ci_high"),
-        )
-        writer.writeheader()
-        for workload, stats in workload_summary["workloads"].items():
-            writer.writerow(
-                {
-                    "workload": workload,
-                    "metric": "energy_est_j",
-                    "n": stats["n"],
-                    "mean": stats["mean_energy_est_j"],
-                    "ci_low": stats["ci_low_energy_est_j"],
-                    "ci_high": stats["ci_high_energy_est_j"],
-                }
-            )
-    _record_artifact(ctx, bootstrap_path, "csv", "statistics", "complexity_energetics.summary")
-
-
-def _task_visualizations(ctx: RunContext) -> None:
-    _ensure_ce_result(ctx)
-    source_assets = ctx.run_dir / "papers" / "complexity_energetics" / "assets"
-    for src in sorted(source_assets.glob("*.png")):
-        dst = _copy_file(src, ctx.layout["visualizations/static"] / f"complexity_energetics_{src.name}")
-        _record_artifact(ctx, dst, "image", "visualizations", "complexity_energetics.assets")
-
-    rows = _ce_rows(ctx)
-    for fmt in ctx.config.visualization.output_formats:
-        plot_path = ctx.layout["visualizations/static"] / f"workload_energy_summary.{fmt}"
-        _save_workload_energy_plot(rows, plot_path, ctx.config.visualization)
-        _record_artifact(ctx, plot_path, "image", "visualizations", "complexity_energetics.summary")
-
-    inventory = {
-        "static_visualizations": [
-            artifact.to_dict()
-            for artifact in ctx.artifacts
-            if artifact.producing_task == "visualizations"
-        ],
-        "formats": ctx.config.visualization.output_formats,
-        "dpi": ctx.config.visualization.dpi,
-        "figure_size": ctx.config.visualization.figure_size,
-    }
-    inventory_path = _write_json(ctx.layout["visualizations/static"] / "visualization_inventory.json", inventory)
-    _record_artifact(ctx, inventory_path, "json", "visualizations", "visualization.config")
-
-
-def _task_animations(ctx: RunContext) -> None:
-    _ensure_ce_result(ctx)
-    gif_paths: list[Path] = []
-    if "gif" in ctx.config.visualization.animation_formats:
-        energy_gif = ctx.layout["visualizations/animations"] / "energy_components.gif"
-        _save_energy_animation(_ce_rows(ctx), energy_gif, ctx.config.visualization)
-        gif_paths.append(energy_gif)
-        _record_artifact(ctx, energy_gif, "animation", "animations", "complexity_energetics.summary")
-
-        scaling_gif = ctx.layout["visualizations/animations"] / "scaling_sweep.gif"
-        _save_scaling_animation(_scaling_curves(ctx), scaling_gif, ctx.config.visualization)
-        gif_paths.append(scaling_gif)
-        _record_artifact(ctx, scaling_gif, "animation", "animations", "complexity_energetics.scaling")
-    if "mp4" in ctx.config.visualization.animation_formats:
-        note_path = ctx.layout["visualizations/animations"] / "mp4_writer_status.json"
-        _write_json(
-            note_path,
-            {
-                "requested": True,
-                "created": False,
-                "reason": "MP4 output requires an ffmpeg runtime; GIF and HTML preview are always generated.",
-            },
-        )
-        _record_artifact(ctx, note_path, "json", "animations", "visualization.animation_formats")
-    if "html" in ctx.config.visualization.animation_formats:
-        html_path = ctx.layout["visualizations/animations"] / "preview.html"
-        _write_animation_preview(html_path, gif_paths)
-        _record_artifact(ctx, html_path, "animation", "animations", "visualization.animation_formats")
-
-
-def _task_reports(ctx: RunContext) -> None:
-    _ensure_ce_result(ctx)
-    generated = Path(ctx.ce_result.generated_markdown_path)
-    if generated.exists():
-        copied = _copy_file(generated, ctx.layout["reports"] / "complexity_energetics_generated.md")
-        _record_artifact(ctx, copied, "markdown", "reports", "complexity_energetics.generated")
-    summary_path = ctx.layout["reports"] / "run_summary.md"
-    summary_path.write_text(_render_run_summary(ctx), encoding="utf-8")
-    _record_artifact(ctx, summary_path, "markdown", "reports", "run_all.config")
-
-
-def _task_papers(ctx: RunContext) -> None:
-    _ensure_ce_result(ctx)
-    paper_note = ctx.layout["papers"] / "paper_artifacts.md"
-    copied_pdfs: list[str] = []
-    for source in ctx.config.complexity_energetics.pdf_sources:
-        src = _resolve_repo_path(source)
-        if src.exists():
-            dst = _copy_file(src, ctx.layout["papers"] / src.name)
-            copied_pdfs.append(str(dst))
-            _record_artifact(ctx, dst, "paper", "papers", "complexity_energetics.pdf_sources")
-    paper_note.write_text(
-        "\n".join(
-            [
-                "# Paper Artifacts",
-                "",
-                "Complexity energetics paper-ready projections are generated under this run's `papers/complexity_energetics/` folder.",
-                f"Compatibility projection enabled: {ctx.config.complexity_energetics.paper_projection}",
-                f"PDF build requested: {ctx.config.complexity_energetics.build_pdf}",
-                f"Copied PDFs: {', '.join(copied_pdfs) if copied_pdfs else 'none available in this checkout'}",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    _record_artifact(ctx, paper_note, "paper", "papers", "complexity_energetics.paper_projection")
-
-
-def _task_validation(ctx: RunContext) -> None:
-    artifact_types = {artifact.artifact_type for artifact in ctx.artifacts}
-    missing = [
-        artifact_type
-        for artifact_type in ctx.config.validation.required_artifact_types
-        if artifact_type not in artifact_types
-    ]
-    empty = [artifact.to_dict() for artifact in ctx.artifacts if artifact.bytes <= 0]
-    checksums = {
-        artifact.path: artifact.checksum
-        for artifact in ctx.artifacts
-        if ctx.config.validation.deterministic_checksum_checks
-    }
-    valid = True
-    if ctx.config.validation.fail_on_missing and missing:
-        valid = False
-    if ctx.config.validation.fail_on_empty and empty:
-        valid = False
-    payload = {
-        "valid": valid,
-        "required_artifact_types": ctx.config.validation.required_artifact_types,
-        "present_artifact_types": sorted(artifact_types),
-        "missing_artifact_types": missing,
-        "empty_artifacts": empty,
-        "artifact_count": len(ctx.artifacts),
-        "checksums": checksums,
-    }
-    validation_path = _write_json(ctx.layout["statistics"] / "validation_summary.json", payload)
-    _record_artifact(ctx, validation_path, "json", "validation", "validation.config")
-    if not valid:
-        raise RuntimeError(f"Run validation failed: {payload}")
-
-
-def _write_final_metadata(ctx: RunContext) -> tuple[Path, Path]:
-    dependency_path = _write_json(
-        ctx.layout["provenance"] / "dependency_versions.json",
-        collect_dependency_versions((*DEFAULT_DEPENDENCIES, "pandas", "pillow")),
-    )
-    _record_artifact(ctx, dependency_path, "provenance", "provenance", "runtime.dependencies")
-
-    commit, dirty = detect_git_state(ROOT)
-    git_path = _write_json(
-        ctx.layout["provenance"] / "git_state.json",
-        {"git_commit": commit, "git_dirty": dirty, "root": str(ROOT)},
-    )
-    _record_artifact(ctx, git_path, "provenance", "provenance", "git")
-
-    manifest_path = ctx.run_dir / "manifest.json"
-    run_manifest_path = ctx.layout["provenance"] / "run_manifest.json"
-    provenance_path = ctx.layout["provenance"] / "provenance.json"
-    inventory_path = ctx.layout["provenance"] / "output_inventory.json"
-    output_paths = [
-        artifact.absolute_path for artifact in ctx.artifacts
-    ] + [
-        str(manifest_path.resolve()),
-        str(run_manifest_path.resolve()),
-        str(provenance_path.resolve()),
-        str(inventory_path.resolve()),
-    ]
-    provenance = build_run_provenance(
-        project="ant-stack-run-all",
-        command=sys.argv,
-        input_paths=[ctx.config.config_path, _resolve_repo_path(ctx.config.complexity_energetics.manifest)],
-        output_paths=output_paths,
-        parameters={
-            "run_id": ctx.config.run.run_id,
-            "tasks": ctx.config.tasks.enabled(),
-            "paper_projection": ctx.config.complexity_energetics.paper_projection,
-        },
-        cwd=ROOT,
-        dependency_names=(*DEFAULT_DEPENDENCIES, "pandas", "pillow"),
-    )
-    write_provenance(provenance_path, provenance)
-    _record_artifact(ctx, provenance_path, "provenance", "provenance", "run_all.provenance")
-
-    inventory_path = _write_json(
-        inventory_path,
-        {
-            "run_id": ctx.config.run.run_id,
-            "artifact_count": len(ctx.artifacts),
-            "artifacts": [artifact.to_dict() for artifact in ctx.artifacts],
-        },
-    )
-    _record_artifact(ctx, inventory_path, "provenance", "provenance", "run_all.inventory")
-
-    write_manifest(manifest_path, ctx.config, ctx.artifacts)
-    _copy_file(manifest_path, run_manifest_path)
-    return manifest_path, provenance_path
-
-
-def _ce_rows(ctx: RunContext) -> list[dict[str, Any]]:
-    if ctx.ce_summary and "rows" in ctx.ce_summary:
-        return list(ctx.ce_summary["rows"])
-    if ctx.ce_result is not None and getattr(ctx.ce_result, "rows", None) is not None:
-        return list(ctx.ce_result.rows)
-    return []
-
-
-def _summarize_workloads(rows: Sequence[Mapping[str, Any]], *, seed: int) -> dict[str, Any]:
-    by_workload: dict[str, list[float]] = {}
+def _summarize_workloads(rows, *, seed, confidence=0.95, samples=1000):
+    grouped = {}
     for row in rows:
-        by_workload.setdefault(str(row["workload"]), []).append(float(row["energy_est_j"]))
-    summary: dict[str, Any] = {"workloads": {}, "row_count": len(rows)}
-    for workload, values in sorted(by_workload.items()):
-        mean, ci_low, ci_high = bootstrap_mean_ci(values, num_samples=1000, alpha=0.05, seed=seed)
-        variance = sum((value - mean) ** 2 for value in values) / max(1, len(values) - 1)
-        summary["workloads"][workload] = {
-            "n": len(values),
-            "mean_energy_est_j": mean,
-            "min_energy_est_j": min(values),
-            "max_energy_est_j": max(values),
-            "std_energy_est_j": math.sqrt(variance),
-            "ci_low_energy_est_j": ci_low,
-            "ci_high_energy_est_j": ci_high,
-        }
-    return summary
+        grouped.setdefault(row["workload"], []).append(row["energy_est_j"])
+    result = {"workloads": {}, "row_count": len(rows), "seed": seed, "confidence_level": confidence, "bootstrap_samples": samples}
+    for name, values in grouped.items():
+        mean, lo, hi = bootstrap_mean_ci(values, num_samples=samples, alpha=1-confidence, seed=seed)
+        variance = sum((value-mean)**2 for value in values) / max(1, len(values)-1)
+        result["workloads"][name] = {"n": len(values), "mean_energy_est_j": mean,
+                                      "min_energy_est_j": min(values), "max_energy_est_j": max(values),
+                                      "std_energy_est_j": math.sqrt(variance),
+                                      "ci_low_energy_est_j": lo, "ci_high_energy_est_j": hi}
+    return result
 
 
-def _scaling_summary(ctx: RunContext) -> dict[str, Any]:
+def _statistics(ctx):
+    loaded = load_manifest_snapshot(ctx.manifest_snapshot)
+    return _summarize_workloads(_ce_rows(ctx), seed=ctx.config.run.seed, confidence=loaded[4], samples=loaded[5])
+
+
+def _scaling_curves(ctx):
+    if ctx.ce_summary is not None:
+        return list(ctx.ce_summary["scaling_curves"])
+    _, raw, manifest, coeff, *_ = load_manifest_snapshot(ctx.manifest_snapshot)
+    return scaling_curves(manifest, raw, coeff)
+
+
+def _scaling_summary(ctx):
+    return {"curves": [{**curve, **analyze_scaling_relationship(curve["x"], curve["y"])} for curve in _scaling_curves(ctx)]}
+
+
+def _task_statistics(ctx):
+    _ensure_ce_result(ctx)
+    stats = _statistics(ctx)
+    for name, payload in (("workload_summary.json", stats), ("scaling_summary.json", _scaling_summary(ctx))):
+        _record_artifact(ctx, _write_json(ctx.layout["statistics"] / name, payload), "json", "statistics", "manifest.statistics")
+    path = ctx.layout["statistics"] / "bootstrap_intervals.csv"
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["workload", "metric", "n", "mean", "ci_low", "ci_high"])
+        for name, value in stats["workloads"].items():
+            writer.writerow([name, "energy_est_j", value["n"], value["mean_energy_est_j"], value["ci_low_energy_est_j"], value["ci_high_energy_est_j"]])
+    _record_artifact(ctx, path, "csv", "statistics", "manifest.statistics")
+
+
+def _task_visualizations(ctx):
+    from antstack_core.figures import PlotConfig, interval_plot
+    _ensure_ce_result(ctx)
+    for source in ctx.ce_result.output_paths:
+        source = Path(source)
+        if source.suffix == ".png" and source.parent.name == "assets":
+            destination = _copy_file(source, ctx.layout["visualizations/static"] / f"complexity_energetics_{source.name}")
+            _record_artifact(ctx, destination, "image", "visualizations", "complexity_energetics.assets")
+    stats = _statistics(ctx)["workloads"]
+    for fmt in ctx.config.visualization.output_formats:
+        path = ctx.layout["visualizations/static"] / f"workload_energy_summary.{fmt}"
+        labels = list(stats)
+        means = [stats[name]["mean_energy_est_j"] for name in labels]
+        bounds = ([(stats[name]["ci_low_energy_est_j"], stats[name]["ci_high_energy_est_j"]) for name in labels]
+                  if ctx.config.visualization.statistical_annotations else None)
+        interval_plot([name.title() for name in labels], means,
+                      "Module-isolated modeled energy: current workload means", str(path),
+                      xlabel="J / workload window", confidence_intervals=bounds,
+                      config=PlotConfig(figure_size=ctx.config.visualization.figure_size,
+                                        dpi=ctx.config.visualization.dpi))
+        _record_artifact(ctx, path, "image", "visualizations", "manifest.statistics")
+
+
+def _task_animations(ctx):
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation, FFMpegWriter, PillowWriter
+    _ensure_ce_result(ctx)
+    visualization = ctx.config.visualization
+    directory = ctx.layout["visualizations/animations"]
+    formats = set(visualization.animation_formats)
+    media = []
+    if "html" in formats:
+        formats.add("gif")
+    stats = _statistics(ctx)["workloads"]
     curves = _scaling_curves(ctx)
-    summary = {
-        "curves": [],
-        "runner_scaling_exponents": getattr(ctx.ce_result, "scaling_exponents", {}) if ctx.ce_result else {},
-    }
-    for curve in curves:
-        relationship = analyze_scaling_relationship(curve["x"], curve["y"])
-        summary["curves"].append(
-            {
-                "name": curve["name"],
-                "workload": curve["workload"],
-                "parameter": curve["parameter"],
-                "x": curve["x"],
-                "energy_est_j": curve["y"],
-                "scaling_exponent": relationship.get("scaling_exponent"),
-                "r_squared": relationship.get("r_squared"),
-            }
-        )
-    return summary
-
-
-def _scaling_curves(ctx: RunContext) -> list[dict[str, Any]]:
-    manifest_path = _resolve_repo_path(ctx.config.complexity_energetics.manifest)
-    raw = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-    manifest = ctx.ce_manifest or ExperimentManifest.load(manifest_path)
-    coeff = EnergyCoefficients(
-        flops_pj=float(manifest.coefficients.flops_pj),
-        sram_pj_per_byte=float(manifest.coefficients.sram_pj_per_byte),
-        dram_pj_per_byte=float(manifest.coefficients.dram_pj_per_byte),
-        spike_aj=float(manifest.coefficients.spike_aj),
-        baseline_w=float(manifest.coefficients.baseline_w),
-        body_per_joint_w=float(manifest.coefficients.body_per_joint_w),
-        body_sensor_w_per_channel=float(manifest.coefficients.body_sensor_w_per_channel),
-    )
-    analyses = ((raw.get("scaling") or {}).get("analyses") or [])
-    if not analyses:
-        scaling = raw.get("scaling") or {}
-        analyses = [
-            {
-                "workload": scaling.get("workload", "brain"),
-                "param": scaling.get("param", "K"),
-                "values": scaling.get("values", [64, 128, 256, 512]),
-                "description": "Legacy scaling analysis",
-            }
-        ]
-    curves: list[dict[str, Any]] = []
-    for item in analyses:
-        workload = str(item["workload"])
-        parameter = str(item["param"])
-        values = [float(value) for value in item["values"]]
-        workload_cfg = (manifest.workloads or {}).get(workload)
-        params = dict((workload_cfg.params if workload_cfg else {}) or {})
-        y_values: list[float] = []
-        for value in values:
-            params[parameter] = int(value) if float(value).is_integer() else value
-            load = _closed_form_load(workload, 0.25, params)
-            y_values.append(add_baseline_energy(estimate_compute_energy(load, coeff), 0.25, coeff))
-        curves.append(
-            {
-                "name": str(item.get("description", f"{workload} vs {parameter}")),
-                "workload": workload,
-                "parameter": parameter,
-                "x": values,
-                "y": y_values,
-            }
-        )
-    return curves
-
-
-def _closed_form_load(workload: str, duration_s: float, params: Mapping[str, Any]):
-    if workload == "body":
-        return body_workload_closed_form(duration_s, dict(params))
-    if workload == "brain":
-        return brain_workload_closed_form(duration_s, dict(params))
-    if workload == "mind":
-        return mind_workload_closed_form(duration_s, dict(params))
-    raise ValueError(f"Unsupported workload in scaling curve: {workload}")
-
-
-def _save_workload_energy_plot(
-    rows: Sequence[Mapping[str, Any]],
-    path: Path,
-    visualization: VisualizationSection,
-) -> None:
-    import matplotlib.pyplot as plt
-
-    summary = _summarize_workloads(rows, seed=123)["workloads"]
-    labels = list(summary)
-    values = [summary[label]["mean_energy_est_j"] for label in labels]
-    yerr = [
-        (
-            max(0.0, summary[label]["mean_energy_est_j"] - summary[label]["ci_low_energy_est_j"]),
-            max(0.0, summary[label]["ci_high_energy_est_j"] - summary[label]["mean_energy_est_j"]),
-        )
-        for label in labels
-    ]
-    err_array = (
-        [[lo for lo, _hi in yerr], [hi for _lo, hi in yerr]]
-        if visualization.statistical_annotations and values
-        else None
-    )
-    fig, ax = plt.subplots(figsize=visualization.figure_size)
-    bars = ax.bar(labels, values, yerr=err_array, capsize=4)
-    top = max(
-        (value + hi for value, (_lo, hi) in zip(values, yerr)),
-        default=0.0,
-    )
-    ax.set_ylim(0.0, top * 1.2 if top > 0 else 1.0)
-    # Value labels above each bar (including upper CI) so small bars stay readable
-    for bar, value, (_lo, hi) in zip(bars, values, yerr):
-        ax.text(
-            bar.get_x() + bar.get_width() / 2.0,
-            value + hi + (top * 0.02 if top > 0 else 0.0),
-            f"{value:.3g}",
-            ha="center", va="bottom", fontsize=9, fontweight="bold",
-        )
-    ax.set_title("Workload Energy Summary (mean, 95% CI)")
-    ax.set_ylabel("Mean estimated energy (J)")
-    ax.set_xlabel("Workload")
-    fig.tight_layout()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path, dpi=visualization.dpi)
-    plt.close(fig)
-
-
-def _save_energy_animation(
-    rows: Sequence[Mapping[str, Any]],
-    path: Path,
-    visualization: VisualizationSection,
-) -> None:
-    import matplotlib.pyplot as plt
-    from matplotlib.animation import FuncAnimation, PillowWriter
-
-    summary = _summarize_workloads(rows, seed=123)["workloads"]
-    labels = list(summary)
-    values = [summary[label]["mean_energy_est_j"] for label in labels]
+    definitions = [("energy_components", list(stats), [stats[name]["mean_energy_est_j"] for name in stats])]
+    if curves:
+        definitions.append(("scaling_sweep", curves[0]["x"], curves[0]["y"]))
     frames = max(2, int(visualization.animation_fps * visualization.animation_duration_s))
-    fig, ax = plt.subplots(figsize=visualization.figure_size)
-    bars = ax.bar(labels, [0.0 for _ in labels])
-    ymax = max(values) * 1.15 if values else 1.0
-    ax.set_ylim(0.0, ymax)
-    ax.set_ylabel("Mean estimated energy (J)")
-    ax.set_title("Energy Components Across Workloads")
-
-    def update(frame: int):
-        fraction = (frame + 1) / frames
-        for bar, value in zip(bars, values):
-            bar.set_height(value * fraction)
-        return bars
-
-    animation = FuncAnimation(fig, update, frames=frames, interval=1000 / visualization.animation_fps)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    animation.save(path, writer=PillowWriter(fps=visualization.animation_fps))
-    plt.close(fig)
-
-
-def _save_scaling_animation(
-    curves: Sequence[Mapping[str, Any]],
-    path: Path,
-    visualization: VisualizationSection,
-) -> None:
-    import matplotlib.pyplot as plt
-    from matplotlib.animation import FuncAnimation, PillowWriter
-
-    if not curves:
-        curves = [{"name": "empty", "x": [0.0, 1.0], "y": [0.0, 0.0]}]
-    frames = max(2, int(visualization.animation_fps * visualization.animation_duration_s))
-    fig, ax = plt.subplots(figsize=visualization.figure_size)
-    max_y = max(max(float(value) for value in curve["y"]) for curve in curves)
-    ax.set_ylim(0.0, max_y * 1.15 if max_y > 0 else 1.0)
-    min_x = min(min(float(value) for value in curve["x"]) for curve in curves)
-    max_x = max(max(float(value) for value in curve["x"]) for curve in curves)
-    ax.set_xlim(min_x, max_x)
-    ax.set_xlabel("Scaling parameter value")
-    ax.set_ylabel("Estimated energy (J)")
-    ax.set_title("Scaling Sweep")
-    lines = []
-    for curve in curves:
-        (line,) = ax.plot([], [], marker="o", label=str(curve["name"])[:48])
-        lines.append(line)
-    ax.legend(loc="best", fontsize="small")
-
-    def update(frame: int):
-        fraction = (frame + 1) / frames
-        for line, curve in zip(lines, curves):
-            x_values = list(curve["x"])
-            y_values = [float(value) * fraction for value in curve["y"]]
-            line.set_data(x_values, y_values)
-        return lines
-
-    animation = FuncAnimation(fig, update, frames=frames, interval=1000 / visualization.animation_fps)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    animation.save(path, writer=PillowWriter(fps=visualization.animation_fps))
-    plt.close(fig)
+    for name, labels, values in definitions:
+        for fmt in sorted(formats - {"html"}):
+            figure, ax = plt.subplots(figsize=visualization.figure_size)
+            bars = ax.bar([str(label) for label in labels], [0.0]*len(values))
+            ax.set_ylim(0, max(values)*1.15 if max(values) > 0 else 1)
+            ax.set_ylabel("Modeled energy (J)")
+            positive = [value for value in values if value > 0]
+            if len(positive) == len(values) and max(positive) / min(positive) > 100:
+                ax.set_yscale("symlog", linthresh=min(positive)/10)
+                ax.set_ylabel("Modeled energy (J; symmetric-log axis)")
+            ax.set_title("Illustrative reveal of fixed modeled values; not elapsed experimental time")
+            def update(frame, bars=bars, values=values):
+                for bar, value in zip(bars, values):
+                    bar.set_height(value*(frame+1)/frames)
+                return bars
+            animation = FuncAnimation(figure, update, frames=frames, interval=1000/visualization.animation_fps)
+            path = directory / f"{name}.{fmt}"
+            writer = FFMpegWriter(fps=visualization.animation_fps) if fmt == "mp4" else PillowWriter(fps=visualization.animation_fps)
+            try:
+                animation.save(path, writer=writer)
+            finally:
+                plt.close(figure)
+            _record_artifact(ctx, path, "animation", "animations", "visualization.animation_formats")
+            if fmt == "gif":
+                media.append(path)
+    if "html" in visualization.animation_formats:
+        path = directory / "preview.html"
+        images = [f'<img alt="{image.stem}" src="data:image/gif;base64,{base64.b64encode(image.read_bytes()).decode()}" />' for image in media]
+        path.write_text('<!doctype html><html><head><meta charset="utf-8"><title>Modeled energy animations</title></head><body>' + "".join(images) + '</body></html>', encoding="utf-8")
+        _record_artifact(ctx, path, "animation", "animations", "visualization.animation_formats")
 
 
-def _write_animation_preview(path: Path, gif_paths: Sequence[Path]) -> None:
-    links = []
-    for gif_path in gif_paths:
-        links.append(
-            f'<figure><img src="{gif_path.name}" alt="{gif_path.stem}" /><figcaption>{gif_path.stem}</figcaption></figure>'
-        )
-    path.write_text(
-        "\n".join(
-            [
-                "<!doctype html>",
-                "<html><head><meta charset=\"utf-8\"><title>Ant Stack Animations</title></head>",
-                "<body>",
-                "<h1>Ant Stack Animation Preview</h1>",
-                *links,
-                "</body></html>",
-            ]
-        ),
-        encoding="utf-8",
-    )
+def _task_reports(ctx):
+    _ensure_ce_result(ctx)
+    # Preserve linked assets next to the copied report, not broken source-bound links.
+    source = Path(ctx.ce_result.generated_markdown_path)
+    target = ctx.layout["reports"] / "complexity_energetics_generated.md"
+    text = source.read_text()
+    text = text.replace("](assets/", "](../papers/complexity_energetics/out/assets/").replace("](results.csv)", "](../papers/complexity_energetics/out/results.csv)")
+    target.write_text(text, encoding="utf-8")
+    _record_artifact(ctx, target, "markdown", "reports", "complexity_energetics.generated")
+    path = ctx.layout["reports"] / "run_summary.md"
+    lines = ["# Ant Stack Run Summary", "", f"Run: {ctx.config.run.run_id}", "", "Analytical/synthetic workload outputs; not empirical validation.", "", "| Workload | N | Mean J/window | CI low | CI high |", "|---|---:|---:|---:|---:|"]
+    for name, value in _statistics(ctx)["workloads"].items():
+        lines.append(f"| {name} | {value['n']} | {value['mean_energy_est_j']:.8g} | {value['ci_low_energy_est_j']:.8g} | {value['ci_high_energy_est_j']:.8g} |")
+    path.write_text("\n".join(lines)+"\n", encoding="utf-8")
+    _record_artifact(ctx, path, "markdown", "reports", "run_all.config")
 
 
-def _render_run_summary(ctx: RunContext) -> str:
-    stats = _summarize_workloads(_ce_rows(ctx), seed=ctx.config.run.seed)
-    lines = [
-        "# Ant Stack Run Summary",
-        "",
-        f"- Run ID: `{ctx.config.run.run_id}`",
-        f"- Output root: `{ctx.run_dir}`",
-        f"- Tasks: `{', '.join(ctx.config.tasks.enabled())}`",
-        f"- Artifact count at report time: `{len(ctx.artifacts)}`",
-        "",
-        "## Workload Statistics",
-        "",
-        "| Workload | N | Mean energy (J) | 95% CI low | 95% CI high |",
-        "|---|---:|---:|---:|---:|",
-    ]
-    for workload, values in stats["workloads"].items():
-        lines.append(
-            f"| {workload} | {values['n']} | {values['mean_energy_est_j']:.6g} | {values['ci_low_energy_est_j']:.6g} | {values['ci_high_energy_est_j']:.6g} |"
-        )
-    lines.extend(
-        [
-            "",
-            "## Canonical Folders",
-            "",
-            "- `data/raw/`: copied source manifests and run config.",
-            "- `data/derived/`: normalized CSV and JSON outputs.",
-            "- `statistics/`: workload summaries, scaling metrics, bootstrap intervals, and validation summary.",
-            "- `visualizations/static/`: PNG/SVG/PDF figures.",
-            "- `visualizations/animations/`: GIF/HTML animation previews.",
-            "- `reports/`: Markdown summaries and generated manuscript fragments.",
-            "- `papers/`: paper-ready projections and copied PDFs when available.",
-            "- `provenance/`: run manifest, provenance, dependency versions, git state, and output inventory.",
-            "",
-        ]
-    )
-    return "\n".join(lines)
+def _task_papers(ctx):
+    _ensure_ce_result(ctx)
+    sources = []
+    for source in ctx.config.complexity_energetics.pdf_sources:
+        path = _resolve_repo_path(source)
+        if not path.is_file():
+            raise FileNotFoundError(f"Requested historical PDF source is absent: {path}")
+        destination = ctx.layout["papers"] / path.name
+        _copy_file(path, destination)
+        _record_artifact(ctx, destination, "historical_paper", "papers", "complexity_energetics.pdf_sources")
+        sources.append(path.name)
+    if ctx.config.complexity_energetics.build_pdf:
+        from antstack_core.publishing.pdf_generator import PDFGenerator
+        destination = ctx.layout["papers"] / "complexity_energetics.pdf"
+        result = PDFGenerator().generate_pdf([Path(ctx.ce_result.generated_markdown_path)], destination,
+                    {"title": "Ant Stack Generated Analytical Results", "subtitle": "Model outputs; not an empirical study or the full manuscript"})
+        if not result.success:
+            raise RuntimeError(f"Requested PDF build failed: {result.error_message}")
+        _record_artifact(ctx, destination, "paper", "papers", "complexity_energetics.build_pdf")
+    path = ctx.layout["papers"] / "paper_artifacts.md"
+    path.write_text("# Paper Artifacts\n\nGenerated analytical report: [Markdown](complexity_energetics/out/Generated.md).\n\n" +
+                    f"Historical copied PDFs (not a new build): {', '.join(sources) or 'none'}.\n", encoding="utf-8")
+    _record_artifact(ctx, path, "markdown", "papers", "complexity_energetics.paper_projection")
 
 
-__all__ = [
-    "ArtifactRecord",
-    "ComplexityEnergeticsSection",
-    "DEFAULT_REQUIRED_ARTIFACT_TYPES",
-    "RUN_SUBDIRECTORIES",
-    "RunAllConfig",
-    "RunAllResult",
-    "RunContext",
-    "RunSection",
-    "TASK_NAMES",
-    "TaskSelection",
-    "ValidationSection",
-    "VisualizationSection",
-    "checksum_file",
-    "create_run_layout",
-    "main",
-    "parse_task_names",
-    "run_all",
-    "write_manifest",
-]
+def _validate_current(ctx):
+    identities = set()
+    for record in ctx.artifacts:
+        if record.path in identities:
+            raise ValueError(f"Duplicate artifact identity: {record.path}")
+        identities.add(record.path)
+        path = ordinary_path(ctx.run_dir / record.path)
+        if path != Path(record.absolute_path):
+            raise ValueError("Artifact escapes its canonical run namespace")
+        current = file_identity(path)
+        if current["bytes"] != record.bytes or current["sha256"] != record.checksum:
+            raise RuntimeError(f"Artifact changed after registration: {record.path}")
+        if ctx.config.validation.fail_on_empty and current["bytes"] == 0:
+            raise RuntimeError(f"Empty artifact: {record.path}")
 
+
+def _task_validation(ctx):
+    _validate_current(ctx)
+    present = {item.artifact_type for item in ctx.artifacts}
+    missing = set(ctx.config.validation.required_artifact_types)-present
+    valid = not (missing and ctx.config.validation.fail_on_missing)
+    path = _write_json(ctx.layout["statistics"] / "validation_summary.json",
+                       {"valid": valid, "missing_artifact_types": sorted(missing),
+                        "checksums": {item.path: item.checksum for item in ctx.artifacts},
+                        "validation_scope": "artifact completeness and current byte integrity, not scientific validation"})
+    _record_artifact(ctx, path, "json", "validation", "validation.config")
+    if not valid:
+        raise RuntimeError(f"Run validation failed; missing artifact types: {sorted(missing)}")
+
+
+def write_manifest(path, config, artifacts, *, generation_id=None):
+    destination = ordinary_path(path)
+    if destination in {_resolve_repo_path(config.config_path), _resolve_repo_path(config.complexity_energetics.manifest)}:
+        raise ValueError("Manifest output must not replace an input source")
+    paths = [record.path for record in artifacts]
+    if len(set(paths)) != len(paths):
+        raise ValueError("Duplicate manifest identity")
+    return _write_json(Path(path), {"schema_version": 2, "complete": True,
+                                   "artifact_path_base": ".." if Path(path).parent.name == "provenance" else ".", "run_id": config.run.run_id,
+                                   "generation_id": generation_id or uuid.uuid4().hex,
+                                   "created_at_utc": datetime.now(timezone.utc).isoformat(),
+                                   "tasks": config.tasks.enabled(), "config": config.to_dict(),
+                                   "artifact_count": len(artifacts), "artifacts": [item.to_dict() for item in artifacts]})
+
+
+def _write_final_metadata(ctx):
+    for name, payload in (("dependency_versions.json", collect_dependency_versions(DEFAULT_DEPENDENCIES)),
+                          ("git_state.json", ctx.source_state)):
+        _record_artifact(ctx, _write_json(ctx.layout["provenance"] / name, payload), "provenance", "provenance", name)
+    path = ctx.layout["provenance"] / "provenance.json"
+    inputs = [ctx.layout["provenance"] / "run_config.yaml", ctx.manifest_snapshot]
+    provenance = build_run_provenance(project="ant-stack-run-all", input_paths=inputs,
+                                      output_paths=[item.path for item in ctx.artifacts] + ["manifest.json", "provenance/provenance.json", "provenance/output_inventory.json"],
+                                      parameters={"run_id": ctx.config.run.run_id, "output_path_base": "run_root",
+                                                  "seed_scope": "run.seed controls all bootstrap intervals; manifest seed identifies workload input"},
+                                      source_state=ctx.source_state)
+    # Portable snapshot identities rather than ephemeral staging directory names.
+    provenance = replace(provenance, input_paths=[str(p.relative_to(ctx.run_dir)) for p in inputs],
+                         input_identities={str(p.relative_to(ctx.run_dir)): file_identity(p) for p in inputs})
+    write_provenance(path, provenance)
+    _record_artifact(ctx, path, "provenance", "provenance", "run_all.provenance")
+    inventory = _write_json(ctx.layout["provenance"] / "output_inventory.json",
+                            {"artifact_path_base": "run_root", "artifacts": [item.to_dict() for item in ctx.artifacts]})
+    _record_artifact(ctx, inventory, "provenance", "provenance", "run_all.inventory")
+    _validate_current(ctx)
+    # Required metadata first; the root completion manifest is atomic and last.
+    write_manifest(ctx.layout["provenance"] / "run_manifest.json", ctx.config, ctx.artifacts, generation_id=ctx.generation_id)
+    _record_artifact(ctx, ctx.layout["provenance"] / "run_manifest.json", "provenance", "provenance", "run_all.manifest_snapshot")
+    marker = ctx.run_dir / ".antstack-owned.json"
+    _write_json(marker, {"owner": "ant-stack-run-all", "run_id": ctx.config.run.run_id})
+    _record_artifact(ctx, marker, "provenance", "provenance", "run_all.ownership")
+    _validate_current(ctx)
+    write_manifest(ctx.run_dir / "manifest.json", ctx.config, ctx.artifacts, generation_id=ctx.generation_id)
+    return ctx.run_dir / "manifest.json", path
+
+
+def run_all(config_path, *, output_root=None, run_id=None, validate_only=False, tasks=None, log_level=None):
+    _bool(validate_only, "validate_only")
+    config = RunAllConfig.from_file(config_path).with_overrides(output_root=output_root, run_id=run_id, tasks=tasks, log_level=log_level)
+    destination = _preflight_paths(config)
+    snapshot = load_manifest_snapshot(_resolve_repo_path(config.complexity_energetics.manifest))[0]
+    if validate_only:
+        return RunAllResult(config.run.run_id, destination, None, None, (), True)
+    source_state = capture_source_state(Path.cwd())
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    stage = destination.with_name(f".{destination.name}.stage-{uuid.uuid4().hex}")
+    stage.mkdir()
+    ctx = RunContext(config, stage, _layout(stage), source_state=source_state, snapshot_data=snapshot)
+    ctx.log_path = ctx.layout["logs"] / "run_all_antstack.log"
+    logging_state = _configure_logging(ctx.log_path, config.run.log_level)
+    try:
+        logging_state.info("Starting workflow: %s", config.run.run_id)
+        _write_initial_inputs(ctx)
+        for task in TASK_NAMES:
+            if task != "validation" and getattr(config.tasks, task):
+                globals()[f"_task_{task}"](ctx)
+        logging_state.info("Finished producing requested tasks")
+    finally:
+        _close_logging(logging_state)
+    _record_artifact(ctx, ctx.log_path, "log", "logging", "run.log_level")
+    if config.tasks.validation:
+        _task_validation(ctx)
+    # Prepare compatibility publication without touching the current projection.
+    projection_stage = projection = None
+    if config.complexity_energetics.paper_projection and ctx.ce_result is not None:
+        projection = _resolve_repo_path(config.complexity_energetics.paper_root)
+        prepared = project_result(ctx.ce_result, projection, publish=False)
+        projection_stage = Path(prepared["staged_root"])
+        metadata_path = projection_stage / ".antstack-ce-projection.json"
+        metadata = json.loads(metadata_path.read_text())
+        metadata["canonical_source"] = str(destination / "papers/complexity_energetics/out")
+        metadata["canonical_generation_id"] = ctx.generation_id
+        _write_json(metadata_path, metadata)
+    _write_final_metadata(ctx)
+    archive = destination.with_name(f".{destination.name}.archive-{uuid.uuid4().hex}")
+    projection_archive = projection.with_name(f".{projection.name}.archive-{uuid.uuid4().hex}") if projection else None
+    moved_run = moved_projection = published_projection = False
+    preserve_tree_modes(stage, destination)
+    if projection_stage is not None:
+        preserve_tree_modes(projection_stage, projection)
+    try:
+        if projection_stage is not None:
+            if projection.exists():
+                os.replace(projection, projection_archive)
+                moved_projection = True
+            os.replace(projection_stage, projection)
+            published_projection = True
+        if destination.exists():
+            os.replace(destination, archive)
+            moved_run = True
+        # Canonical completed view is published last: no required copy/move follows.
+        os.replace(stage, destination)
+    except BaseException:
+        if published_projection:
+            os.replace(projection, projection_stage)
+        if moved_projection:
+            os.replace(projection_archive, projection)
+        if moved_run:
+            os.replace(archive, destination)
+        raise
+    artifacts = tuple(replace(item, absolute_path=str(destination / item.path)) for item in ctx.artifacts)
+    return RunAllResult(config.run.run_id, destination, destination / "manifest.json", destination / "provenance/provenance.json", artifacts)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Generate all Ant Stack outputs from one YAML config.")
+    parser.add_argument("--config", required=True)
+    parser.add_argument("--out")
+    parser.add_argument("--run-id")
+    parser.add_argument("--validate-only", action="store_true")
+    parser.add_argument("--tasks")
+    parser.add_argument("--log-level")
+    args = parser.parse_args(argv)
+    try:
+        result = run_all(args.config, output_root=args.out, run_id=args.run_id, validate_only=args.validate_only, tasks=args.tasks, log_level=args.log_level)
+    except Exception as error:
+        print(f"run-all-antstack failed: {error}", file=sys.stderr)
+        return 1
+    print(json.dumps(result.to_dict(), indent=2))
+    return 0
+
+
+__all__ = ["ArtifactRecord", "ComplexityEnergeticsSection", "DEFAULT_REQUIRED_ARTIFACT_TYPES", "RUN_SUBDIRECTORIES",
+           "RunAllConfig", "RunAllResult", "RunContext", "RunSection", "TASK_NAMES", "TaskSelection", "ValidationSection",
+           "VisualizationSection", "checksum_file", "create_run_layout", "main", "parse_task_names", "run_all", "write_manifest"]
 
 if __name__ == "__main__":
     raise SystemExit(main())

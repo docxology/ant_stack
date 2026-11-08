@@ -1,0 +1,79 @@
+{
+  "artifact_path_base": "family_root",
+  "artifacts": [
+    {
+      "artifact_type": "markdown",
+      "bytes": 621,
+      "checksum": "cdf7c3046453a05bb4d16631339787fcf6e12eda8adb2bb0ebb96a12e81faf67",
+      "path": "complexity_table.md",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 875,
+      "checksum": "15713bd64d4ef2df7b7cc0720f97f1ff6fd7ba08c00688c369d903b51e977771",
+      "path": "contact_solvers.md",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 930,
+      "checksum": "f56a99a119504ed4ef95b7c494c315e9bd975833f1841595ef0bc2b491fb9d99",
+      "path": "efficiency_analysis.md",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 579,
+      "checksum": "5a520935543bf97fd8e1c05ddfc4f9f6f59a8fddba243accc0efd105121e92f7",
+      "path": "energy_coefficients.md",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 4754,
+      "checksum": "deb3a9136121fec93c17f4a8a21afb30d551d63e9455a75e3dea2e3351a4644e",
+      "path": "generated_tables.md",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    },
+    {
+      "artifact_type": "json",
+      "bytes": 1413,
+      "checksum": "3676abab0ac97c7fc3fb3c312bcc819f4c8dc82d3fb968dc2c232d895fddd22f",
+      "path": "key_numbers.json",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 577,
+      "checksum": "29bdae114d8f868c3e083c9dc83a29e64598068456e315493ba78fa583979e0d",
+      "path": "parameter_ranges.md",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 818,
+      "checksum": "cc798ce631cdade5381e789ce0f1c11fe33ac42b5df395ded081972f929c5607",
+      "path": "scaling_results.md",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    },
+    {
+      "artifact_type": "provenance",
+      "bytes": 116939,
+      "checksum": "d996834b1b277abf5cec112f71228492638dc79033ed70a5e687ee3e32938236",
+      "path": "provenance/provenance.json",
+      "producing_task": "enhanced_tables.generate",
+      "source_config": "key_numbers.json"
+    }
+  ],
+  "complete": true,
+  "schema_version": 1
+}

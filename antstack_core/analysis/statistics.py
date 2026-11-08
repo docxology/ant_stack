@@ -1,7 +1,7 @@
 """Statistical analysis utilities for scientific computing.
 
 Comprehensive statistical methods for quantitative research including:
-- Bootstrap confidence intervals with bias correction
+- Percentile bootstrap confidence intervals
 - Scaling relationship analysis and power law detection
 - Uncertainty quantification and error propagation
 - Statistical significance testing
@@ -27,7 +27,7 @@ import random
 
 def bootstrap_mean_ci(
     values: Sequence[float],
-    num_samples: int = 1000,  # Maintained at 1000 for statistical power (review requirement)
+    num_samples: int = 1000,
     alpha: float = 0.05,
     seed: Optional[int] = None,
 ) -> Tuple[float, float, float]:
@@ -49,53 +49,55 @@ def bootstrap_mean_ci(
         - Efron & Tibshirani bootstrap methods: https://doi.org/10.1201/9780429246593
         - Bootstrap confidence intervals: https://doi.org/10.1214/aos/1176344552
     """
-    if not values or len(values) == 0:
-        raise ValueError("Cannot compute bootstrap CI for empty data")
-    
-    if seed is not None:
-        random.seed(seed)
-    
-    n = len(values)
-    original_mean = sum(values) / n
-    if n == 1:
+    data = _finite_values(values)
+    _validate_resampling(num_samples, alpha)
+    rng = random.Random(seed)
+    n = len(data)
+    original_mean = math.fsum(value / n for value in data)
+    if n == 1 or all(value == data[0] for value in data):
         return original_mean, original_mean, original_mean
-    
-    # Generate bootstrap samples
-    bootstrap_means = []
-    for _ in range(num_samples):
-        # Resample with replacement
-        bootstrap_sample = [random.choice(values) for _ in range(n)]
-        bootstrap_mean = sum(bootstrap_sample) / n
-        bootstrap_means.append(bootstrap_mean)
-    
-    # Sort bootstrap means
-    bootstrap_means.sort()
-    
-    # Calculate confidence interval bounds
-    lower_percentile = (alpha / 2) * 100
-    upper_percentile = (1 - alpha / 2) * 100
-    
-    lower_idx = int((lower_percentile / 100) * num_samples)
-    upper_idx = int((upper_percentile / 100) * num_samples)
-    
-    # Ensure indices are within bounds
-    lower_idx = max(0, min(lower_idx, num_samples - 1))
-    upper_idx = max(0, min(upper_idx, num_samples - 1))
-    
-    lower = bootstrap_means[lower_idx]
-    upper = bootstrap_means[upper_idx]
-    if lower == upper == original_mean:
-        epsilon = max(abs(original_mean) * 1e-12, 1e-12)
-        lower = original_mean - epsilon
-        upper = original_mean + epsilon
+    bootstrap_means = sorted(
+        math.fsum(rng.choice(data) / n for _ in range(n))
+        for _ in range(num_samples)
+    )
+    return (
+        original_mean,
+        _percentile(bootstrap_means, alpha / 2),
+        _percentile(bootstrap_means, 1 - alpha / 2),
+    )
 
-    return original_mean, lower, upper
+
+def _finite_values(values: Sequence[float]) -> list[float]:
+    """Validate a nonempty finite numeric vector without changing global RNGs."""
+    try:
+        data = [float(value) for value in values]
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("Data must be a finite numeric sequence") from exc
+    if not data or not all(math.isfinite(value) for value in data):
+        raise ValueError("Data must be a nonempty finite numeric sequence")
+    return data
+
+
+def _validate_resampling(num_samples: int, alpha: float) -> None:
+    if isinstance(num_samples, bool) or not isinstance(num_samples, int) or num_samples < 1:
+        raise ValueError("num_samples must be a positive integer")
+    if not math.isfinite(alpha) or not 0 < alpha < 1:
+        raise ValueError("alpha must be finite and between 0 and 1")
+
+
+def _percentile(sorted_values: Sequence[float], probability: float) -> float:
+    """Linearly interpolated empirical quantile (NumPy's default convention)."""
+    position = (len(sorted_values) - 1) * probability
+    left = int(position)
+    right = min(left + 1, len(sorted_values) - 1)
+    weight = position - left
+    return (1 - weight) * sorted_values[left] + weight * sorted_values[right]
 
 
 def analyze_scaling_relationship(
     x_values: Sequence[float], 
     y_values: Sequence[float]
-) -> Dict[str, Union[float, str]]:
+) -> Dict[str, Any]:
     """Analyze scaling relationships and detect power laws.
     
     Performs comprehensive scaling analysis including:
@@ -115,75 +117,75 @@ def analyze_scaling_relationship(
         - Power law detection: https://doi.org/10.1137/070710111
         - Scaling in complex systems: https://doi.org/10.1126/science.1062081
     """
-    if not x_values or not y_values:
-        return {"error": "Empty input data"}
-    
+    if len(x_values) == 0 or len(y_values) == 0:
+        return {"valid": False, "error": "Empty input data"}
     if len(x_values) != len(y_values):
-        return {"error": "Mismatched data lengths"}
-    
+        return {"valid": False, "error": "Mismatched data lengths"}
     if len(x_values) < 3:
-        return {"error": "Insufficient data points for scaling analysis"}
-    
-    # Check for non-positive values (can't take log)
-    if any(x <= 0 for x in x_values) or any(y <= 0 for y in y_values):
-        return {"error": "Cannot analyze scaling with non-positive values"}
-    
+        return {"valid": False, "error": "Insufficient data points for scaling analysis"}
     try:
-        # Convert to log-log space
-        log_x = [math.log10(x) for x in x_values]
-        log_y = [math.log10(y) for y in y_values]
-        
-        # Linear regression in log space: log(y) = a * log(x) + b
+        x_data = _finite_values(x_values)
+        y_data = _finite_values(y_values)
+        if any(value <= 0 for value in x_data + y_data):
+            return {"valid": False, "error": "Cannot analyze scaling with non-positive values"}
+        log_x = [math.log10(value) for value in x_data]
+        log_y = [math.log10(value) for value in y_data]
         n = len(log_x)
-        sum_log_x = sum(log_x)
-        sum_log_y = sum(log_y)
-        sum_log_x_sq = sum(lx * lx for lx in log_x)
-        sum_log_x_log_y = sum(lx * ly for lx, ly in zip(log_x, log_y))
-        
-        # Calculate regression coefficients
-        denominator = n * sum_log_x_sq - sum_log_x * sum_log_x
-        if abs(denominator) < 1e-12:
-            return {"error": "Singular matrix in regression"}
-        
-        scaling_exponent = (n * sum_log_x_log_y - sum_log_x * sum_log_y) / denominator
-        log_intercept = (sum_log_y - scaling_exponent * sum_log_x) / n
+        mean_x = math.fsum(log_x) / n
+        mean_y = math.fsum(log_y) / n
+        centered_x = [value - mean_x for value in log_x]
+        centered_y = [value - mean_y for value in log_y]
+        ss_x = math.fsum(value * value for value in centered_x)
+        if ss_x == 0:
+            return {"valid": False, "error": "Singular matrix in regression"}
+        scaling_exponent = math.fsum(x * y for x, y in zip(centered_x, centered_y)) / ss_x
+        log_intercept = mean_y - scaling_exponent * mean_x
         intercept = 10 ** log_intercept
-        
-        # Calculate R-squared
-        mean_log_y = sum_log_y / n
-        ss_total = sum((ly - mean_log_y)**2 for ly in log_y)
-        ss_residual = sum((ly - (scaling_exponent * lx + log_intercept))**2 
-                         for lx, ly in zip(log_x, log_y))
-        
-        r_squared = 1 - (ss_residual / ss_total) if ss_total > 0 else 0
-        
-        # Classify scaling regime
-        if abs(scaling_exponent - 1.0) < 0.1:
+        ss_total = math.fsum(value * value for value in centered_y)
+        ss_residual = math.fsum(
+            (y - (scaling_exponent * x + log_intercept)) ** 2
+            for x, y in zip(log_x, log_y)
+        )
+        # A constant response has undefined R²; it does not demonstrate fit quality.
+        r_squared = 1 - ss_residual / ss_total if ss_total > 0 else None
+        if all(value == y_data[0] for value in y_data):
+            scaling_exponent = 0.0
+            log_intercept = log_y[0]
+            intercept = y_data[0]
+            r_squared = None
+        if intercept <= 0:
+            return {"valid": False, "error": "Regression intercept underflow"}
+        if not all(math.isfinite(value) for value in (scaling_exponent, intercept, log_intercept)):
+            return {"valid": False, "error": "Nonfinite regression result"}
+        if r_squared is not None and not math.isfinite(r_squared):
+            return {"valid": False, "error": "Nonfinite regression result"}
+        if abs(scaling_exponent) < 0.1:
+            scaling_regime = "constant"
+        elif abs(scaling_exponent - 1.0) < 0.1:
             scaling_regime = "linear"
         elif abs(scaling_exponent - 2.0) < 0.1:
             scaling_regime = "quadratic"
-        elif abs(scaling_exponent - 1.5) < 0.1:
-            scaling_regime = "super-linear"
+        elif abs(scaling_exponent - 3.0) < 0.1:
+            scaling_regime = "cubic"
         elif scaling_exponent < 0:
             scaling_regime = "inverse"
-        elif scaling_exponent < 1.0:
+        elif scaling_exponent < 1:
             scaling_regime = "sub-linear"
-        elif scaling_exponent > 2.0:
+        elif scaling_exponent > 2:
             scaling_regime = "super-quadratic"
         else:
-            scaling_regime = "power-law"
-        
+            scaling_regime = "super-linear"
         return {
+            "valid": True,
             "scaling_exponent": scaling_exponent,
             "intercept": intercept,
             "r_squared": r_squared,
             "scaling_regime": scaling_regime,
             "sample_size": n,
-            "log_intercept": log_intercept
+            "log_intercept": log_intercept,
         }
-        
-    except Exception as e:
-        return {"error": f"Scaling analysis failed: {str(e)}"}
+    except (ArithmeticError, TypeError, ValueError) as exc:
+        return {"valid": False, "error": f"Scaling analysis failed: {exc}"}
 
 
 def estimate_theoretical_limits(
@@ -210,6 +212,13 @@ def estimate_theoretical_limits(
         - Quantum limits: https://doi.org/10.1103/PhysRevLett.85.441
         - Thermodynamic computing: https://doi.org/10.1038/nature23460
     """
+    if not math.isfinite(temperature_k) or temperature_k <= 0:
+        raise ValueError("temperature_k must be finite and positive")
+    for name, value in workload_metrics.items():
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"{name} must be finite and nonnegative")
+    if "hot_temperature_k" in workload_metrics and workload_metrics["hot_temperature_k"] <= temperature_k:
+        raise ValueError("hot_temperature_k must exceed temperature_k")
     k_boltzmann = 1.380649e-23  # J/K (Boltzmann constant)
     
     limits = {}
@@ -274,6 +283,13 @@ def calculate_energy_efficiency_metrics(
     
     if len(energy_values) != len(performance_values):
         return {"error": "Mismatched data lengths"}
+    try:
+        energy_values = _finite_values(energy_values)
+        performance_values = _finite_values(performance_values)
+    except ValueError as exc:
+        return {"error": str(exc)}
+    if any(value < 0 for value in energy_values + performance_values):
+        return {"error": "Energy and performance must be nonnegative"}
     
     # Basic efficiency metrics
     avg_energy = sum(energy_values) / len(energy_values)

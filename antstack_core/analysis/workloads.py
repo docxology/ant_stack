@@ -1,27 +1,89 @@
-"""Computational workload models for different system components.
+"""Analytical operation/traffic counters and synthetic timing workloads.
 
-Comprehensive workload modeling for embodied cognitive systems:
-- AntBody: Contact dynamics, sensors, actuation
-- AntBrain: Sparse neural networks, connectivity patterns
-- AntMind: Active inference, bounded rationality, planning
-
-Following .cursorrules principles:
-- Real computational models (no mocks)
-- Scientifically validated scaling relationships
-- Comprehensive parameter ranges and validation
-- Professional implementation with proper references
-
-References:
-- Contact dynamics: https://doi.org/10.1109/TRO.2012.2202059
-- Neural network complexity: https://doi.org/10.1038/nature14539
-- Active inference: https://doi.org/10.1371/journal.pcbi.1003710
+Body, Brain and Mind are accounting abstractions for contact/control-like,
+sparse-neural-like and planning-tree work. Closed-form functions evaluate
+declared formulas; timed loops accumulate illustrative counters. Neither
+implements a physics engine, neural circuit or active-inference controller.
+These cost conventions are assumptions, not scientifically validated scaling
+laws or calibrated hardware instruction counts.
 """
 
 from __future__ import annotations
 from typing import Dict, Any, Tuple
 import math
 
-from .energy import ComputeLoad, EnergyCoefficients
+from .energy import ComputeLoad, EnergyCoefficients, _require_nonnegative, _require_positive
+
+def _require_integer(name: str, value: int, minimum: int = 0) -> None:
+    _require_nonnegative(name, value)
+    if value < minimum or int(value) != value:
+        raise ValueError(f"{name} must be an integer >= {minimum}")
+
+
+def effective_policy_count(branching: int, horizon: int, max_policies: int | None = 1000) -> int:
+    """Leaf-policy count for the aggregate per-policy model; None is exact enumeration.
+
+    The bounded model caps this count at every horizon. Per-policy costs below
+    are aggregate costs, not a claim to simulate each trajectory time step.
+    """
+    _require_integer("B", branching, 1)
+    _require_integer("H_p", horizon)
+    if max_policies is not None:
+        _require_integer("max_policies", max_policies, 1)
+        count = 1
+        for _ in range(int(horizon)):
+            count = min(count * int(branching), int(max_policies))
+            if count == max_policies or branching == 1:
+                break
+        return count
+    return int(branching) ** int(horizon)
+
+
+def validate_workload_parameters(kind: str, duration_s: float, params: Dict[str, Any]) -> None:
+    """Validate the physical domains used by both loop and analytical models."""
+    _require_nonnegative("duration_s", duration_s)
+    if not isinstance(params, dict):
+        raise ValueError("Workload params must be a dictionary")
+    _require_positive("hz", params.get("hz", 100))
+    if kind == "body":
+        for key, default, minimum in (("J", 18, 0), ("C", 12, 0), ("S", 256, 0), ("P", 4096, 0)):
+            _require_integer(key, params.get(key, default), minimum)
+        if params.get("contact_solver", "pgs") not in {"pgs", "si", "ldlt"}:
+            raise ValueError("contact_solver must be pgs, si, or ldlt")
+        for key in ("per_joint_w", "sensor_w_per_channel", "v", "m", "L", "g"):
+            if key in params:
+                _require_nonnegative(key, params[key])
+    elif kind == "brain":
+        for key, default in (("K", 128), ("N_KC", 50000), ("H", 64)):
+            _require_integer(key, params.get(key, default))
+        rho = params.get("rho", 0.02)
+        _require_nonnegative("rho", rho)
+        if rho > 1:
+            raise ValueError("rho must be in [0, 1]")
+        if params.get("connectivity_pattern", "random") not in {"random", "structured"}:
+            raise ValueError("connectivity_pattern must be random or structured")
+    elif kind == "mind":
+        if "branching" in params:
+            raise ValueError("Use canonical B, not branching, in mind workload params")
+        for key, default, minimum in (("B", 4, 1), ("H_p", 15, 0), ("state_dim", 16, 1), ("action_dim", 6, 1), ("precision_steps", 3, 1)):
+            _require_integer(key, params.get(key, default), minimum)
+        if params.get("max_policies", 1000) is not None:
+            _require_integer("max_policies", params.get("max_policies", 1000), 1)
+        if not isinstance(params.get("hierarchical", False), bool):
+            raise ValueError("hierarchical must be boolean")
+    else:
+        raise ValueError(f"Unsupported workload: {kind}")
+
+
+def _update_count(duration_s: float, hz: float) -> int:
+    """Floor updates, treating one-ULP integer roundoff as the boundary itself."""
+    updates = hz * duration_s
+    if not math.isfinite(updates):
+        raise ValueError("Workload update count must be finite")
+    nearest = round(updates)
+    if abs(updates - nearest) <= math.ulp(updates):
+        return nearest
+    return int(updates)
 
 
 def body_workload_closed_form(duration_s: float, params: Dict[str, Any]) -> ComputeLoad:
@@ -44,6 +106,7 @@ def body_workload_closed_form(duration_s: float, params: Dict[str, Any]) -> Comp
         - Contact solver complexity: https://doi.org/10.1109/TRO.2012.2202059
         - Robotics computational analysis: https://doi.org/10.1109/LRA.2019.2893418
     """
+    validate_workload_parameters("body", duration_s, params)
     J = params.get('J', 6)           # Number of joints
     C = params.get('C', 12)          # Number of contacts
     S = params.get('S', 256)         # Number of sensor channels
@@ -67,7 +130,7 @@ def body_workload_closed_form(duration_s: float, params: Dict[str, Any]) -> Comp
     total_memory_per_step = memory + sensor_memory + control_memory
     
     # Scale by frequency and duration
-    total_steps = int(hz * duration_s)
+    total_steps = _update_count(duration_s, hz)
     total_flops = total_flops_per_step * total_steps
     total_memory = total_memory_per_step * total_steps
     
@@ -102,6 +165,7 @@ def brain_workload_closed_form(duration_s: float, params: Dict[str, Any]) -> Com
         - Sparse neural networks: https://doi.org/10.1038/nature14539
         - Mushroom body computation: https://doi.org/10.1016/j.neuron.2020.09.043
     """
+    validate_workload_parameters("brain", duration_s, params)
     K = params.get('K', 64)          # Number of channels
     N_KC = params.get('N_KC', 50000) # Number of Kenyon cells
     rho = params.get('rho', 0.02)    # Sparsity level
@@ -118,7 +182,7 @@ def brain_workload_closed_form(duration_s: float, params: Dict[str, Any]) -> Com
     channel_memory = K * H * 4  # Channel state storage
     
     # Scale by frequency and duration
-    total_steps = int(hz * duration_s)
+    total_steps = _update_count(duration_s, hz)
     total_flops = (flops + channel_flops) * total_steps
     total_memory = (memory + channel_memory) * total_steps
     total_spikes = spikes * total_steps
@@ -136,27 +200,16 @@ def brain_workload_closed_form(duration_s: float, params: Dict[str, Any]) -> Com
 
 
 def mind_workload_closed_form(duration_s: float, params: Dict[str, Any]) -> ComputeLoad:
-    """Calculate AntMind computational workload using closed-form models.
-    
-    Models active inference and bounded rational computation including:
-    - Hierarchical planning with limited horizon
-    - Bayesian belief updates
-    - Policy optimization under uncertainty
-    - Evidence lower bound (ELB) computation
-    
-    Args:
-        duration_s: Time duration for the workload
-        params: Parameters including H_p (planning horizon), branching, state/action dimensions
-        
-    Returns:
-        ComputeLoad specification for energy analysis
-        
-    References:
-        - Active inference: https://doi.org/10.1371/journal.pcbi.1003710
-        - Bounded rationality: https://doi.org/10.1146/annurev-economics-063016-103855
+    """Evaluate base planning-tree operation and byte-count conventions.
+
+    ``H_p`` is a decision-step horizon and ``B`` the branching factor. The
+    function counts assumed work for a tree and multiplies it by the floor of
+    frequency times duration. It does not execute Bayesian belief updates,
+    variational inference, policy optimization or an evidence-bound solver.
     """
+    validate_workload_parameters("mind", duration_s, params)
     H_p = params.get('H_p', 5)       # Planning horizon
-    branching = params.get('branching', 3)  # Branching factor
+    branching = params.get('B', 3)  # Canonical branching factor
     state_dim = params.get('state_dim', 8)  # State space dimension
     action_dim = params.get('action_dim', 4) # Action space dimension
     precision_steps = params.get('precision_steps', 3)
@@ -168,7 +221,7 @@ def mind_workload_closed_form(duration_s: float, params: Dict[str, Any]) -> Comp
     )
     
     # Scale by frequency and duration
-    total_steps = int(hz * duration_s)
+    total_steps = _update_count(duration_s, hz)
     total_flops = flops * total_steps
     total_memory = memory * total_steps
     
@@ -198,6 +251,10 @@ def calculate_contact_complexity(
     Returns:
         Tuple of (flops, memory_bytes, iterations)
     """
+    _require_integer("J", J)
+    _require_integer("C", C)
+    if not isinstance(solver, str):
+        raise ValueError("solver must be pgs, si, or ldlt")
     if solver.lower() == "pgs":
         # Projected Gauss-Seidel: iterative solver
         iterations = min(50, max(10, C))  # Adaptive iteration count
@@ -220,8 +277,7 @@ def calculate_contact_complexity(
         return flops, memory, 1
         
     else:
-        # Default to PGS if unknown solver
-        return calculate_contact_complexity(J, C, "pgs")
+        raise ValueError(f"Unsupported contact solver: {solver}")
 
 
 def calculate_sparse_neural_complexity(
@@ -239,6 +295,14 @@ def calculate_sparse_neural_complexity(
     Returns:
         Tuple of (flops, memory_bytes, spike_events)
     """
+    _require_integer("N_total", N_total)
+    _require_nonnegative("sparsity", sparsity)
+    if sparsity > 1:
+        raise ValueError("sparsity must be in [0, 1]")
+    if connectivity_pattern not in {"random", "structured"}:
+        raise ValueError(f"Unsupported connectivity pattern: {connectivity_pattern}")
+    if N_total == 0:
+        return 0.0, 0.0, 0.0
     N_active = int(N_total * sparsity)
     
     if connectivity_pattern == "structured":
@@ -278,8 +342,10 @@ def calculate_active_inference_complexity(
     Returns:
         Tuple of (flops, memory_bytes)
     """
+    for name, value, minimum in (("horizon", horizon, 0), ("branching", branching, 1), ("state_dim", state_dim, 1), ("action_dim", action_dim, 1), ("precision_steps", precision_steps, 1)):
+        _require_integer(name, value, minimum)
     # Tree search complexity
-    tree_nodes = sum(branching ** h for h in range(horizon + 1))
+    tree_nodes = sum(branching ** h for h in range(int(horizon) + 1))
     
     # Belief update complexity (Bayesian inference)
     belief_flops = tree_nodes * state_dim * state_dim * 10  # Matrix ops
@@ -316,6 +382,7 @@ def enhanced_body_workload_closed_form(duration_s: float, params: Dict[str, Any]
     Returns:
         ComputeLoad with detailed computational breakdown
     """
+    validate_workload_parameters("body", duration_s, params)
     J = params.get('J', 18)           # Number of joints
     C = params.get('C', 12)           # Number of contacts
     S = params.get('S', 256)          # Number of sensor channels
@@ -355,7 +422,7 @@ def enhanced_body_workload_closed_form(duration_s: float, params: Dict[str, Any]
                            sensor_memory + control_memory)
 
     # Scale by frequency and duration
-    total_steps = int(hz * duration_s)
+    total_steps = _update_count(duration_s, hz)
     total_flops = total_flops_per_step * total_steps
     total_memory = total_memory_per_step * total_steps
 
@@ -386,13 +453,14 @@ def enhanced_brain_workload_closed_form(duration_s: float, params: Dict[str, Any
     Returns:
         ComputeLoad with biologically-realistic neural computation
     """
+    validate_workload_parameters("brain", duration_s, params)
     K = params.get('K', 128)          # AL input channels
     N_KC = params.get('N_KC', 50000)  # Kenyon cells in MB
     rho = params.get('rho', 0.02)     # Sparsity level
     H = params.get('H', 64)           # CX heading bins
     hz = params.get('hz', 100)        # Neural processing frequency
 
-    connectivity_pattern = params.get('connectivity_pattern', 'biological')
+    connectivity_pattern = params.get('connectivity_pattern', 'random')
 
     # AL processing: sensory feature extraction and glomerular mapping
     al_flops = K * 15  # Enhanced sensory processing per channel
@@ -417,7 +485,7 @@ def enhanced_brain_workload_closed_form(duration_s: float, params: Dict[str, Any
     total_spikes_per_step = mb_spikes
 
     # Scale by frequency and duration
-    total_steps = int(hz * duration_s)
+    total_steps = _update_count(duration_s, hz)
     total_flops = total_flops_per_step * total_steps
     total_memory = total_memory_per_step * total_steps
     total_spikes = total_spikes_per_step * total_steps
@@ -450,6 +518,7 @@ def enhanced_mind_workload_closed_form(duration_s: float, params: Dict[str, Any]
     Returns:
         ComputeLoad with cognitive computational requirements
     """
+    validate_workload_parameters("mind", duration_s, params)
     B = params.get('B', 4)            # Branching factor
     H_p = params.get('H_p', 15)       # Policy horizon (bounded)
     state_dim = params.get('state_dim', 16)    # State dimensionality
@@ -458,11 +527,8 @@ def enhanced_mind_workload_closed_form(duration_s: float, params: Dict[str, Any]
 
     hierarchical = params.get('hierarchical', False)
 
-    # Policy tree evaluation with bounded rationality
-    if H_p <= 10:  # Small horizon: full enumeration
-        total_policies = B ** H_p
-    else:  # Large horizon: sampling approach
-        total_policies = min(1000, B ** min(H_p, 8))  # Cap at 1000 policies
+    # Aggregate leaf-policy model: one explicit budget at every horizon.
+    total_policies = effective_policy_count(B, H_p, params.get('max_policies', 1000))
 
     # Belief update complexity (variational message passing)
     belief_flops = total_policies * state_dim * state_dim * 10
@@ -482,7 +548,7 @@ def enhanced_mind_workload_closed_form(duration_s: float, params: Dict[str, Any]
     total_memory_per_step = (belief_memory + efe_memory + precision_memory) * hierarchical_factor
 
     # Scale by frequency and duration
-    total_steps = int(hz * duration_s)
+    total_steps = _update_count(duration_s, hz)
     total_flops = total_flops_per_step * total_steps
     total_memory = total_memory_per_step * total_steps
 
@@ -550,6 +616,7 @@ def body_workload(duration_s: float, params: Dict[str, Any]) -> ComputeLoad:
     import time
     import random
     
+    validate_workload_parameters("body", duration_s, params)
     flops = 0.0
     sram = 0.0
     dram = 0.0
@@ -586,6 +653,7 @@ def brain_workload(duration_s: float, params: Dict[str, Any]) -> ComputeLoad:
     import time
     import random
     
+    validate_workload_parameters("brain", duration_s, params)
     flops = 0.0
     sram = 0.0
     dram = 0.0
@@ -624,6 +692,7 @@ def mind_workload(duration_s: float, params: Dict[str, Any]) -> ComputeLoad:
     """
     import time
     
+    validate_workload_parameters("mind", duration_s, params)
     flops = 0.0
     sram = 0.0
     dram = 0.0
@@ -652,10 +721,13 @@ def estimate_body_energy_mech(duration_s: float, params: Dict[str, Any], coeffs:
     Returns:
         Total energy in joules
     """
+    validate_workload_parameters("body", duration_s, params)
     J = int(params.get("J", 18))
     S = int(params.get("S", 256))
     per_joint = float(params.get("per_joint_w", coeffs.body_per_joint_w))
     sens_w = float(params.get("sensor_w_per_channel", coeffs.body_sensor_w_per_channel))
+    _require_nonnegative("per_joint_w", per_joint)
+    _require_nonnegative("sensor_w_per_channel", sens_w)
     p = J * per_joint + S * sens_w
     return p * duration_s
 

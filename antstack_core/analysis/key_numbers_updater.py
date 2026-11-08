@@ -1,173 +1,60 @@
-"""Update paper sections with key numbers integration. Moved verbatim from scripts/common_pipeline/update_paper_key_numbers.py; thin wrapper retained for CLI compatibility."""
+"""Canonicalize explicit manuscript metric placeholders without rewriting literals."""
 
 import re
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from antstack_core.analysis.key_numbers import get_key_numbers_manager
+from antstack_core.analysis.key_numbers import KeyNumbersLoader, KeyNumbersManager
 
 
 class PaperKeyNumbersUpdater:
     """Updates paper sections with key numbers placeholders."""
 
-    def __init__(self, project_root: Optional[Path] = None):
-        """Initialize updater with project root."""
-        if project_root is None:
-            project_root = Path(__file__).parent.parent.parent
-        self.project_root = project_root
-        self.key_manager = get_key_numbers_manager()
+    def __init__(self, project_root: Optional[Path] = None, *, json_path: Optional[Path] = None):
+        """Bind inputs to the caller's project or explicit enhanced JSON path."""
+        self.project_root = Path.cwd() if project_root is None else Path(project_root)
+        source = json_path if json_path is not None else (
+            self.project_root / "papers/complexity_energetics/generated_content/key_numbers.json"
+        )
+        self.key_manager = KeyNumbersManager(KeyNumbersLoader(source))
+
+    def _update_semantic_placeholders(self, file_path: Path) -> bool:
+        """Canonicalize authored metric placeholders; never infer meaning from numbers.
+
+        For example scaling.body.exponent maps to scaling_exponents.body_energy.
+        Literal measurements, uncertainty ranges, coefficients and mathematical
+        notation are left unchanged. Authors must identify the metric explicitly.
+        """
+        content = file_path.read_text(encoding="utf-8")
+
+        def canonicalize(match):
+            parts = match.group(1).split(":", 1)
+            path = self.key_manager.resolve_key_path(parts[0].strip())
+            spec = ":" + parts[1].strip() if len(parts) == 2 else ""
+            if self.key_manager.loader.get_value(path) is None:
+                raise KeyError(f"Missing key-number metric: {path}")
+            self.key_manager.loader.get_formatted_value(path, parts[1].strip() if len(parts) == 2 else ".3f")
+            return "{{key_numbers." + path + spec + "}}"
+
+        updated = re.sub(r"\{\{key_numbers\.([^}]+)\}\}", canonicalize, content)
+        if updated != content:
+            file_path.write_text(updated, encoding="utf-8")
+        return True
 
     def update_abstract(self, file_path: Path) -> bool:
-        """Update Abstract.md with key numbers placeholders."""
-        content = file_path.read_text(encoding='utf-8')
-
-        # Replace scaling exponents
-        content = re.sub(
-            r'\$E \\propto K\^\{([^}]+)\}\$',
-            r'$E \propto K^{{key_numbers.scaling.brain.exponent}}$',
-            content, flags=re.MULTILINE | re.VERBOSE
-        )
-        content = re.sub(
-            r'\$E \\propto H_p\^\{([^}]+)\}\$',
-            r'$E \propto H_p^{{key_numbers.scaling.mind.exponent}}$',
-            content, flags=re.MULTILINE | re.VERBOSE
-        )
-
-        # Replace planning horizon limit
-        content = re.sub(
-            r'H_p \\leq (\d+)',
-            r'$H_p \leq$ {{key_numbers.mind_params.H_p_max}}',
-            content, flags=re.MULTILINE | re.VERBOSE
-        )
-
-        # Replace sparsity value
-        content = re.sub(
-            r'\\rho \\approx ([0-9.]+)',
-            r'$\rho \approx$ {{key_numbers.brain_params.rho}}',
-            content, flags=re.MULTILINE | re.VERBOSE
-        )
-
-        file_path.write_text(content, encoding='utf-8')
-        return True
+        return self._update_semantic_placeholders(file_path)
 
     def update_energetics(self, file_path: Path) -> bool:
-        """Update Energetics.md with key numbers placeholders."""
-        content = file_path.read_text(encoding='utf-8')
-
-        # Replace energy coefficients
-        replacements = {
-            r'e_\{\\(text\{FLOP\})\}': r'$e_{\text{FLOP}}$',
-            r'e_\{\\(text\{SRAM\})\}': r'$e_{\text{SRAM}}$',
-            r'e_\{\\(text\{DRAM\})\}': r'$e_{\text{DRAM}}$',
-            r'E_\{\\(text\{spk\})\}': r'$E_{\text{spk}}$'
-        }
-
-        for pattern, replacement in replacements.items():
-            content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
-
-        # Replace energy values with placeholders
-        content = re.sub(
-            r'(\d+(?:\.\d+)?)\s*mJ/decision',
-            r'{{key_numbers.per_decision_energy.total_mj}} mJ/decision',
-            content, flags=re.MULTILINE
-        )
-
-        file_path.write_text(content, encoding='utf-8')
-        return True
+        return self._update_semantic_placeholders(file_path)
 
     def update_results(self, file_path: Path) -> bool:
-        """Update Results.md with key numbers placeholders."""
-        content = file_path.read_text(encoding='utf-8')
-
-        # Replace scaling relationships
-        content = re.sub(
-            r'E \\propto J\^\{([^}]+)\}',
-            r'$E \propto J^{{key_numbers.scaling.body.exponent}}$',
-            content, flags=re.MULTILINE
-        )
-        content = re.sub(
-            r'E \\propto K\^\{([^}]+)\}',
-            r'$E \propto K^{{key_numbers.scaling.brain.exponent}}$',
-            content, flags=re.MULTILINE
-        )
-        content = re.sub(
-            r'E \\propto H_p\^\{([^}]+)\}',
-            r'$E \propto H_p^{{key_numbers.scaling.mind.exponent}}$',
-            content, flags=re.MULTILINE
-        )
-
-        # Replace R-squared values
-        content = re.sub(
-            r'R\^2 = ([0-9.]+)',
-            r'$R^2 =$ {{key_numbers.scaling.body.r_squared}}',
-            content, flags=re.MULTILINE
-        )
-
-        # Replace energy ranges
-        content = re.sub(
-            r'([0-9.]+) \pm ([0-9.]+) mJ',
-            r'{{key_numbers.per_decision_energy.body_mj}} mJ',
-            content, flags=re.MULTILINE
-        )
-
-        file_path.write_text(content, encoding='utf-8')
-        return True
+        return self._update_semantic_placeholders(file_path)
 
     def update_background(self, file_path: Path) -> bool:
-        """Update Background.md with key numbers placeholders."""
-        content = file_path.read_text(encoding='utf-8')
-
-        # Replace complexity notations
-        content = re.sub(
-            r'\\mathcal\{O\}\(([^)]+)\)',
-            r'$\mathcal{O}(\1)$',
-            content, flags=re.MULTILINE
-        )
-
-        # Replace scaling parameters
-        content = re.sub(
-            r'\\rho \\leq ([0-9.]+)',
-            r'$\rho \leq$ {{key_numbers.brain_params.rho}}',
-            content, flags=re.MULTILINE
-        )
-
-        # Replace planning horizon
-        content = re.sub(
-            r'H_p \\leq (\d+)',
-            r'$H_p \leq$ {{key_numbers.mind_params.H_p_max}}',
-            content, flags=re.MULTILINE
-        )
-
-        file_path.write_text(content, encoding='utf-8')
-        return True
+        return self._update_semantic_placeholders(file_path)
 
     def update_complexity(self, file_path: Path) -> bool:
-        """Update Complexity.md with key numbers placeholders."""
-        content = file_path.read_text(encoding='utf-8')
-
-        # Replace FLOPs values
-        content = re.sub(
-            r'(\d+(?:\.\d+)?) FLOPs',
-            r'{{key_numbers.computational_load.body_flops}} FLOPs',
-            content, flags=re.MULTILINE
-        )
-
-        # Replace complexity expressions
-        content = re.sub(
-            r'\\mathcal\{O\}\(([^)]+)\)',
-            r'$\mathcal{O}(\1)$',
-            content, flags=re.MULTILINE
-        )
-
-        # Replace parameter ranges
-        content = re.sub(
-            r'(\d+)-(\d+) joints',
-            r'{{key_numbers.body_params.J_min}}-{{key_numbers.body_params.J_max}} joints',
-            content, flags=re.MULTILINE
-        )
-
-        file_path.write_text(content, encoding='utf-8')
-        return True
+        return self._update_semantic_placeholders(file_path)
 
     def update_paper_section(self, section_name: str, file_path: Path) -> bool:
         """Update a specific paper section with key numbers placeholders."""
@@ -214,27 +101,23 @@ class PaperKeyNumbersUpdater:
         return results
 
     def validate_key_numbers_placeholders(self, file_path: Path) -> Dict[str, List[str]]:
-        """Validate that key numbers placeholders in a file can be resolved."""
-        content = file_path.read_text(encoding='utf-8')
-
-        # Find all key_numbers placeholders
-        placeholders = re.findall(r'\{\{key_numbers\.([^}]+)\}\}', content)
-
-        validation_results = {
-            'valid': [],
-            'invalid': [],
-            'missing': []
-        }
-
-        for placeholder in placeholders:
+        """Validate exact paths and format specs against the producer schema."""
+        content = file_path.read_text(encoding="utf-8")
+        results = {'valid': [], 'invalid': [], 'missing': []}
+        for placeholder in re.findall(r"\{\{key_numbers\.([^}]+)\}\}", content):
+            parts = placeholder.split(":", 1)
             try:
-                # Try to resolve the placeholder
-                self.key_manager.loader.get_formatted_value(f"per_decision_energy.{placeholder}", ".3f")
-                validation_results['valid'].append(placeholder)
-            except (KeyError, ValueError):
-                validation_results['invalid'].append(placeholder)
-
-        return validation_results
+                path = self.key_manager.resolve_key_path(parts[0].strip())
+                if self.key_manager.loader.get_value(path) is None:
+                    results['invalid'].append(placeholder)
+                    continue
+                self.key_manager.loader.get_formatted_value(path, parts[1].strip() if len(parts) == 2 else ".3f")
+                results['valid'].append(placeholder)
+            except KeyError:
+                results['missing'].append(placeholder)
+            except (ValueError, TypeError):
+                results['invalid'].append(placeholder)
+        return results
 
 
 def run(args):

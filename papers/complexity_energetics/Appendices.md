@@ -1,87 +1,58 @@
 # Appendices
 
-## A. Energy Coefficients
+## A. Energy Input Assumptions
 
-**Table A: Device-Specific Energy Coefficients**
+The manifest is the numerical source of truth. The following table records its illustrative default input prices, not calibrated devices or literature measurements. A changed manifest requires fresh generated results, not manual repinning of prose results.
 
-All energy calculations throughout this analysis use these standardized coefficients, calibrated for modern computing platforms and validated against published benchmarks.
+## Table: Illustrative Energy Inputs {#tab:energy_inputs}
 
-| Parameter | Symbol | Value | Units | Reference/Validation |
-|---|---|---|---|---|
-| **Computational Energy** |
-| FLOP energy | $e_\text{FLOP}$ | 1.0 | pJ/FLOP | Modern processors, 7-45nm nodes |
-| SRAM access | $e_\text{SRAM}$ | 0.10 | pJ/byte | On-die cache, validated against |
-| DRAM access | $e_\text{DRAM}$ | 20.0 | pJ/byte | External memory, validated against |
-| **Neuromorphic Energy** |
-| Spike generation | $E_\text{spk}$ | 1.0 | aJ/spike | Advanced 7nm circuits |
-| **System Power** |
-| Baseline power | $P_\text{idle}$ | 0.50 | W | Controller + housekeeping (non-zero) |
-| Sensor power | $P_\text{sens}$ | 5.0 | mW/channel | Multi-modal sensing average |
-| **Physical Constants** |
-| Landauer limit | $kT \ln 2$ | 2.8 $\times$ 10^{-21} | J/bit | Thermodynamic minimum (295K) |
-| Gravitational acceleration | $g$ | 9.81 | m/s² | Standard gravity for CoT calculations |
+| Input | Manifest value | Units | Evidence class |
+|---|---:|---|---|
+| FLOP price | 1.0 | pJ/FLOP | Assumption |
+| SRAM traffic price | 0.10 | pJ/byte | Assumption |
+| DRAM traffic price | 20.0 | pJ/byte | Assumption |
+| Spike-event price | 1.0 | aJ/spike | Assumption, not circuit measurement |
+| Idle power | 0.50 | W | Assumption |
+| Electrical actuator power | 2.0 | W/joint | Assumption |
+| Sensor power | 0.005 | W/channel | Assumption |
 
-**Usage Note**: These coefficients are applied consistently across all energy calculations, scaling analyses, and efficiency comparisons. Any deviation from these values is explicitly noted.
+Landauer's $k_BT\ln 2$ [@landauer1961irreversibility] is a separate physical reference per erased bit at specified temperature, not one of these device prices. At 295 K it is approximately $2.82\times10^{-21}$ J/bit. The transport convention uses $g=9.81\,\mathrm{m/s^2}$ as a nominal gravitational acceleration, not an observed platform property. A mass of 0.001 kg is 1 g, not 1 mg.
 
-## B. Detailed Measurement Protocols
+## B. Proposed Measurement Protocol
 
-**Power Meter Calibration and Environmental Controls**:
-- Calibrate all power measurement instruments against NIST-traceable standards before each experimental session
-- Record and maintain stable ambient conditions: temperature (20$\pm$2$^\circ$C), humidity (45$\pm$5%), and minimize electromagnetic interference
-- Pin all software versions including operating system, drivers, libraries, and analysis frameworks
-- Document hardware specifications including CPU model, memory configuration, and thermal management settings
+The following are requirements for a future calibration campaign, not procedures performed by the native null-meter example:
 
-**Experimental Reproducibility Standards**:
-- Report deterministic seeds for all pseudorandom number generation across statistical bootstrap sampling
-- Version and archive message schema definitions and unit registry entries for long-term reproducibility
-- Maintain synchronized timestamps across all measurement systems with sub-millisecond accuracy
-- Implement automated validation checks for measurement consistency and outlier detection
+- Identify devices, measurement rails, instruments, firmware, sampling resolution, counter ranges/wrap rules, synchronization error, and calibration certificates.
+- Specify environmental targets before acquisition. For example, 20 ± 2 °C and 45 ± 5% relative humidity would be protocol choices, not recorded conditions in this release.
+- Preserve timestamped raw traces and benchmark inputs; report software and hardware versions.
+- Distinguish independent devices/sessions/animals from repeated deterministic calculations or repeated readings on one unit.
+- Fit coefficient uncertainty and evaluate held-out workloads; report measurement failure/unavailable status rather than fabricated zeros.
+- For locomotion, align energy, duration, distance, mass, and physical boundary. Do not infer CoT from an unrelated workload window.
 
-## C. Comprehensive Parameter Tables and System Configurations
+## C. Parameterization and Model Selection
 
-**Module Scaling Parameters by Platform Type**:
-- **Hexapod Configuration**: J=18 (6 legs $\times$ 3 joints), C=12 (typical stance contacts), S=256 (multi-modal sensing)
-- **Quadruped Configuration**: J=12 (4 legs $\times$ 3 joints), C=8 (reduced contact complexity), S=128 (streamlined sensing)
-- **Biped Configuration**: J=12 (2 legs $\times$ 6 joints), C=4 (minimal contacts), S=192 (enhanced proprioception)
+The example's morphology, population, activity, and horizon ranges are illustrative engineering dimensions. They are not a species library, universal operating limits, or inferred physiological optima. A hexapod with 18 modeled joint degrees of freedom is a six-by-three design assumption.
 
-**Neural System Parameter Ranges**:
-- AL input channels (K): 64-512 depending on sensory modality emphasis and computational budget
-- Mushroom Body populations (N_KC): 10^4-10^5 following biological scaling relationships
-- Sparsity levels ($\rho$): 0.01-0.05 with 0.02 representing optimal biological balance
-- Central Complex resolution (H): 32-128 bins balancing angular precision and computational cost
+Selected CE workloads are **base** Body/Brain/Mind. Supported solvers are `pgs`, `si`, `ldlt`; supported neural patterns are `random`, `structured`. Base Mind uses canonical $B,H_p$ and sums exact tree nodes. Enhanced Mind is separate: finite `max_policies` (default 1000) bounds leaf policies uniformly; `None` requests exact leaf enumeration. $H_p$ is in steps; seconds require an explicit step duration.
 
-## D. Comprehensive Reproducibility Checklist
+## D. Reproducibility and Acceptance Requirements
 
-**Computational Environment Documentation**:
-- Complete profiling harness configuration including compiler flags, optimization levels, and runtime parameters
-- Detailed device specifications: CPU architecture, memory hierarchy, interconnect topology, and thermal design
-- Systematic seed range validation across statistical analysis pipelines to ensure robust confidence intervals
-- Continuous integration manifest versioning for automated reproducibility verification
+- Preserve manifest, invocation, model family, environment, package revision, result identity, and generated-artifact provenance.
+- Require a completed coherent run before projection into paper-local compatibility paths; do not reuse concatenation snapshots or retained PDFs as fresh proof.
+- Reconcile per-window rows with per-decision tables using the configured update count and explicit baseline allocation.
+- Keep analytical results, assumptions, literature data, actual measurements, and proposed protocols distinct in captions/tables.
+- Bootstrap effort (1000 resamples) and deterministic repetition (100 repeats) do not establish independent sample size or guaranteed power.
+- Rendering and mathematical regression checks are implementation acceptance, not external scientific validation.
 
-**Data Provenance and Validation**:
-- Automated generation of figure provenance links connecting results to specific experimental runs
-- Comprehensive logging of all experimental parameters and intermediate computational results  
-- Statistical validation frameworks including bootstrap confidence intervals and power law detection
-- Cross-validation against theoretical limits including Landauer's principle and thermodynamic bounds
-
-## E. Notation and Symbols (Unified)
+## E. Notation
 
 | Symbol | Description |
 |---|---|
-| J | Total joint DOF (Body) |
-| C | Active contacts per tick (Body) |
-| S | Sensor channels (Body) |
-| K | AL input channels (Brain) |
-| N_KC | Number of Kenyon cells (MB) |
-| $\rho$ | Active fraction in MB |
-| H | CX heading bins |
-| H_p | Policy horizon (steps) |
-| B | Branching factor |
-| G | Pheromone grid cells |
-| E | Deposit events per tick |
-| $e_\text{FLOP}$ | Energy per FLOP (pJ/FLOP) |
-| $e_\text{SRAM}$ | Energy per SRAM byte (pJ/byte) |
-| $e_\text{DRAM}$ | Energy per DRAM byte (pJ/byte) |
-| $E_\text{spk}$ | Energy per spike (aJ/spike) |
-| $P_\text{idle}$ | Idle power (W) |
-| $P_\text{sens}$ | Sensor power (W) |
+| $J,C,S$ | Joint DOF, contacts, sensor channels |
+| $K,N_{KC},\rho,H$ | Input channels, population, activity fraction, state dimension |
+| $B,H_p$ | Branching factor, policy horizon in steps |
+| $G,E$ | Proposed field cells and deposits per update |
+| $e_F,e_S,e_D$ | FLOP and SRAM/DRAM traffic prices in pJ |
+| $E_{\mathrm{spk}}$ | Spike-event price in aJ/spike |
+| $P_0$ | Idle power in W |
+| $t,f$ | Window duration in s, update rate in Hz |

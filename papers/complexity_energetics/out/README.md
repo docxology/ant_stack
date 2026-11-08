@@ -1,15 +1,15 @@
 # papers/complexity_energetics/out
 
 ## Purpose
-Canonical output directory for complexity energetics runner artifacts.
+Compatibility projection and retained historical CE results, not a fresh standalone generation destination.
 
 ## Local commands
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out
+uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
 ```
 
 ## Notes
 - Keep generated files in this directory only when they are intentional, reproducible, and documented by a command above.
 - Prefer package-owned logic in `antstack_core`; scripts and CLIs should stay thin wrappers.
 - Update this README and the local `AGENTS.md` whenever the directory contract changes.
-- `summary.json` and `provenance.json` record the manifest path, command, generated outputs, dependency versions, Python version, and git state for each regenerated run.
+- Use `antstack-ce MANIFEST --out NEW_EMPTY_DIRECTORY` for a new standalone family, or the configured canonical run with an owned paper projection. Existing retained bytes do not establish current completion.

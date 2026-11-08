@@ -14,8 +14,8 @@
 - **Sparse spiking**: Low average activity for energy efficiency
 - **Stigmergy**: Indirect coordination via environmental modification (e.g., pheromone trails)
 - **Tripod gait**: Hexapod locomotion using alternating tripods
-- **Expected free energy (EFE)**: Balances risk and ambiguity; minimized to select actions or policies
-- **Variational free energy (VFE)**: Upper bound on surprise; minimized to update beliefs and guide inference
+- **Expected free energy (EFE)**: Decision-theoretic objective involving risk, ambiguity and epistemic value; not automatically thermodynamic energy in joules
+- **Variational free energy (VFE)**: Variational bound used for inference; physical energy requires a separately justified model and units
  - **STDP (Spike-Timing-Dependent Plasticity)**: Local synaptic update rule driven by pre-/post-spike timing
  - **WTA (Winner-Take-All)**: Competitive selection mechanism used for action selection or sparsification
  - **Quorum sensing**: Thresholded group decision mechanism relevant to task allocation and evacuation

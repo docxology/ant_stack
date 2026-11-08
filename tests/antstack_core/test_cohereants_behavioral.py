@@ -17,6 +17,7 @@ Following .cursorrules principles:
 """
 
 import unittest
+import math
 import warnings
 import numpy as np
 from typing import List, Dict, Optional
@@ -268,10 +269,7 @@ class TestStatisticalAnalyzer(unittest.TestCase):
         self.assertEqual(result["t_statistic"], 0.0)
         self.assertEqual(result["p_value"], 1.0)
 
-        # Effect size should be very close to zero
-        cohens_d = analyzer.calculate_cohens_d(identical_data)
-        if not np.isnan(cohens_d):
-            self.assertAlmostEqual(cohens_d, 0.0, places=3)
+        self.assertTrue(np.isnan(analyzer.calculate_cohens_d(identical_data)))
 
         # Test with very small samples
         small_treatment = [1.0, 1.1]
@@ -529,6 +527,65 @@ class TestBehavioralRobustness(unittest.TestCase):
         # Properties should still work
         self.assertIsInstance(data.treatment_mean, float)
         self.assertIsInstance(data.control_mean, float)
+
+
+class TestBehavioralInferenceReferences(unittest.TestCase):
+    def test_welch_reference_probability_and_df(self):
+        data = BehavioralData([1, 2], [4, 5])
+        result = StatisticalAnalyzer().perform_t_test(data)
+        self.assertAlmostEqual(result["t_statistic"], -3 * math.sqrt(2), places=12)
+        self.assertAlmostEqual(result["degrees_of_freedom"], 2, places=12)
+        self.assertAlmostEqual(result["p_value"], 1 - 3 / math.sqrt(10), places=12)
+        self.assertFalse(BehavioralAnalyzer().analyze_response([1, 2], [4, 5])["significant"])
+
+    def test_two_sided_power_has_both_tails_and_actual_alpha(self):
+        for alpha in [0.01, 0.05, 0.2]:
+            result = calculate_power_analysis([1, 2, 3], [1, 2, 3], alpha=alpha)
+            self.assertAlmostEqual(result["estimated_power"], alpha, places=14)
+        result = calculate_power_analysis([1, 2, 3], [2, 3, 4])
+        signal = math.sqrt(1.5)
+        critical = 1.959963984540054
+        expected = 0.5 * math.erfc((critical - signal) / math.sqrt(2)) + 0.5 * math.erfc((critical + signal) / math.sqrt(2))
+        self.assertAlmostEqual(result["estimated_power"], expected, places=14)
+
+    def test_constant_samples_have_explicit_degenerate_results(self):
+        analyzer = StatisticalAnalyzer()
+        data = BehavioralData([1, 1], [2, 2])
+        self.assertEqual(analyzer.calculate_cohens_d(data), -float("inf"))
+        result = analyzer.perform_t_test(data)
+        self.assertEqual(result["t_statistic"], -float("inf"))
+        self.assertEqual(result["p_value"], 0)
+        self.assertTrue(math.isnan(result["degrees_of_freedom"]))
+        ci = analyzer.calculate_confidence_interval(data)
+        self.assertEqual((ci["lower_bound"], ci["upper_bound"]), (-1, -1))
+        self.assertEqual(calculate_power_analysis([1, 1], [2, 2])["estimated_power"], 1)
+        same = BehavioralData([1, 1], [1, 1])
+        self.assertTrue(math.isnan(analyzer.calculate_cohens_d(same)))
+        self.assertTrue(math.isnan(calculate_power_analysis([1, 1], [1, 1])["estimated_power"]))
+        self.assertTrue(math.isnan(calculate_power_analysis([1], [2, 3])["estimated_power"]))
+
+    def test_confidence_uses_alpha_and_missing_backend_is_unavailable(self):
+        data = BehavioralData([1, 2], [4, 5])
+        ci = StatisticalAnalyzer().calculate_confidence_interval(data)
+        # Exact df=2 95% t critical value is sqrt(722/39), not a rounded scipy table.
+        margin = 19 / math.sqrt(39)
+        self.assertAlmostEqual(ci["lower_bound"], -3 - margin, places=12)
+        self.assertAlmostEqual(ci["upper_bound"], -3 + margin, places=12)
+        wider = StatisticalAnalyzer(alpha=0.01).calculate_confidence_interval(data)
+        self.assertLess(wider["lower_bound"], ci["lower_bound"])
+        with patch("antstack_core.cohereants.behavioral.scipy_stats", None):
+            unavailable = StatisticalAnalyzer().calculate_confidence_interval(data)
+            self.assertTrue(math.isnan(unavailable["lower_bound"]))
+            self.assertTrue(math.isnan(StatisticalAnalyzer().perform_t_test(data)["p_value"]))
+            self.assertAlmostEqual(calculate_power_analysis([1, 2, 3], [1, 2, 3])["estimated_power"], 0.05, places=14)
+
+    def test_nonfinite_and_invalid_alpha_domains(self):
+        for invalid in [float("nan"), float("inf"), -float("inf")]:
+            with self.subTest(value=invalid), self.assertRaises(ValueError):
+                BehavioralData([1, invalid], [2, 3])
+        for alpha in [0, 1, -0.1, float("nan"), float("inf")]:
+            with self.subTest(alpha=alpha), self.assertRaises(ValueError):
+                calculate_power_analysis([1, 2], [2, 3], alpha=alpha)
 
 
 if __name__ == '__main__':

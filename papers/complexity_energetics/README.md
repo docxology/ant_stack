@@ -1,31 +1,35 @@
 # Computational Complexity and Energetics of the Ant Stack
 
-## Overview and Research Objectives
+## Analytical Scope and Evidence Boundary {#scope-and-research-philosophy}
 
-This research presents a comprehensive analysis of computational complexity and energetics for the Ant Stack, an integrated framework for embodied artificial intelligence. As a companion paper to The Ant Stack, our work focuses specifically on algorithmic complexity characterization, detailed energy modeling, and empirical scaling property analysis. The document structure mirrors the primary paper to enable direct side-by-side comparison and support fully reproducible computational builds.
+This companion manuscript studies **analytical workload and energy models**, not measured validation of an ant, robot, or processor. Body, Brain, and Mind are conceptual accounting boundaries. Input coefficients and dimensions are illustrative assumptions; current numeric results belong only in `Generated.md` from the corresponding completed governed run.
 
-**Research Philosophy**: The paper integrates energy estimation with complexity characterization to inform practical design trade-offs. Claims about real ant behavior or robotic deployment should remain tied to cited references, explicit assumptions, or reproducible generated outputs.
+Compute-aware planning research [@sudhakar2020balancing] motivates comparing computation and actuation costs. Historical computing-efficiency trends [@koomey2011energy] do not calibrate this example's coefficients. No independent raw calibration, species-validation dataset, or demonstrated publication-readiness result is identified here.
 
-For example, we implement early-stopping planning strategies when expected energy savings diminish, following principles established in compute-energy integrated motion planning (CEIMP) methodologies \href{https://lean.mit.edu/papers/ceimp-icra}{(Sudhakar et al., 2020)}.
+## Reproducible Inputs and Products
 
-**Methodological Foundation**: Our energy modeling leverages device-level energy coefficients and workload-specific counters to provide accurate Joules-per-decision estimates \href{https://ieeexplore.ieee.org/document/5440129}{(Koomey et al., 2011)}. This approach enables hardware-agnostic analysis while maintaining the precision necessary for energy-constrained system optimization. 
+`manifest.example.yaml` selects base closed-form workloads, supported `pgs`/`si`/`ldlt` contact models and `random`/`structured` neural patterns, canonical Mind $B,H_p$, and a null meter. Workload rows are isolated compute-plus-idle estimates over their windows. The separate system per-decision table uses the same base compute models, assumed physical actuation/sensing, and one shared idle baseline. Mind physical compute is not zero. CoT is unavailable without a matched modeled locomotion interval for the distance.
 
-Additional methodological context draws from scientific-computing and reference-management practices to support reproducible and verifiable results. The current repository-level validation target is the `uv run pytest -q` suite and the manifest-driven runner documented in the root README.
+The package CLI writes every CE product beneath the fresh normalized `--out` destination: tabular/provenance outputs, `assets/`, and `Generated.md`. Governed `run-all-antstack` publishes canonical results beneath `outputs/<run_id>/` and projects explicitly completed products to paper-local compatibility `out/`, `assets/`, and `Generated.md`, preserving source-owned guides. Do not hand-copy arbitrary output-tree contents or treat a historical compatibility artifact as a completed fresh run.
 
-Canonical run-all outputs are written under `outputs/<run_id>/`; this paper retains paper-local compatibility outputs in `out/`, `assets/`, and `Generated.md`.
+From the repository root, the release owner can generate a fresh CE result tree (destination must not already contain a prior run):
 
-## Roadmap & Contributions
+```bash
+uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/ce-manuscript-fresh
+```
 
-- Derive $\mathcal{O}(\cdot)$ complexity and constants for body, brain, and mind loops
-- Map compute and memory to Joules via calibrated device/power models
-- Quantify actuation energy under terrain/material parameters
-- Provide standardized profiling harnesses and manifest-driven experiments
-- Report scaling laws across agents, sensors, and policies
-
-## Open Source Implementation
-
-All code, scripts, tests, and methods for this analysis are open source and available in the repository [github.com/docxology/ant_stack](https://github.com/docxology/ant_stack). The implementation includes comprehensive energy modeling, statistical validation, and automated figure generation pipelines. See the main repository README for detailed setup and usage instructions.
+For governed canonical orchestration and compatibility projection, use the root guide's `run-all-antstack` configuration and command. Publication configuration marks CE analysis as required and uses the package module, not the removed paper-local runner. Rendering is a separate governed acceptance step. No generation or render is claimed by these source edits.
 
 ## Figure: Ant Stack Overview and Flow {#fig:stack_overview}
 
-![Ant Stack Overview and Flow. Overview of how module complexities translate to energetics and scaling analyses. AntBody contributes actuation and sensing energy; AntBrain maps workload ($K$, $\rho$, $N_{KC}$, $H$) to compute energy via calibrated coefficients; AntMind modulates policy semantics, indirectly shifting Brain workloads. Outputs include per-decision Joules at $100\,\mathrm{Hz}$ and energy-performance Pareto curves.](papers/complexity_energetics/assets/mermaid/diagram_8006c7d7.png)
+```mermaid
+graph TD
+    Body["Base Body counters and assumed physical loads"] --> Accounting["Explicit common-interval energy accounting"]
+    Brain["Base Brain counters"] --> Accounting
+    Mind["Base Mind tree counters"] --> Accounting
+    Inputs["Manifest assumptions, not calibration"] --> Accounting
+    Accounting --> Generated["Current run Generated.md and assets"]
+    Generated --> Interpretation["Conditional analytical interpretation"]
+```
+
+**Caption:** Source-owned conceptual schematic. Numeric outputs are generated, while coefficients remain assumptions until independently calibrated. Separate enhanced models are not implicitly substituted for selected base workloads.

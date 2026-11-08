@@ -1,7 +1,9 @@
-### Table: Empirical Scaling Laws {#tab:scaling_laws}
+### Table: Descriptive Enhanced Model Fits {#tab:scaling_laws}
 
-| Module | Parameter | Energy Scaling | R² | FLOPs Scaling | R² | Regime |
-|--------|-----------|----------------|----|--------------|----|--------|
-| AntBody | Joint Count (J) | $E \propto J^{1.03e-02}$ | 0.927 | $\text{FLOPs} \propto J^{0.032}$ | 0.930 | sub-linear |
-| AntBrain | AL Channels (K) | $E \propto K^{1.34e-03}$ | 0.871 | $\text{FLOPs} \propto K^{0.002}$ | 0.871 | sub-linear |
-| AntMind | Policy Horizon (H_p) | $E \propto H_p^{3.8}$ | 0.940 | $\text{FLOPs} \propto H_p^{3.8}$ | 0.940 | super-linear |
+| Module | Parameter Values | Energy Exponent | Log-log R² | FLOPs Exponent | Log-log R² |
+|--------|------------------|-----------------|------------|----------------|------------|
+| AntBody | J: [6, 12, 18, 24, 36] | 1.7448e-05 | 0.806364 | 0.350245 | 0.9071 |
+| AntBrain | K: [64, 128, 256, 512, 1024] | 2.63638e-06 | 0.870968 | 0.00493219 | 0.872138 |
+| AntMind | H_p: [5, 7, 9, 11, 13] | 0.000313915 | 0.625076 | 1.32566 | 0.625076 |
+
+Enhanced analytical workload model, not canonical base-run evidence. Compute-plus-idle energy with assumed default EnergyCoefficients; no mechanical work, sensing power, device calibration or empirical validation. Mind max_policies=1000. Fits describe the displayed deterministic sweep, not independent samples.

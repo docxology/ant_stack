@@ -2,7 +2,7 @@
 paper:
   name: "documentation"
   title: "Ant Stack Documentation and PDF Rendering Guide"
-  subtitle: "Comprehensive framework for scientific publications in embodied AI"
+  subtitle: "Native Commands, Artifact Provenance and Failure-Honest PDF Rendering"
   author: "Daniel Ari Friedman"
   email: "daniel@activeinference.institute"
   orcid: "0000-0001-6232-9096"

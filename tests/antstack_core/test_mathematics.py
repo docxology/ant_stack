@@ -40,6 +40,36 @@ class TestNormalizeUnicodeMath:
         assert normalize_unicode_math("") == ""
 
 
+    def test_existing_inline_display_and_latex_contexts(self) -> None:
+        cases = {
+            "$α$": r"$\alpha$",
+            "$$α + β$$": r"$$\alpha + \beta$$",
+            r"\(α ≤ β\)": r"\(\alpha \le \beta\)",
+            r"\[γ × δ\]": r"\[\gamma \times \delta\]",
+            r"\begin{align}α &= β\end{align}": r"\begin{align}\alpha &= \beta\end{align}",
+            r"$αx$": r"$\alpha{}x$",
+            "α and $β$ and $$γ$$": r"$\alpha$ and $\beta$ and $$\gamma$$",
+        }
+        for source, expected in cases.items():
+            assert normalize_unicode_math(source) == expected
+            assert normalize_unicode_math(expected) == expected
+
+    def test_code_and_verbatim_regions_are_preserved(self) -> None:
+        for code in (
+            "\x60α ≤ β\x60",
+            "\x60\x60$α$\x60\x60",
+            "\x60\x60\x60python\nα = '$β$'\n\x60\x60\x60",
+            "~~~text\nα ≤ β\n~~~",
+            r"\begin{verbatim}$α$\end{verbatim}",
+            r"\verb|α ≤ β|",
+        ):
+            # Closing fenced blocks must end the line; appended prose is a new paragraph.
+            text = code + "\n\nand γ"
+            expected = code + "\n\nand " + r"$\gamma$"
+            assert normalize_unicode_math(text) == expected
+            assert normalize_unicode_math(expected) == expected
+
+
 class TestExtractLatexLabels:
     def test_finds_single_label(self) -> None:
         text = "See equation " + chr(92) + "label{eq:energy} for details."

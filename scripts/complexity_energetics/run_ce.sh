@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out
-echo "Results: papers/complexity_energetics/out/results.csv"
-echo "JSON: papers/complexity_energetics/out/summary.json"
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $0 NEW_OUTPUT_DIRECTORY [antstack-ce options]" >&2
+    exit 2
+fi
+output="$1"
+shift
+exec uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out "$output" "$@"

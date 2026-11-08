@@ -26,6 +26,8 @@ import yaml
 import json
 import logging
 
+from ..figures.references import _without_code
+
 logger = logging.getLogger(__name__)
 
 
@@ -110,7 +112,7 @@ class ReferenceManager:
         # Definition patterns (Pandoc format)
         self.definition_patterns = {
             'figure': [
-                re.compile(r'!\[([^\]]*)\]\([^)]+\)\{[^}]*#(fig:[^}\s]+)[^}]*\}'),
+                re.compile(r'!\[([^\]]*)\]\([^)]+\)\s*\{[^}]*#(fig:[^}\s]+)[^}]*\}'),
                 re.compile(r'## Figure:\s*([^{]+)\s*\{#(fig:[^}]+)\}'),
                 re.compile(r'\\label\{(fig:[^}]+)\}'),
             ],
@@ -124,7 +126,6 @@ class ReferenceManager:
             ],
             'equation': [
                 re.compile(r'\\label\{(eq:[^}]+)\}'),
-                re.compile(r'\\begin\{equation\}.*\\label\{(eq:[^}]+)\}', re.DOTALL),
             ]
         }
 
@@ -133,7 +134,6 @@ class ReferenceManager:
             'figure': [
                 re.compile(r'\\cref\{(fig:[^}]+)\}'),
                 re.compile(r'\\ref\{(fig:[^}]+)\}'),
-                re.compile(r'Figure~\s*\\ref\{(fig:[^}]+)\}'),
             ],
             'table': [
                 re.compile(r'\\cref\{(tab:[^}]+)\}'),
@@ -148,14 +148,13 @@ class ReferenceManager:
                 re.compile(r'\\ref\{(eq:[^}]+)\}'),
             ]
         }
+        for kind, prefix in {'figure': 'fig', 'table': 'tab', 'section': 'sec', 'equation': 'eq'}.items():
+            self.usage_patterns[kind].append(re.compile(r'(?<![\w\\])@(' + prefix + r':[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_])?)'))
 
         # Citation patterns
         self.citation_patterns = [
-            re.compile(r'\\cite\{([^}]+)\}'),
-            re.compile(r'\\citep\{([^}]+)\}'),
-            re.compile(r'\\citet\{([^}]+)\}'),
-            re.compile(r'\\citeauthor\{([^}]+)\}'),
-            re.compile(r'\\citeyear\{([^}]+)\}'),
+            re.compile(r'\\cite(?:p|t|author|year)?(?:\[[^\]]*\])*\{([^}]+)\}'),
+            re.compile(r'(?<![A-Za-z0-9_/\\:])@([A-Za-z0-9_][A-Za-z0-9_:.+-]*)'),
         ]
 
     def analyze_references(self, files: List[Path]) -> ReferenceReport:
@@ -169,24 +168,19 @@ class ReferenceManager:
             Comprehensive reference analysis report
         """
         report = ReferenceReport()
+        if not files:
+            raise ValueError('At least one reference source is required')
 
         # Extract definitions and usages
         for file_path in files:
-            if file_path.exists() and file_path.suffix.lower() in ['.md', '.markdown']:
-                try:
-                    content = file_path.read_text(encoding='utf-8')
-                    lines = content.split('\n')
-
-                    # Extract definitions
-                    file_definitions = self._extract_definitions(content, file_path, lines)
-                    report.definitions.extend(file_definitions)
-
-                    # Extract usages
-                    file_usages = self._extract_usages(content, file_path, lines)
-                    report.usages.extend(file_usages)
-
-                except Exception as e:
-                    logger.warning(f"Failed to analyze references in {file_path}: {str(e)}")
+            if not file_path.is_file():
+                raise FileNotFoundError(file_path)
+            if file_path.suffix.lower() not in ['.md', '.markdown']:
+                raise ValueError(f'Unsupported reference source: {file_path}')
+            content = _without_code(file_path.read_text(encoding='utf-8'))
+            lines = content.split('\n')
+            report.definitions.extend(self._extract_definitions(content, file_path, lines))
+            report.usages.extend(self._extract_usages(content, file_path, lines))
 
         # Analyze reference consistency
         report.broken_references = self._find_broken_references(report.definitions, report.usages)
@@ -206,14 +200,11 @@ class ReferenceManager:
         for ref_type, patterns in self.definition_patterns.items():
             for pattern in patterns:
                 for match in pattern.finditer(content):
-                    # Extract reference ID
-                    if ref_type in ['figure', 'table', 'section']:
-                        if len(match.groups()) >= 2:
-                            label = match.group(1).strip()
-                            ref_id_full = match.group(2)
-                        else:
-                            continue
-                    else:  # equation
+                    label = ''
+                    if len(match.groups()) >= 2:
+                        label = match.group(1).strip()
+                        ref_id_full = match.group(2)
+                    else:
                         ref_id_full = match.group(1)
 
                     # Parse reference ID
@@ -233,7 +224,7 @@ class ReferenceManager:
                         ref_id=ref_id,
                         file_path=file_path,
                         line_number=line_number,
-                        label=label if 'label' in locals() else "",
+                        label=label,
                         caption=caption
                     )
                     definitions.append(definition)
@@ -381,15 +372,17 @@ class ReferenceManager:
     def fix_broken_references(self, report: ReferenceReport,
                             auto_fix: bool = False) -> Dict[str, Any]:
         """
-        Attempt to fix broken references automatically.
+        Report author-review suggestions; automatic semantic retargeting is refused.
 
         Args:
             report: Reference analysis report
-            auto_fix: Whether to apply fixes automatically
+            auto_fix: True is rejected; supply a reviewed mapping to fix_figure_ids instead
 
         Returns:
             Dictionary with fix results and suggestions
         """
+        if auto_fix:
+            raise ValueError('Automatic reference retargeting is unsafe; use an explicit reviewed id_mapping')
         fixes_applied = []
         manual_fixes_needed = []
 
@@ -398,25 +391,13 @@ class ReferenceManager:
             similar_defs = self._find_similar_definitions(broken_ref, report.definitions)
 
             if similar_defs:
-                suggestion = f"Change {broken_ref.full_id} to {similar_defs[0].full_id}"
-                if auto_fix:
-                    # In a real implementation, this would edit the file
-                    fixes_applied.append({
-                        'reference': broken_ref.full_id,
-                        'file': str(broken_ref.file_path),
-                        'line': broken_ref.line_number,
-                        'fix_type': 'id_correction',
-                        'old_id': broken_ref.full_id,
-                        'new_id': similar_defs[0].full_id
-                    })
-                else:
-                    manual_fixes_needed.append({
-                        'reference': broken_ref.full_id,
-                        'file': str(broken_ref.file_path),
-                        'line': broken_ref.line_number,
-                        'suggestion': suggestion,
-                        'similar_definitions': [d.full_id for d in similar_defs[:3]]
-                    })
+                manual_fixes_needed.append({
+                    'reference': broken_ref.full_id,
+                    'file': str(broken_ref.file_path),
+                    'line': broken_ref.line_number,
+                    'suggestion': 'Author review required: similarly named definitions are not evidence of the intended target',
+                    'similar_definitions': [d.full_id for d in similar_defs[:3]]
+                })
             else:
                 manual_fixes_needed.append({
                     'reference': broken_ref.full_id,
@@ -469,71 +450,47 @@ class ReferenceManager:
         return 0.0
 
     def validate_citations(self, files: List[Path],
-                          bib_file: Optional[Path] = None) -> Dict[str, Any]:
-        """
-        Validate citations and bibliography consistency.
-
-        Args:
-            files: Files to check for citations
-            bib_file: Bibliography file (BibTeX format)
-
-        Returns:
-            Citation validation results
-        """
+                           bib_file: Optional[Path] = None) -> Dict[str, Any]:
+        """Check LaTeX/Pandoc citation keys without inventing bibliographic identities."""
         citations_found = set()
         citation_usages = []
-
-        # Extract citations from files
+        errors = [] if files else ['At least one citation source is required']
         for file_path in files:
-            if file_path.exists() and file_path.suffix.lower() in ['.md', '.markdown']:
-                try:
-                    content = file_path.read_text(encoding='utf-8')
+            try:
+                content = _without_code(file_path.read_text(encoding='utf-8'))
+                for pattern in self.citation_patterns:
+                    for match in pattern.finditer(content):
+                        for raw_key in match.group(1).split(','):
+                            key = raw_key.strip().rstrip('.:')
+                            if key and not key.startswith(('fig:', 'tab:', 'eq:', 'sec:')):
+                                citations_found.add(key)
+                                citation_usages.append({'key': key, 'file': str(file_path),
+                                                        'line': self._find_line_number(content, match.start())})
+            except (OSError, UnicodeError) as error:
+                errors.append(f'Cannot read citation source {file_path}: {error}')
+        coverage = {}
+        if bib_file is not None:
+            try:
+                coverage = self._validate_citation_coverage(citations_found, self._parse_bib_file(bib_file))
+                if coverage['missing_bibliography_entries']:
+                    errors.append('Missing bibliography keys: ' + ', '.join(coverage['missing_bibliography_entries']))
+            except (OSError, UnicodeError, ValueError) as error:
+                errors.append(f'Cannot validate bibliography {bib_file}: {error}')
+        return {'valid': False if errors else (True if bib_file is not None else None),
+                'errors': errors, 'citations_found': sorted(citations_found),
+                'total_citations': len(citations_found), 'citation_usages': citation_usages,
+                'bibliography_validation': coverage}
 
-                    for pattern in self.citation_patterns:
-                        for match in pattern.finditer(content):
-                            citation_keys = match.group(1).split(',')
-                            for key in citation_keys:
-                                key = key.strip()
-                                if key:
-                                    citations_found.add(key)
-                                    citation_usages.append({
-                                        'key': key,
-                                        'file': str(file_path),
-                                        'line': self._find_line_number(content, match.start())
-                                    })
-
-                except Exception as e:
-                    logger.warning(f"Failed to extract citations from {file_path}: {str(e)}")
-
-        # Validate against bibliography if provided
-        bib_validation = {}
-        if bib_file and bib_file.exists():
-            bib_entries = self._parse_bib_file(bib_file)
-            bib_validation = self._validate_citation_coverage(citations_found, bib_entries)
-
-        return {
-            'citations_found': list(citations_found),
-            'total_citations': len(citations_found),
-            'citation_usages': citation_usages,
-            'bibliography_validation': bib_validation
-        }
 
     def _parse_bib_file(self, bib_file: Path) -> Set[str]:
-        """Parse BibTeX file to extract entry keys."""
-        bib_entries = set()
+        """Extract unique entry keys; missing/duplicate inputs cannot certify coverage."""
+        content = bib_file.read_text(encoding='utf-8')
+        keys = re.findall(r'@(?!comment\b|string\b|preamble\b)\w+\s*\{([^,\s]+)', content, re.IGNORECASE)
+        duplicates = sorted(key for key, count in Counter(keys).items() if count > 1)
+        if duplicates:
+            raise ValueError('Duplicate bibliography keys: ' + ', '.join(duplicates))
+        return set(keys)
 
-        try:
-            content = bib_file.read_text(encoding='utf-8')
-
-            # Simple BibTeX key extraction (very basic)
-            key_pattern = re.compile(r'@\w+\{([^,\s]+)', re.MULTILINE)
-            for match in key_pattern.finditer(content):
-                bib_entries.add(match.group(1))
-
-        except Exception as e:
-            logger.warning(f"Failed to parse bibliography file {bib_file}: {str(e)}")
-
-        return bib_entries
 
     def _validate_citation_coverage(self, citations: Set[str],
                                   bib_entries: Set[str]) -> Dict[str, Any]:
@@ -542,8 +499,8 @@ class ReferenceManager:
         unused_entries = bib_entries - citations
 
         return {
-            'missing_bibliography_entries': list(missing_entries),
-            'unused_bibliography_entries': list(unused_entries),
+            'missing_bibliography_entries': sorted(missing_entries),
+            'unused_bibliography_entries': sorted(unused_entries),
             'coverage_ratio': len(citations - missing_entries) / len(citations) if citations else 1.0
         }
 

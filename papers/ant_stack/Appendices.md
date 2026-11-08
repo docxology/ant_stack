@@ -1,6 +1,8 @@
 # Appendices
 
-## A. Reproducibility Checklist
+## A. Proposed Reproducibility Checklist
+
+This is an acceptance protocol, not a record of completed trials, instrument calibration, species validation, or implemented infrastructure.
 
 - Fixed random seeds (report all)
 - Explicit I/O rates and units (see `AntBody`)
@@ -15,7 +17,9 @@
  - Unit registry and versions (e.g., Pint) recorded; message schema versions (e.g., ROS 2) pinned
  - Continuous integration manifest for experiment reruns and document/PDF builds
 
-## B. Species Parameterization Quickstart
+## B. Proposed Species Parameterization Protocol
+
+No preset is validated by naming a species. Bind each numerical parameter to primary data for species/caste, colony, environment, and units; otherwise mark it as an illustrative assumption. Evaluate held-out individuals/colonies separately from fitting data.
 
 - `AntBody`: leg DOF, segment masses, antenna channel count K, sensor noise $\sigma$, gait presets
 - Pheromone: diffusion $D$, decay $\lambda$, baseline deposit, reward/urgency modulation
@@ -25,7 +29,7 @@
 - Provenance: cite sources for parameter choices and note uncertainties
  - Energy/compute envelope; actuator latency distributions; friction coefficients per terrain/material
 
-## C. Evaluation Protocol Templates
+## C. Proposed Task-Evaluation Templates {#c.-evaluation-protocol-templates}
 
 - Navigation: maze/slope/rough terrain; success, path ratio, energy per reward
 - Trail following: deposit reward-linked trail; formation time, stability, traffic

@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional, Tuple, Union
 import math
+import random
 try:
     import numpy as np
     HAS_NUMPY = True
@@ -24,7 +25,7 @@ except ImportError:
     stats = None
     HAS_SCIPY = False
 
-from .statistics import analyze_scaling_relationship
+from .statistics import analyze_scaling_relationship, _percentile, _validate_resampling
 
 
 @dataclass
@@ -44,6 +45,10 @@ class ScalingResult:
     p_value: Optional[float] = None
 
     valid: bool = False
+    error: Optional[str] = None
+    bootstrap_valid_samples: int = 0
+    inference_method: str = "paired_percentile_bootstrap_descriptive"
+    confidence_level: float = 0.95
 
 
 @dataclass
@@ -55,20 +60,26 @@ class MultiParameterScaling:
     scaling_results: Dict[str, ScalingResult]
 
     interaction_effects: Dict[str, float] = None
+    parameter_correlations: Optional[Dict[str, float]] = None
 
 
 class ScalingAnalyzer:
     """Advanced scaling analyzer for Ant Stack modules.
 
     Provides comprehensive scaling analysis including:
-    - Power law detection with statistical validation
-    - Multi-parameter scaling analysis
-    - Regime classification and confidence intervals
-    - Interaction effect detection
+    - Descriptive power-law fitting
+    - Marginal multi-parameter scaling analysis
+    - Paired-bootstrap exponent intervals
+    - Descriptive parameter correlations (not interaction estimates)
     """
 
-    def __init__(self):
-        """Initialize scaling analyzer."""
+    def __init__(self, bootstrap_samples: int = 1000, confidence_level: float = 0.95,
+                 random_seed: Optional[int] = 42):
+        """Configure reproducible paired resampling without mutating ambient RNGs."""
+        _validate_resampling(bootstrap_samples, 1 - confidence_level)
+        self.bootstrap_samples = bootstrap_samples
+        self.confidence_level = confidence_level
+        self.random_seed = random_seed
         self.backend_capabilities = {
             "numpy": HAS_NUMPY,
             "scipy": HAS_SCIPY,
@@ -91,62 +102,26 @@ class ScalingAnalyzer:
         Returns:
             ScalingResult with comprehensive analysis
         """
-        if len(parameter_values) < 3 or len(response_values) < 3:
-            return ScalingResult(
-                parameter_name=parameter_name,
-                parameter_values=parameter_values,
-                response_values=response_values,
-                valid=False
-            )
-
-        # Perform scaling analysis
         scaling_result = analyze_scaling_relationship(parameter_values, response_values)
-
-        # Calculate confidence interval for scaling exponent
+        analysis_valid = scaling_result["valid"]
         confidence_interval = None
-        p_value = None
-
-        # Check if scaling analysis was successful
-        analysis_valid = "scaling_exponent" in scaling_result and "intercept" in scaling_result
-
+        exponents = []
         if analysis_valid:
-            try:
-                # Calculate confidence interval using bootstrap
-                if HAS_NUMPY and HAS_SCIPY:
-                    exponents = []
-                    n_bootstrap = 1000
-
-                    for _ in range(n_bootstrap):
-                        # Bootstrap sample
-                        indices = np.random.choice(len(parameter_values), len(parameter_values), replace=True)
-                        boot_x = [parameter_values[i] for i in indices]
-                        boot_y = [response_values[i] for i in indices]
-
-                        # Calculate scaling for bootstrap sample
-                        boot_result = analyze_scaling_relationship(boot_x, boot_y)
-                        if "scaling_exponent" in boot_result:
-                            exponents.append(boot_result.get("scaling_exponent", 0))
-
-                    if exponents:
-                        try:
-                            ci_low = np.percentile(exponents, 2.5)
-                            ci_high = np.percentile(exponents, 97.5)
-                            confidence_interval = (ci_low, ci_high)
-
-                            # Calculate p-value (test against null hypothesis of no scaling)
-                            t_stat = scaling_result.get("scaling_exponent", 0) / (np.std(exponents) or 1)
-                            p_value = 2 * (1 - stats.t.cdf(abs(t_stat), len(exponents) - 1))
-                        except (ValueError, TypeError):
-                            # Fallback if numpy percentile fails
-                            exponents.sort()
-                            n_exp = len(exponents)
-                            ci_low_idx = max(0, int(0.025 * n_exp))
-                            ci_high_idx = min(n_exp - 1, int(0.975 * n_exp))
-                            confidence_interval = (exponents[ci_low_idx], exponents[ci_high_idx])
-
-            except (ArithmeticError, ValueError, TypeError):
-                confidence_interval = None
-                p_value = None
+            rng = random.Random(self.random_seed)
+            for _ in range(self.bootstrap_samples):
+                indices = [rng.randrange(len(parameter_values)) for _ in parameter_values]
+                boot_result = analyze_scaling_relationship(
+                    [parameter_values[index] for index in indices],
+                    [response_values[index] for index in indices],
+                )
+                if boot_result["valid"]:
+                    exponents.append(boot_result["scaling_exponent"])
+            if exponents:
+                exponents.sort()
+                alpha = 1 - self.confidence_level
+                confidence_interval = (_percentile(exponents, alpha / 2), _percentile(exponents, 1 - alpha / 2))
+        # Replicate count is Monte Carlo precision, not inferential degrees of freedom.
+        # No residual/noise model is supplied, so no hypothesis-test p-value is claimed.
 
         result = ScalingResult(
             parameter_name=parameter_name,
@@ -157,8 +132,11 @@ class ScalingAnalyzer:
             r_squared=scaling_result.get("r_squared"),
             regime=scaling_result.get("scaling_regime"),
             confidence_interval=confidence_interval,
-            p_value=p_value,
-            valid=analysis_valid
+            p_value=None,
+            valid=analysis_valid,
+            error=scaling_result.get("error"),
+            bootstrap_valid_samples=len(exponents),
+            confidence_level=self.confidence_level,
         )
         self.last_result = result
         return result
@@ -195,20 +173,26 @@ class ScalingAnalyzer:
                 )
                 scaling_results[param_name] = result
 
-        # Calculate interaction effects (simplified)
-        interaction_effects = {}
-        if len(scaling_results) > 1 and HAS_NUMPY:
-            for param_name, result in scaling_results.items():
-                if result.valid and result.scaling_exponent:
-                    # Simple interaction measure based on correlation
-                    correlation = np.corrcoef(primary_values, result.parameter_values)[0, 1]
-                    interaction_effects[param_name] = abs(correlation) * result.scaling_exponent
+        # Marginal fits and parameter correlation cannot identify interaction terms.
+        correlations = {}
+        if primary_result.valid:
+            for name, result in scaling_results.items():
+                if name == primary_param or not result.valid:
+                    continue
+                left_mean = sum(primary_values) / len(primary_values)
+                right_mean = sum(result.parameter_values) / len(result.parameter_values)
+                left = [value - left_mean for value in primary_values]
+                right = [value - right_mean for value in result.parameter_values]
+                scale = math.sqrt(sum(value * value for value in left) * sum(value * value for value in right))
+                if scale > 0 and math.isfinite(scale):
+                    correlations[name] = sum(x * y for x, y in zip(left, right)) / scale
 
         return MultiParameterScaling(
             primary_parameter=primary_param,
             secondary_parameters=secondary_params,
             scaling_results=scaling_results,
-            interaction_effects=interaction_effects
+            interaction_effects=None,
+            parameter_correlations=correlations,
         )
 
     def detect_scaling_regime(self, scaling_result: ScalingResult) -> Dict[str, Any]:
@@ -220,45 +204,32 @@ class ScalingAnalyzer:
         Returns:
             Dictionary with regime characterization
         """
-        if not scaling_result.valid or scaling_result.scaling_exponent is None:
-            return {"regime": "invalid", "confidence": 0.0}
-
+        if (not scaling_result.valid or scaling_result.scaling_exponent is None
+                or not math.isfinite(scaling_result.scaling_exponent)):
+            return {"regime": "invalid", "confidence": None}
         exponent = scaling_result.scaling_exponent
-
-        # Classify regime
         if abs(exponent) < 0.1:
             regime = "constant"
-            confidence = 0.9
-        elif abs(exponent - 1.0) < 0.1:
+        elif abs(exponent - 1) < 0.1:
             regime = "linear"
-            confidence = 0.9
-        elif abs(exponent - 2.0) < 0.1:
+        elif abs(exponent - 2) < 0.1:
             regime = "quadratic"
-            confidence = 0.8
-        elif abs(exponent - 3.0) < 0.1:
+        elif abs(exponent - 3) < 0.1:
             regime = "cubic"
-            confidence = 0.7
-        elif exponent > 1.0:
-            regime = "super-linear"
-            confidence = 0.8
-        elif exponent < 1.0 and exponent > 0:
+        elif exponent < 0:
+            regime = "inverse"
+        elif exponent < 1:
             regime = "sub-linear"
-            confidence = 0.8
+        elif exponent > 2:
+            regime = "super-quadratic"
         else:
-            regime = "unknown"
-            confidence = 0.5
-
-        # Adjust confidence based on r-squared
-        if scaling_result.r_squared:
-            r2_confidence = scaling_result.r_squared * confidence
-        else:
-            r2_confidence = confidence
-
+            regime = "super-linear"
         return {
             "regime": regime,
-            "confidence": r2_confidence,
-            "exponent_range": (exponent - 0.1, exponent + 0.1),
-            "interpretation": self._interpret_regime(regime, exponent)
+            "confidence": None,
+            "r_squared": scaling_result.r_squared,
+            "classification_tolerance": 0.1,
+            "interpretation": self._interpret_regime(regime, exponent),
         }
 
     def _interpret_regime(self, regime: str, exponent: float) -> str:
@@ -301,52 +272,33 @@ class ScalingAnalyzer:
         if not scaling_results:
             return {"error": "No scaling results to compare"}
 
-        # Extract valid results
-        valid_results = {k: v for k, v in scaling_results.items() if v.valid}
-
+        valid_results = {
+            name: result for name, result in scaling_results.items()
+            if result.valid and result.scaling_exponent is not None
+            and math.isfinite(result.scaling_exponent)
+        }
         if not valid_results:
             return {"error": "No valid scaling results"}
-
-        # Compare exponents
-        exponents = [r.scaling_exponent for r in valid_results.values() if r.scaling_exponent]
-        r_squared_values = [r.r_squared for r in valid_results.values() if r.r_squared]
-
+        exponents = [result.scaling_exponent for result in valid_results.values()]
+        r_squared_values = [
+            result.r_squared for result in valid_results.values()
+            if result.r_squared is not None and math.isfinite(result.r_squared)
+        ]
         comparison = {
             "num_valid_results": len(valid_results),
-            "exponent_range": (min(exponents), max(exponents)) if exponents else None,
-            "mean_r_squared": None,
-            "regime_distribution": {}
+            "exponent_range": (min(exponents), max(exponents)),
+            "mean_r_squared": sum(r_squared_values) / len(r_squared_values) if r_squared_values else None,
+            "regime_distribution": {},
         }
-
-        # Calculate mean r_squared
-        if r_squared_values and HAS_NUMPY:
-            comparison["mean_r_squared"] = np.mean(r_squared_values)
-
-        # Count regime distribution
         for result in valid_results.values():
             regime = result.regime or "unknown"
-            comparison["regime_distribution"][regime] = \
-                comparison["regime_distribution"].get(regime, 0) + 1
-
-        # Identify most challenging scaling
-        if exponents:
-            if HAS_NUMPY:
-                max_exponent_idx = np.argmax(np.abs(exponents))
-            else:
-                # Fallback without numpy
-                max_exponent_idx = 0
-                max_abs_exp = 0
-                for i, exp in enumerate(exponents):
-                    if abs(exp) > max_abs_exp:
-                        max_abs_exp = abs(exp)
-                        max_exponent_idx = i
-
-            max_exponent_param = list(valid_results.keys())[max_exponent_idx]
-            comparison["most_challenging"] = {
-                "parameter": max_exponent_param,
-                "exponent": exponents[max_exponent_idx],
-                "regime": list(valid_results.values())[max_exponent_idx].regime
-            }
+            comparison["regime_distribution"][regime] = comparison["regime_distribution"].get(regime, 0) + 1
+        name, result = max(valid_results.items(), key=lambda pair: abs(pair[1].scaling_exponent))
+        comparison["most_challenging"] = {
+            "parameter": name,
+            "exponent": result.scaling_exponent,
+            "regime": result.regime,
+        }
 
         return comparison
 
@@ -360,7 +312,7 @@ class ScalingAnalyzer:
             Formatted report string
         """
         if not scaling_result.valid:
-            return f"Scaling analysis for {scaling_result.parameter_name}: INVALID (insufficient data)"
+            return f"Scaling analysis for {scaling_result.parameter_name}: INVALID ({scaling_result.error or 'insufficient data or invalid domain'})"
 
         report_lines = [
             f"Scaling Analysis Report: {scaling_result.parameter_name}",
@@ -368,16 +320,18 @@ class ScalingAnalyzer:
             f"Parameter: {scaling_result.parameter_name}",
             f"Data points: {len(scaling_result.parameter_values)}",
             f"Exponent: {scaling_result.scaling_exponent:.6f}",
-            f"R²: {scaling_result.r_squared:.6f}",
+            f"R²: {scaling_result.r_squared:.6f}" if scaling_result.r_squared is not None else "R²: undefined (constant response)",
             f"Intercept: {scaling_result.intercept:.6f}",
             f"Regime: {scaling_result.regime}",
         ]
 
         if scaling_result.confidence_interval:
             ci_low, ci_high = scaling_result.confidence_interval
-            report_lines.append(f"95% CI: [{ci_low:.6f}, {ci_high:.6f}]")
-        if scaling_result.p_value:
-            report_lines.append(f"P-value: {scaling_result.p_value:.6f}")
+            report_lines.append(f"{100 * scaling_result.confidence_level:g}% CI (paired percentile bootstrap): [{ci_low:.6f}, {ci_high:.6f}]")
+        if scaling_result.p_value is not None:
+            report_lines.append(f"P-value (supplied): {scaling_result.p_value:.6f}")
+        else:
+            report_lines.append("Hypothesis test: not performed; bootstrap intervals are descriptive resampling summaries.")
         report_lines.extend([
             "",
             "Interpretation:",
@@ -399,7 +353,7 @@ class ScalingAnalyzer:
         Returns:
             Recommendation string
         """
-        if not scaling_result.valid or not scaling_result.scaling_exponent:
+        if not scaling_result.valid or scaling_result.scaling_exponent is None:
             return "Insufficient data for recommendations"
 
         exponent = scaling_result.scaling_exponent
@@ -421,7 +375,7 @@ class ScalingAnalyzer:
             recommendations.append("Cubic scaling indicates fundamental algorithmic redesign required")
 
         if exponent > 2.0:
-            recommendations.append("WARNING: Exponential scaling detected - may limit practical applications")
+            recommendations.append("High-order power-law scaling may limit practical applications; it is not an exponential fit")
 
         if scaling_result.r_squared and scaling_result.r_squared < 0.8:
             recommendations.append("Low R² indicates complex relationship - consider additional parameters")

@@ -1,72 +1,29 @@
-# Complexity & Energetics Analysis Scripts
+# Complexity–Energetics Tools: Analytical Families and Fresh Outputs
 
-Scripts for computational complexity analysis and energy modeling of embodied AI systems.
+Thin wrappers delegate to `antstack_core.analysis`; they do not implement a physics engine, neural circuit, policy controller or hardware calibration.
 
-## Purpose
+## Choose the Result Family Before Running
 
-This directory contains specialized scripts for analyzing the computational complexity and energy consumption patterns of the Ant Stack framework, focusing on:
+| Surface | Meaning |
+|---|---|
+| `antstack-ce MANIFEST --out NEW_DIRECTORY` | Canonical base workload family; explicit fresh destination and current-invocation inventory. |
+| `run-all-antstack --config FILE` | Governed canonical family, task selection, reports and optional owned paper projection. |
+| `generate_tables_and_numbers.py` / `analysis.ce_tables_and_numbers` | Separate enhanced analytical assumptions and descriptive fits; not canonical numerical substitutes. |
+| Contact/neural/planning/comprehensive/figure scripts | Supplemental analyses of their declared model inputs. Inspect their options and output boundaries before generation. |
 
-- Algorithmic complexity characterization
-- Energy consumption modeling
-- Scaling relationship analysis
-- Theoretical limit validation
-- Performance benchmarking
-
-## Scripts
-
-### Core Analysis Scripts
-- `analyze_active_inference.py` - Active inference complexity and bounded rationality analysis
-- `analyze_contact_dynamics.py` - Contact dynamics solver performance comparison
-- `analyze_neural_networks.py` - Sparse neural network connectivity pattern analysis
-- `comprehensive_analysis.py` - Advanced complexity analysis with agent-based, network, thermodynamic, and entropy methods
-
-### Figure and Results Generation
-- `generate_comprehensive_analysis.py` - Complete scaling analysis pipeline
-- `generate_biomechanical_benchmarks.py` - Biomechanical and robotic benchmark report generation
-- `generate_manuscript_figures.py` - Publication-quality figure generation
-- `generate_multipanel_figures.py` - Multi-panel figure layouts
-- `generate_results_figures.py` - Automated results visualization
-- `generate_publication_figures.py` - Publication figure suite with comprehensive captions
-- `generate_tables_and_numbers.py` - Key numbers and table generation
-
-### Utilities
-- `run_ce.sh` - Convenience script for running complexity-energetics analysis
-
-## Key Features
-
-- **Comprehensive Scaling Analysis**: Automated power-law detection and regime classification
-- **Energy Modeling**: Device-specific energy coefficients with uncertainty quantification
-- **Theoretical Limits**: Comparison against fundamental physical limits (Landauer, thermodynamic)
-- **Statistical Rigor**: Bootstrap confidence intervals and hypothesis testing
-- **Publication Ready**: Automated figure generation with proper formatting and captions
-
-## Usage
-
-Most scripts can be run directly from the project root:
+## Use Native Commands from the Checkout Root
 
 ```bash
-# Run comprehensive analysis
-python scripts/complexity_energetics/generate_comprehensive_analysis.py
-
-# Analyze specific component
-python scripts/complexity_energetics/analyze_neural_networks.py --sparsity 0.02
-
-# Generate figures for paper
-python scripts/complexity_energetics/generate_manuscript_figures.py
+uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
+# Choose a genuinely new path; a repeated populated destination is an error.
+bash scripts/complexity_energetics/run_ce.sh cache/ce-manual-001
+uv run python -m antstack_core.analysis.ce_tables_and_numbers --output cache/enhanced-manual-001
 ```
 
-## Dependencies
+The shell launcher requires the output path and forwards additional CE options. Never point standalone CE at the retained `papers/complexity_energetics/out` directory. Publication commands may intentionally project a completed owned generation there under the [custody contract](../../docs/reproducibility.md).
 
-- `antstack_core.analysis` package
-- matplotlib, seaborn for plotting
-- numpy, scipy for numerical analysis
-- pandas for data manipulation
-- pytest for validation
+## Interpret Generated Values Conservatively
 
-## Output
+Default energy coefficients are assumptions, not device-specific calibration. Repeated deterministic model values are not empirical trials. Descriptive exponents, conditional erasure comparisons and figure formatting do not establish biological validity, physical efficiency, real-time feasibility or publication readiness. Distinguish module-isolated idle windows from additive shared-system accounting.
 
-Scripts generate:
-- JSON key numbers files (`key_numbers.json`)
-- Publication-quality figures (PNG/SVG)
-- Statistical analysis reports
-- Validation test results
+Use [scientific validation](../../docs/scientific_validation.md), [API contracts](../../docs/public_api_contracts.md) and [native acceptance checks](../../docs/validation.md). The package/private Node versions are not registry publication receipts.

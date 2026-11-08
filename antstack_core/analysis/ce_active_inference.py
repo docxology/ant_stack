@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Any
 
 from antstack_core.analysis import (
-    calculate_active_inference_complexity, enhanced_mind_workload_closed_form
+    enhanced_mind_workload_closed_form
 )
 from antstack_core.analysis import (
     estimate_detailed_energy, analyze_scaling_relationship,
@@ -14,10 +14,11 @@ from antstack_core.analysis import (
 from antstack_core.analysis import EnergyCoefficients
 from antstack_core.figures import line_plot, scatter_plot, bar_plot
 
+from .workloads import effective_policy_count
 
 def analyze_horizon_scaling(horizons: List[int], branching: int, state_dim: int,
                           action_dim: int, output_dir: Path) -> Dict[str, Any]:
-    """Analyze computational explosion with policy horizon scaling."""
+    """Analyze the aggregate policy model with a fixed 1000-policy budget."""
     print("Analyzing policy horizon scaling...")
 
     coeffs = EnergyCoefficients()
@@ -29,16 +30,11 @@ def analyze_horizon_scaling(horizons: List[int], branching: int, state_dim: int,
     theoretical_limits = []
 
     for H_p in horizons:
-        # Calculate active inference complexity
-        ai_flops, ai_memory = calculate_active_inference_complexity(
-            H_p, branching, state_dim, action_dim
-        )
-
         # Calculate energy using mind workload model
         params = {
             'B': branching, 'H_p': H_p, 'hz': 100,
             'state_dim': state_dim, 'action_dim': action_dim,
-            'hierarchical': False
+            'hierarchical': False, 'max_policies': 1000
         }
 
         load = enhanced_mind_workload_closed_form(0.01, params)
@@ -58,6 +54,9 @@ def analyze_horizon_scaling(horizons: List[int], branching: int, state_dim: int,
 
         results[f"H_p_{H_p}"] = {
             'horizon': H_p,
+            'model': 'bounded_aggregate_policy_evaluation',
+            'max_policies': 1000,
+            'effective_policies': effective_policy_count(branching, H_p, 1000),
             'energy_total': breakdown.total,
             'energy_breakdown': breakdown.to_dict(),
             'flops': load.flops,
@@ -133,19 +132,14 @@ def analyze_branching_effects(horizon: int, branching_factors: List[int],
     policy_counts = []
 
     for B in branching_factors:
-        # Calculate raw complexity
-        ai_flops, ai_memory = calculate_active_inference_complexity(
-            horizon, B, state_dim, action_dim
-        )
-
         # Calculate total policy count (before sampling)
         total_policies = B ** horizon
-        effective_policies = min(1000, total_policies)  # Bounded rationality
+        effective_policies = effective_policy_count(B, horizon, 1000)
 
         params = {
             'B': B, 'H_p': horizon, 'hz': 100,
             'state_dim': state_dim, 'action_dim': action_dim,
-            'hierarchical': False
+            'hierarchical': False, 'max_policies': 1000
         }
 
         load = enhanced_mind_workload_closed_form(0.01, params)
@@ -157,6 +151,8 @@ def analyze_branching_effects(horizon: int, branching_factors: List[int],
 
         results[f"B_{B}"] = {
             'branching': B,
+            'model': 'bounded_aggregate_policy_evaluation',
+            'max_policies': 1000,
             'total_policies': total_policies,
             'effective_policies': effective_policies,
             'energy_total': breakdown.total,
@@ -228,42 +224,27 @@ def analyze_bounded_rationality(horizon: int, branching: int, state_dim: int,
     for strategy in strategies:
         name = strategy['name']
 
-        # Calculate complexity with strategy
-        if strategy['max_policies'] is None:
-            # Unbounded (theoretical)
-            total_policies = branching ** horizon
-            effective_policies = total_policies
-        else:
-            total_policies = branching ** horizon
-            effective_policies = min(strategy['max_policies'], total_policies)
+        total_policies = branching ** horizon
+        effective_policies = effective_policy_count(branching, horizon, strategy['max_policies'])
 
         params = {
             'B': branching, 'H_p': horizon, 'hz': 100,
             'state_dim': state_dim, 'action_dim': action_dim,
-            'hierarchical': strategy['hierarchical']
+            'hierarchical': strategy['hierarchical'],
+            'max_policies': strategy['max_policies'],
         }
 
-        # For unbounded case, estimate theoretical energy
-        if strategy['max_policies'] is None and total_policies > 10000:
-            # Extrapolate from bounded case
-            bounded_load = enhanced_mind_workload_closed_form(0.01, dict(params, hierarchical=False))
-            scaling_factor = total_policies / 1000
-            theoretical_flops = bounded_load.flops * scaling_factor
-            theoretical_energy = theoretical_flops * 1e-12  # Rough estimate
-
-            energy_values.append(theoretical_energy)
-            flops_values.append(theoretical_flops)
-        else:
-            load = enhanced_mind_workload_closed_form(0.01, params)
-            breakdown = estimate_detailed_energy(load, coeffs, 0.01)
-
-            energy_values.append(breakdown.total)
-            flops_values.append(load.flops)
+        # Exact and bounded cases use the same component accounting and prices.
+        load = enhanced_mind_workload_closed_form(0.01, params)
+        breakdown = estimate_detailed_energy(load, coeffs, 0.01)
+        energy_values.append(breakdown.total)
+        flops_values.append(load.flops)
 
         strategy_names.append(name)
 
         results[name] = {
             'strategy': strategy,
+            'model': 'exact_aggregate_policy_evaluation' if strategy['max_policies'] is None else 'bounded_aggregate_policy_evaluation',
             'total_policies': total_policies,
             'effective_policies': effective_policies,
             'energy_total': energy_values[-1],

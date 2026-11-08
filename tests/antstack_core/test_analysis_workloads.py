@@ -10,6 +10,7 @@ Following .cursorrules principles:
 - Comprehensive edge case testing
 - Professional documentation with scientific references
 """
+import pytest
 
 import unittest
 import math
@@ -29,6 +30,67 @@ from antstack_core.analysis.workloads import (
     estimate_brain_compute_per_decision, estimate_mind_compute_per_decision
 )
 from antstack_core.analysis.energy import EnergyCoefficients, ComputeLoad
+class TestScientificWorkloadContracts(unittest.TestCase):
+    def test_supported_contact_formulas_are_distinct(self):
+        self.assertEqual(calculate_contact_complexity(18, 12, 'pgs'), (17280, 3168, 12))
+        self.assertEqual(calculate_contact_complexity(18, 12, 'si'), (6264, 3744, 1))
+        self.assertEqual(calculate_contact_complexity(18, 12, 'ldlt'), (52488, 23328, 1))
+        for solver in ('lcp', 'mlcp', 'typo'):
+            with self.assertRaises(ValueError):
+                calculate_contact_complexity(18, 12, solver)
+
+    def test_supported_topology_formulas_and_empty_network(self):
+        self.assertEqual(calculate_sparse_neural_complexity(10000, .02, 'random'), (40000, 120000, 20))
+        structured = calculate_sparse_neural_complexity(10000, .02, 'structured')
+        self.assertAlmostEqual(structured[0], 200 * math.log(10000))
+        self.assertEqual(structured[1:], (80000, 20))
+        self.assertEqual(calculate_sparse_neural_complexity(0, 0, 'structured'), (0, 0, 0))
+        for pattern in ('biological', 'small_world', 'scale_free', 'typo'):
+            with self.assertRaises(ValueError):
+                calculate_sparse_neural_complexity(10000, .02, pattern)
+
+    def test_budget_applies_at_every_horizon_and_to_every_counter(self):
+        params = {'B': 4, 'hz': 100, 'state_dim': 16, 'action_dim': 6}
+        for horizon in (9, 10, 11):
+            load = enhanced_mind_workload_closed_form(.01, dict(params, H_p=horizon))
+            self.assertEqual(load.flops, 1000 * 2950)
+            self.assertEqual(load.sram_bytes + load.dram_bytes, 1000 * 156)
+        sampled = enhanced_mind_workload_closed_form(.01, dict(params, H_p=12, max_policies=1000))
+        conservative = enhanced_mind_workload_closed_form(.01, dict(params, H_p=12, max_policies=100))
+        self.assertEqual(sampled.flops, 10 * conservative.flops)
+        self.assertEqual(sampled.sram_bytes, 10 * conservative.sram_bytes)
+        exact = enhanced_mind_workload_closed_form(.01, dict(params, H_p=10, max_policies=None))
+        self.assertEqual(exact.flops, 4 ** 10 * 2950)
+        zero_horizon = enhanced_mind_workload_closed_form(.01, dict(params, H_p=0))
+        self.assertEqual(zero_horizon.flops, 2950)
+
+    def test_canonical_branching_controls_the_exact_tree_model(self):
+        for branching in (2, 4):
+            expected_flops, expected_memory = calculate_active_inference_complexity(2, branching, 3, 2, 3)
+            load = mind_workload_closed_form(1, {'B': branching, 'H_p': 2, 'state_dim': 3, 'action_dim': 2, 'hz': 1})
+            self.assertEqual(load.flops, expected_flops)
+            self.assertEqual(load.sram_bytes + load.dram_bytes, expected_memory)
+        with self.assertRaises(ValueError):
+            mind_workload_closed_form(1, {'branching': 4})
+
+    def test_runtime_boundaries_reject_invalid_domains_before_execution(self):
+        for fn in (body_workload_closed_form, enhanced_body_workload_closed_form, body_workload,
+                   brain_workload_closed_form, enhanced_brain_workload_closed_form, brain_workload,
+                   mind_workload_closed_form, enhanced_mind_workload_closed_form, mind_workload):
+            for duration in (-1, float('nan'), float('inf')):
+                with self.subTest(fn=fn, duration=duration), self.assertRaises(ValueError):
+                    fn(duration, {})
+        for rho in (-.01, 1.01, float('nan'), float('inf')):
+            with self.assertRaises(ValueError):
+                enhanced_brain_workload_closed_form(.01, {'rho': rho})
+        for budget in (0, -1, 1.5, float('nan'), float('inf')):
+            with self.assertRaises(ValueError):
+                enhanced_mind_workload_closed_form(.01, {'max_policies': budget})
+        for params in ({'J': -1}, {'C': -1}, {'P': float('nan')}, {'hz': 0}, {'contact_solver': 'mlcp'}):
+            with self.assertRaises(ValueError):
+                enhanced_body_workload_closed_form(.01, params)
+
+
 
 
 class TestBodyWorkloads(unittest.TestCase):
@@ -180,7 +242,7 @@ class TestMindWorkloads(unittest.TestCase):
         """Set up test fixtures for mind workload analysis."""
         self.base_params = {
             'H_p': 5,         # Policy horizon
-            'branching': 3,   # Branching factor
+            'B': 3,           # Canonical branching factor
             'state_dim': 8,   # State dimension
             'action_dim': 4,  # Action dimension
             'hz': 100         # Planning frequency (Hz)
@@ -214,7 +276,7 @@ class TestMindWorkloads(unittest.TestCase):
 
         # Higher branching
         params_branchy = self.base_params.copy()
-        params_branchy['branching'] = 5
+        params_branchy['B'] = 5
         load_branchy = mind_workload_closed_form(self.duration_s, params_branchy)
 
         # Should scale with branching
@@ -300,7 +362,7 @@ class TestWorkloadIntegration(unittest.TestCase):
         self.coeffs = EnergyCoefficients()
         self.body_params = {'J': 6, 'C': 12, 'S': 256, 'hz': 100}
         self.brain_params = {'K': 64, 'N_KC': 50000, 'rho': 0.02, 'H': 64}
-        self.mind_params = {'H_p': 5, 'branching': 3, 'state_dim': 8, 'action_dim': 4, 'hz': 100}
+        self.mind_params = {'H_p': 5, 'B': 3, 'state_dim': 8, 'action_dim': 4, 'hz': 100}
         self.duration_s = 0.01
 
     def test_body_workload_energy_integration(self):
@@ -363,7 +425,7 @@ class TestWorkloadEdgeCases(unittest.TestCase):
 
     def test_mind_workload_zero_horizon(self):
         """Test mind workload with zero horizon."""
-        params = {'H_p': 0, 'branching': 3, 'state_dim': 8, 'action_dim': 4}
+        params = {'H_p': 0, 'B': 3, 'state_dim': 8, 'action_dim': 4}
         load = mind_workload_closed_form(0.01, params)
 
         # Should handle gracefully
@@ -426,7 +488,7 @@ class TestWorkloadScalingAnalysis(unittest.TestCase):
         horizons = [3, 5, 7, 9]
         flops_values = []
 
-        base_params = {'branching': 3, 'state_dim': 8, 'action_dim': 4}
+        base_params = {'B': 3, 'state_dim': 8, 'action_dim': 4}
 
         for H_p in horizons:
             params = base_params.copy()
@@ -441,3 +503,17 @@ class TestWorkloadScalingAnalysis(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+@pytest.mark.parametrize("name", ["body_workload_closed_form", "brain_workload_closed_form", "mind_workload_closed_form",
+                                "enhanced_body_workload_closed_form", "enhanced_brain_workload_closed_form", "enhanced_mind_workload_closed_form"])
+@pytest.mark.parametrize("hz", [49, 93, 100])
+def test_reciprocal_period_keeps_one_discrete_update(name, hz):
+    from antstack_core.analysis import workloads
+    function = getattr(workloads, name)
+    one, many = function(1 / hz, {"hz": hz}), function(1, {"hz": hz})
+    assert many.flops == pytest.approx(one.flops * hz)
+    assert function(0.5 / hz, {"hz": hz}).flops == 0
+    assert function(1.5 / hz, {"hz": hz}).flops == pytest.approx(one.flops)
+    if name == "brain_workload_closed_form":
+        assert function(1 / hz, {"hz": hz, "K": 1, "N_KC": 1, "rho": 1, "H": 1}).flops == 101
