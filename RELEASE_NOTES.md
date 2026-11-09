@@ -13,6 +13,7 @@ Source version: **3.0.0**. Integration is in progress; this entry does not claim
 - Meter configuration exposes only implemented backend controls. Unimplemented calibration, baseline subtraction, sampling/channel/logging fields and planning helpers are removed; unsupported controls are errors. Provenance metadata cannot silently disable mandatory source/version recording.
 - The toy agent model has no meaningless seed argument, global RNG mutation or duplicate enhanced implementation. Its state-pair fraction is named `state_pair_similarity`, not graph clustering; population variance is backend-consistent and its accumulated costs are not physical joules.
 - All ten supplemental analysis/figure/table wrappers require explicit fresh output families instead of overwriting retained assets. Complete families publish atomically with checksummed source/runtime provenance; manifest inputs are snapshotted and advertised vector/PDF formats are real. Distinct coefficient/memory boundaries stay disclosed.
+- Contact/neural/planning maxima bound every corresponding study, including secondary grids, with explicit unavailable fits at small sizes. Label-only solver/pattern flags and unsupported inverse-input efficiency/tractability claims are removed. Uncomputed diagnostic quantities are null, not fabricated zeros; verbatim YAML/JSON input snapshots are never product-normalized.
 
 ### Correctness, Scientific Meaning and Output Custody
 

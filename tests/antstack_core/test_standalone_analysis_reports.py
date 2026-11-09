@@ -60,6 +60,22 @@ def _args(output, manifest, modules=('body', 'brain', 'mind')):
     return SimpleNamespace(output=str(output), manifest=str(manifest), modules=list(modules))
 
 
+def test_compact_json_manifest_keeps_original_snapshot_bytes(adapter, manifest_path, tmp_path):
+    supplied = tmp_path / 'compact-manifest.json'
+    original = json.dumps(yaml.safe_load(manifest_path.read_text()), separators=(',', ':')).encode()
+    supplied.write_bytes(original)
+    output = tmp_path / 'json-family'
+    receipt = adapter.module.run(_args(output, supplied, ('body',)))
+    family = _strict_json(receipt)
+    assert family['complete'] is True
+    binding = family['input_snapshots'][str(supplied)]
+    assert (output / binding['snapshot']).read_bytes() == original
+    assert binding['sha256'] == hashlib.sha256(original).hexdigest()
+    assert supplied.read_bytes() == original
+    results = _strict_json(output / adapter.results)
+    assert [item['module'] for item in results[adapter.analyses]] == ['body']
+
+
 def test_real_default_selection_publishes_complete_portable_current_family(adapter, manifest_path, tmp_path):
     output = tmp_path / 'family'
     args = _args(output, manifest_path)

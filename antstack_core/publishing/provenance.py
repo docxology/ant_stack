@@ -67,7 +67,10 @@ def _publish_analysis_family(output, *, project, produce, required_paths, input_
             if isinstance(value, str) and (value == str(stage) or value.startswith(str(stage) + os.sep)):
                 return Path(value).relative_to(stage).as_posix()
             return value
+        snapshots = {stage / binding['snapshot'] for binding in bindings.values()}
         for path in sorted(stage.rglob('*')):
+            if path in snapshots:
+                continue
             if path.is_file() and path.suffix == '.json':
                 def invalid_number(value):
                     raise ValueError(f"Nonfinite analytical JSON: {path}: {value}")

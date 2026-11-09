@@ -669,7 +669,7 @@ def test_real_diagnostics_distinguish_unavailable_fields_from_computed_zero(modu
     assert serialized["scaling_exponent"] is None
     assert serialized["variance"] is None
     thermo = module.ThermodynamicComplexityAnalyzer(temperature_k=300).analyze_thermodynamic_efficiency(
-        EnergyBreakdown(compute_flops=1), computational_work=1, information_processed=0)
+        EnergyBreakdown(compute_flops=1, baseline=1), computational_work=1, information_processed=0)
     serialized = json.loads(json.dumps(asdict(thermo), allow_nan=False))
     assert serialized["thermodynamic_efficiency"] == 0
     assert serialized["entropy_change"] == pytest.approx(1 / 300)
