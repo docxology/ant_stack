@@ -1,6 +1,6 @@
 # Ant Stack Documentation: Setup, Models, Outputs, and Publishing
 
-These guides describe the Ant Stack 3.0.0 package and its research repository. A version in source metadata is not evidence of a published release or a successful current render. Use the [root overview](../README.md) for project status.
+These guides describe the Ant Stack 3.0.1 package and its research repository. A version in source metadata is not evidence of a published release or a successful current render. Use the [root overview](../README.md) for project status.
 
 ## Choose a Guide by Task
 

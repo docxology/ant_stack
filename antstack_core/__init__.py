@@ -5,7 +5,7 @@ from __future__ import annotations
 from importlib.util import find_spec
 from typing import Iterable
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 __author__ = "Daniel Ari Friedman"
 __email__ = "daniel@activeinference.institute"
 

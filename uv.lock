@@ -15,7 +15,7 @@ resolution-markers = [
 
 [[package]]
 name = "ant-stack"
-version = "3.0.0"
+version = "3.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "jinja2" },

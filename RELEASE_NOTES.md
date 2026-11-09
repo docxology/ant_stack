@@ -1,5 +1,22 @@
 # Ant Stack Release Notes
 
+## 3.0.1 — Complete Contact Reporting and Version-Bound Packaging
+
+Source version: **3.0.1**. A commit, CI result, tag and published repository release remain separate observations; verify the remote state rather than inferring publication from this heading.
+
+### Preserve the Contributed Empirical-Reporting Scope
+
+- Integrates [PR #1](https://github.com/docxology/ant_stack/pull/1)'s trajectory/contact guidance without regressing the current custody and scientific limitations. Illustrative trajectory, contact-event and frame-sample products retain participant/event lineage, ant–ant versus ant–object categories, optional pixel/second kinematics and the manual static-dashboard plus CSV-derived table workflow.
+- Filenames/columns remain proposed study-specific adapter conventions, not a released importer or proof of acquired data, validated contacts or biological agreement. Event counts, frame samples and independent animals/colonies stay distinct.
+- Integrates [PR #5](https://github.com/docxology/ant_stack/pull/5)'s already-satisfied Pillow 13 update history without rolling back the 3.0 package or changing dependency pins.
+
+### Keep Package and Qualification Identities Explicit
+
+- Python/package/private Node and the editable-project lock metadata are synchronized at 3.0.1; the existing 3.0.0 tag and prior producer receipts remain immutable. Bun's workspace lock does not duplicate the root package version; its exact dependency pins are unchanged.
+- CI and executable packaging examples derive distribution filenames from the project version instead of duplicating a release literal. The wheel still comes from a fresh sdist, and the isolated installed-consumer/native-PDF gate remains mandatory.
+- Removes incidental metadata/import/export/name-shape tests rather than repinning them. Behavioral dependency/import-side-effect regressions and the real installed-package consumer gate remain.
+- Retained reviewed manuscript PDFs, numerical capsules and visual-review identities keep their original producing commits. New candidate/main/tag qualification must identify its own source; it does not relabel historical output as a fresh run or a new human page review.
+
 ## 3.0.0 — Scientific Contracts and Failure-Honest Publication
 
 Source version: **3.0.0**. Source-bound acceptance evidence belongs in [validation](docs/validation.md). Publication state must be verified against the remote main/tag and GitHub Release; it is not inferred from this file.

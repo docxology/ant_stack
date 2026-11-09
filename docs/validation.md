@@ -30,9 +30,10 @@ Changed plots require inspection of actual images: paired samples, actual interv
 ## Build a New Package and Prove Installed Entry Points
 
 ```bash
+version="$(uv version --short)"
 uv build --sdist --out-dir dist
-uv build --wheel dist/ant_stack-3.0.0.tar.gz --out-dir dist
-uv run python tools/release_smoke.py --wheel dist/ant_stack-3.0.0-py3-none-any.whl --work-dir cache/install-proof --require-pdf
+uv build --wheel "dist/ant_stack-${version}.tar.gz" --out-dir dist
+uv run python tools/release_smoke.py --wheel "dist/ant_stack-${version}-py3-none-any.whl" --work-dir cache/install-proof --require-pdf
 ```
 
 The wheel comes from the new sdist, not an old `build/lib`. The work directory must not exist. The gate provisions an independent environment under a fresh repository-private work directory and runs consumers from a caller-owned directory outside the package/source import trees, with no editable/source-tree fallback. It compares installed Python payload and locked dependency identities, exercises all console commands, checks current artifact bytes and actually renders caller-owned ordered paper inputs. `--offline` requires cached pinned distributions plus isolated build requirements; absence is a failed prerequisite, never permission to use global packages.
@@ -50,6 +51,8 @@ Native Mermaid uses a real local browser with its sandbox enabled. The local nes
 The repository-owned workflow `.github/workflows/validate.yml` targets fresh Linux runners with pinned action/tool versions, tests, lint/docs, installed package proof, all three actual manuscript builds and the configured canonical run. Allowlisted logs/results survive failure. It is not a release/registry publisher. A workflow file does not prove a launched or green run.
 
 Before publication record the exact tested commit, commands, runtime/dependency/native-tool identities, outcomes, artifacts and all failures/non-runs. Require live checks for that source, obey branch protection, then verify remote main and the version tag target. Verify a GitHub Release and its assets independently; a main push/tag/local build is not a published repository release. The private Node package has no registry publication step.
+
+A later patch or merge must be qualified at its own source commit. The 3.0.0 qualification below identifies the retained reviewed publication bytes; its green checks are not relabeled as checks of a newer source.
 
 ## 3.0.0 Source-Bound Qualification and Explicit Limits
 

@@ -1,6 +1,6 @@
 {
   "name": "ant-stack",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Mermaid and workflow helpers for the Ant Stack scientific publication system.",
   "private": true,
   "scripts": {

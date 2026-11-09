@@ -289,17 +289,19 @@ jobs:
       - name: Build a new sdist then a wheel from that sdist
         run: |
           set -euo pipefail
+          version="$(uv version --short)"
           {
             # Build the wheel from the new sdist, not an old build/lib tree.
             uv build --sdist --out-dir dist
-            uv build --wheel dist/ant_stack-3.0.0.tar.gz --out-dir dist
-            sha256sum dist/ant_stack-3.0.0.tar.gz dist/ant_stack-3.0.0-py3-none-any.whl
+            uv build --wheel "dist/ant_stack-${version}.tar.gz" --out-dir dist
+            sha256sum "dist/ant_stack-${version}.tar.gz" "dist/ant_stack-${version}-py3-none-any.whl"
           } 2>&1 | tee cache/ci/logs/package-build.log
 
       - name: Exercise the isolated installed wheel
         run: |
           set -euo pipefail
-          uv run python tools/release_smoke.py --wheel dist/ant_stack-3.0.0-py3-none-any.whl --work-dir cache/install-proof --require-pdf 2>&1 | tee cache/ci/logs/installed-package-smoke.log
+          version="$(uv version --short)"
+          uv run python tools/release_smoke.py --wheel "dist/ant_stack-${version}-py3-none-any.whl" --work-dir cache/install-proof --require-pdf 2>&1 | tee cache/ci/logs/installed-package-smoke.log
 
       - name: Generate the distinct enhanced-model manuscript supplements
         run: |
@@ -381,7 +383,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import hashlib, json, pathlib, shutil
+          import hashlib, json, pathlib, shutil, tomllib
           root = pathlib.Path.cwd().resolve()
           destination = root / 'cache/ci/artifacts'
           destination.mkdir(parents=True, exist_ok=False)
@@ -415,7 +417,8 @@ jobs:
           for path in sorted(canonical.rglob('*')):
               if path.is_file() and path.suffix in allowed:
                   copy(path.relative_to(root), pathlib.Path('canonical') / path.relative_to(canonical))
-          for name in ('ant_stack-3.0.0.tar.gz', 'ant_stack-3.0.0-py3-none-any.whl'):
+          version = tomllib.loads((root / 'pyproject.toml').read_text())['project']['version']
+          for name in (f'ant_stack-{version}.tar.gz', f'ant_stack-{version}-py3-none-any.whl'):
               copy(pathlib.Path('dist') / name, pathlib.Path('packages') / name)
           smoke = pathlib.Path('cache/install-proof')
           for name in ('receipt.json', 'runtime-requirements.txt', 'caller/consumer.pdf',

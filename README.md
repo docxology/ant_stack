@@ -1,6 +1,6 @@
 # Ant Stack
 
-Analytical workload/energy models and scientific-publication tooling, packaged as `antstack_core` (3.0.0). The Body–Brain–Mind architecture is a proposal: the package does **not** implement an ant dynamics solver, validated neural circuit, active-inference decision engine, or calibrated hardware-energy model.
+Analytical workload/energy models and scientific-publication tooling, packaged as `antstack_core` (3.0.1). The Body–Brain–Mind architecture is a proposal: the package does **not** implement an ant dynamics solver, validated neural circuit, active-inference decision engine, or calibrated hardware-energy model.
 
 ## Start with the native toolchain
 
