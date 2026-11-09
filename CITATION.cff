@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+type: software
+title: "ant_stack"
+authors:
+  - family-names: Friedman
+    given-names: Daniel Ari
+    orcid: "https://orcid.org/0000-0001-6232-9096"
+repository-code: "https://github.com/docxology/ant_stack"
+abstract: "Ant Stack — a reproducible research workspace for embodied AI and ant-inspired systems, pairing complexity-energetics analysis with automated Matplotlib/Mermaid figures and Pandoc + XeLaTeX manuscript rendering. Run manifests emit SHA-256 checksums per artifact, with a pytest suite."
