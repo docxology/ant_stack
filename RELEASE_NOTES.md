@@ -2,7 +2,7 @@
 
 ## 3.0.0 — Scientific Contracts and Failure-Honest Publication
 
-Source version: **3.0.0**. Integration is in progress; this entry does not claim a merged main commit, pushed tag, green remote CI or published GitHub Release. Current acceptance evidence belongs in [validation](docs/validation.md).
+Source version: **3.0.0**. Source-bound acceptance evidence belongs in [validation](docs/validation.md). Publication state must be verified against the remote main/tag and GitHub Release; it is not inferred from this file.
 
 ### Breaking Contracts and Removed Dead Paths
 
@@ -33,6 +33,7 @@ Source version: **3.0.0**. Integration is in progress; this entry does not claim
 - Informative section titles preserve intentional Pandoc targets. Original conceptual graphical abstracts have reproducible vector/raster exports and a source/output receipt; they contain no measured results.
 - Documentation has task-owned setup, API, theory, validation, provenance, data-integration and rendering guides. Source-owned folder guidance has an explicit managed marker/refresh path that preserves curated documents.
 - New repository-owned CI covers native tests/lint/docs, packaging/isolated installed consumers, all configured manuscripts and the configured canonical workflow. A workflow definition is not proof of a completed green run; release state must be observed independently.
+- The pinned Puppeteer executable-path API is awaited before checking the installed browser. Executability, project-cache containment and the native browser sandbox remain required; dependency installation alone is not render proof.
 
 ### Evidence Limits
 

@@ -143,7 +143,7 @@ jobs:
           import {downloadBrowsers} from 'puppeteer/internal/node/install.js';
           await downloadBrowsers();
           JS
-            browser="$(node --input-type=module -e "import puppeteer from 'puppeteer'; console.log(puppeteer.executablePath());")"
+            browser="$(node --input-type=module -e "import puppeteer from 'puppeteer'; console.log(await puppeteer.executablePath());")"
             test -x "$browser"
             case "$browser" in "$PUPPETEER_CACHE_DIR"/*) ;; *) echo 'Browser escaped project cache' >&2; exit 1 ;; esac
             echo "PUPPETEER_EXECUTABLE_PATH=$browser" >> "$GITHUB_ENV"
