@@ -132,6 +132,28 @@ jobs:
             echo "$GITHUB_WORKSPACE/cache/tools/pandoc-3.13/bin" >> "$GITHUB_PATH"
           } 2>&1 | tee cache/ci/logs/pandoc-install.log
 
+      - name: Install checksum-verified private fvextra 1.14.0
+        run: |
+          set -euo pipefail
+          {
+            target="$TEXMFHOME/tex/latex/fvextra/fvextra.sty"
+            mkdir -p "$(dirname "$target")"
+            curl --fail --location --proto '=https' --tlsv1.2 \
+              https://raw.githubusercontent.com/gpoore/fvextra/b22ac9e0806479bfe69bf6f2fd2c052b50a3b5cf/fvextra/fvextra.sty \
+              --output "$target"
+            echo "e91f5114fb99355111835093f4f736fa1d4887fafd09910a65db0dd1ac347fab  $target" | sha256sum --check --strict
+            test "$(kpsewhich fvextra.sty)" = "$target"
+            python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          path = pathlib.Path(os.environ['TEXMFHOME']) / 'tex/latex/fvextra/fvextra.sty'
+          pathlib.Path('cache/ci/metadata/tex-addons.json').write_text(json.dumps({
+              'fvextra': {'version': '1.14.0', 'source_commit': 'b22ac9e0806479bfe69bf6f2fd2c052b50a3b5cf',
+                          'source': 'https://github.com/gpoore/fvextra', 'path': str(path),
+                          'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+          }, indent=2) + '\n')
+          PY
+          } 2>&1 | tee cache/ci/logs/tex-addons-install.log
+
       - name: Install locked project dependencies and pinned browser
         run: |
           set -euo pipefail

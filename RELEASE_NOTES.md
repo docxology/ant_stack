@@ -35,6 +35,7 @@ Source version: **3.0.0**. Source-bound acceptance evidence belongs in [validati
 - Documentation has task-owned setup, API, theory, validation, provenance, data-integration and rendering guides. Source-owned folder guidance has an explicit managed marker/refresh path that preserves curated documents.
 - New repository-owned CI covers native tests/lint/docs, packaging/isolated installed consumers, all configured manuscripts and the configured canonical workflow. A workflow definition is not proof of a completed green run; release state must be observed independently.
 - The pinned Puppeteer executable-path API is awaited before checking the installed browser. Executability, project-cache containment and the native browser sandbox remain required; dependency installation alone is not render proof.
+- Required highlighted-code wrapping uses fvextra 1.7+. CI provisions checksum-pinned fvextra 1.14.0 in its workspace-private TeX tree rather than relying on TeX Live 2022's incompatible bundled package or changing host configuration.
 
 ### Evidence Limits
 

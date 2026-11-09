@@ -164,6 +164,7 @@ class Gate:
                  "XDG_CACHE_HOME": self.work / "cache/xdg", "XDG_CONFIG_HOME": self.work / "config",
                  "XDG_DATA_HOME": self.work / "data", "XDG_STATE_HOME": self.work / "state",
                  "PUPPETEER_CACHE_DIR": self.root / "cache/puppeteer",
+                 "TEXMFHOME": self.work / "texmf/home",
                  "BUN_INSTALL_CACHE_DIR": self.root / "cache/bun"}
         for key, default in paths.items():
             inherited = os.environ.get(key)
@@ -174,7 +175,7 @@ class Gate:
             path.mkdir(parents=True, exist_ok=True)
             env[key] = str(path)
         for key, suffix in (("HOME", "home"), ("TMPDIR", "tmp"), ("TEXMFVAR", "texmf/var"),
-                            ("TEXMFCONFIG", "texmf/config"), ("TEXMFHOME", "texmf/home")):
+                            ("TEXMFCONFIG", "texmf/config")):
             path = self.work / suffix
             path.mkdir(parents=True, exist_ok=True)
             env[key] = str(path)

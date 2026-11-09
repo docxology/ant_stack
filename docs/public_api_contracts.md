@@ -41,7 +41,7 @@ Figure, table, equation and section IDs must name actual counters. A label insid
 
 Mermaid renders locally through pinned `mmdc`/Puppeteer by default. A remote Kroki endpoint is opt-in, credential-free and caller-trusted; there is no implicit public upload or Docker fallback. Failed rendering never reuses an old diagram as fresh evidence. Do not disable a browser sandbox merely to make a gate pass.
 
-Native Mermaid `accTitle:` values become literal descriptive captions. Markdown/TeX delimiter characters remain text, not injected formatting or mathematics. Fenced code uses `fvextra` line breaking, including highlighted unbroken tokens, without inserting characters into copied literal code; native rendering requires that TeX package.
+Native Mermaid `accTitle:` values become literal descriptive captions. Markdown/TeX delimiter characters remain text, not injected formatting or mathematics. Fenced code uses `fvextra` 1.7+ line breaking, including highlighted unbroken tokens, without inserting characters into copied literal code. CI pins fvextra 1.14.0 in its private TeX tree; older TeX Live package presence alone does not establish the required capability.
 
 ## Explicit, trusted templates
 

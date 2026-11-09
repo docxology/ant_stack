@@ -82,7 +82,7 @@ label = 'α ≤ β'
 
 That code needs a font containing those glyphs; mathematical normalization must not rewrite it into different program text. Missing glyphs are render failures, not warnings to suppress. The selected font/toolchain and final rasterized page determine readability.
 
-The renderer uses `fvextra` to wrap long fenced-code lines, including unbroken paths, without changing the source or normalizing literal code. Keep that TeX package available and inspect the final page; a successful build does not excuse clipped examples.
+The renderer requires [fvextra](https://ctan.org/pkg/fvextra) 1.7 or newer (2024-05-16 feature set) to wrap long fenced-code lines, including highlighted unbroken tokens, without changing the source or adding characters to copied code. TeX Live 2022's bundled package is too old. Repository CI installs checksum-pinned fvextra 1.14.0 under its private `TEXMFHOME`; use a current TeX distribution or an explicit project-private TeX package tree, not a global configuration edit or disabled check. Inspect the final page; a successful build does not excuse clipped examples.
 
 ## Source-relative assets must remain unambiguous
 

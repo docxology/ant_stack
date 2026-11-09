@@ -95,7 +95,7 @@ class PDFGenerator:
                 header = workspace / "references.tex"
                 header.write_text(
                     "\\usepackage{hyperref}\n\\usepackage{cleveref}\n"
-                    "\\usepackage{fvextra}\n"
+                    "\\usepackage{fvextra}[2024/05/16]\n"
                     "\\fvset{breaklines=true,breakanywhere=true,breaknonspaceingroup=true,"
                     "breaksymbolleft={},breakanywheresymbolpre={}}\n",
                     encoding="utf-8",
