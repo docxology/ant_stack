@@ -32,7 +32,7 @@
   ],
   "provenance": {
     "command": [],
-    "created_at_utc": "2026-11-09T00:48:39.696586+00:00",
+    "created_at_utc": "2026-11-09T02:02:53.518317+00:00",
     "dependencies": {
       "jinja2": "3.1.6",
       "matplotlib": "3.11.2",
@@ -44,7 +44,7 @@
       "scipy": "1.18.1",
       "seaborn": "0.13.2"
     },
-    "git_commit": "47fc8bcbbb2fbc99e46828101c1eb9a09a820e65",
+    "git_commit": "422c71e5a402d31e7b2a2676423a2651277509ce",
     "git_dirty": false,
     "input_identities": {
       "manifest.input.yaml": {
@@ -90,7 +90,7 @@
       "seed": 123,
       "statistics_seed": 123
     },
-    "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "platform": "Linux-6.8.0-1070-azure-x86_64-with-glibc2.35",
     "project": "ant-stack-complexity-energetics",
     "python_version": "3.15.2",
     "source_state": {
@@ -261,8 +261,8 @@
             "sha256": "3abde82e6b338ed3b163aa6875ec756c785798745396f59ef59da79798cc99fb"
           },
           "figures/mermaid.py": {
-            "bytes": 9108,
-            "sha256": "1b2abcc6af042c959b7f6a662111880e7fe45dcfae838a28f911de1953af9d71"
+            "bytes": 9410,
+            "sha256": "f86d0baae52489e15f17a685fb5017a725eeff9af39dc95e0dda6995fab9ac75"
           },
           "figures/plots.py": {
             "bytes": 23360,
@@ -313,8 +313,8 @@
             "sha256": "c2d33a54f407d68246e65566667db06b4d91c5f06deffa7b2374a3b405ac2d47"
           },
           "publishing/pdf_generator.py": {
-            "bytes": 21189,
-            "sha256": "b193d18263a5462965ce88992a49f5be8d3491d38a4353e56cbdc3ea61da83fe"
+            "bytes": 21483,
+            "sha256": "35f7c4f23ed8721323e045333dc1d53acd221b708b232a431b494727dfe9d33b"
           },
           "publishing/provenance.py": {
             "bytes": 18253,
@@ -337,20 +337,20 @@
             "sha256": "6c6f186e8553959b6260168b1fc80a6cc4feffb89dde72898df2b85ea26455d7"
           }
         },
-        "root": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack/antstack_core",
+        "root": "/home/runner/work/ant_stack/ant_stack/antstack_core",
         "source_checkout": {
           "changes": [],
-          "commit": "47fc8bcbbb2fbc99e46828101c1eb9a09a820e65",
+          "commit": "422c71e5a402d31e7b2a2676423a2651277509ce",
           "dirty": false,
-          "root": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack"
+          "root": "/home/runner/work/ant_stack/ant_stack"
         },
         "version": "3.0.0"
       },
       "working_project": {
         "changes": [],
-        "commit": "47fc8bcbbb2fbc99e46828101c1eb9a09a820e65",
+        "commit": "422c71e5a402d31e7b2a2676423a2651277509ce",
         "dirty": false,
-        "root": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack"
+        "root": "/home/runner/work/ant_stack/ant_stack"
       }
     }
   },

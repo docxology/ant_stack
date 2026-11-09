@@ -1,0 +1,446 @@
+{
+  "artifact_path_base": "run_root",
+  "artifacts": [
+    {
+      "artifact_type": "provenance",
+      "bytes": 821,
+      "checksum": "969e2c231faa36472ba4114e76947dd022e08a9d48753936d9c2db18cdb4e84c",
+      "content_identity": "sha256:969e2c231faa36472ba4114e76947dd022e08a9d48753936d9c2db18cdb4e84c",
+      "path": "provenance/run_config.yaml",
+      "producing_task": "configuration",
+      "source_config": "run_all.config"
+    },
+    {
+      "artifact_type": "yaml",
+      "bytes": 2980,
+      "checksum": "9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a",
+      "content_identity": "sha256:9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a",
+      "path": "data/raw/complexity_energetics_manifest.yaml",
+      "producing_task": "data",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "yaml",
+      "bytes": 2980,
+      "checksum": "9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a",
+      "content_identity": "sha256:9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a",
+      "path": "papers/complexity_energetics/out/manifest.input.yaml",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "csv",
+      "bytes": 36635,
+      "checksum": "791094842fbc0b47004a21c4e5403c10eec03fac4de82ef5ba3a6c3783b494e7",
+      "content_identity": "sha256:791094842fbc0b47004a21c4e5403c10eec03fac4de82ef5ba3a6c3783b494e7",
+      "path": "papers/complexity_energetics/out/results.csv",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 121957,
+      "checksum": "9e84c3847e1e3b97a6d3f0c56abc473dc343f4ed2dc9a4e6fa552377ca34f4f1",
+      "content_identity": "sha256:9e84c3847e1e3b97a6d3f0c56abc473dc343f4ed2dc9a4e6fa552377ca34f4f1",
+      "path": "papers/complexity_energetics/out/assets/energy.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 222720,
+      "checksum": "eb839b772c661ed63f2375ec70b77d56c0e92f9d53cdba318af3c2d2cdc4c401",
+      "content_identity": "sha256:eb839b772c661ed63f2375ec70b77d56c0e92f9d53cdba318af3c2d2cdc4c401",
+      "path": "papers/complexity_energetics/out/assets/scale_body_J.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 215215,
+      "checksum": "d3ab76df1ccfc95efda5f99b35bec0de78a6b9e46886e8a3317373d9e96b9a2e",
+      "content_identity": "sha256:d3ab76df1ccfc95efda5f99b35bec0de78a6b9e46886e8a3317373d9e96b9a2e",
+      "path": "papers/complexity_energetics/out/assets/scale_body_J_scatter.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 247716,
+      "checksum": "784964c74e5e217f49c386e753a92c9af2340c1e5770615ecb3513fe21ddb763",
+      "content_identity": "sha256:784964c74e5e217f49c386e753a92c9af2340c1e5770615ecb3513fe21ddb763",
+      "path": "papers/complexity_energetics/out/assets/inverse_parameter_body_J.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 247094,
+      "checksum": "e144ec82ef9749775d20a98c4f4b6c3271149f198db5e51231f31a280d444335",
+      "content_identity": "sha256:e144ec82ef9749775d20a98c4f4b6c3271149f198db5e51231f31a280d444335",
+      "path": "papers/complexity_energetics/out/assets/scale_brain_K.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 226294,
+      "checksum": "995612e48f9680a9c3eeba2e783b4fb9092125ada58e024f0781fff419df9a54",
+      "content_identity": "sha256:995612e48f9680a9c3eeba2e783b4fb9092125ada58e024f0781fff419df9a54",
+      "path": "papers/complexity_energetics/out/assets/scale_brain_K_scatter.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 214549,
+      "checksum": "ec4557c656117a43f4f270e0eb89906c9612d380bbbdea6c5365ba38223a4fac",
+      "content_identity": "sha256:ec4557c656117a43f4f270e0eb89906c9612d380bbbdea6c5365ba38223a4fac",
+      "path": "papers/complexity_energetics/out/assets/inverse_parameter_brain_K.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 202770,
+      "checksum": "4949e077d42476c985cc23ceaec4c24bbfd7d35ef09199f9b00f92ab1d75a390",
+      "content_identity": "sha256:4949e077d42476c985cc23ceaec4c24bbfd7d35ef09199f9b00f92ab1d75a390",
+      "path": "papers/complexity_energetics/out/assets/scale_mind_H_p.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 241263,
+      "checksum": "a01e27a2eafe78302c3e5082049c4ba3bff0170e8d143e53fb4385f3d2c4d8f4",
+      "content_identity": "sha256:a01e27a2eafe78302c3e5082049c4ba3bff0170e8d143e53fb4385f3d2c4d8f4",
+      "path": "papers/complexity_energetics/out/assets/scale_mind_H_p_scatter.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 230191,
+      "checksum": "740c373cb706fab4deb262f1ff140758b67d362186067fc1ccae924dc76c573f",
+      "content_identity": "sha256:740c373cb706fab4deb262f1ff140758b67d362186067fc1ccae924dc76c573f",
+      "path": "papers/complexity_energetics/out/assets/inverse_parameter_mind_H_p.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 96065,
+      "checksum": "4b29b5a258ec1701c86ebc0460f6ae80cb975bf506e5c7cb895b0f93bcb28935",
+      "content_identity": "sha256:4b29b5a258ec1701c86ebc0460f6ae80cb975bf506e5c7cb895b0f93bcb28935",
+      "path": "papers/complexity_energetics/out/assets/body_split.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 141319,
+      "checksum": "572710df4d6b8aa0dadb6252701d1ed44a113345ecd21ba31d5fccdcc53d343a",
+      "content_identity": "sha256:572710df4d6b8aa0dadb6252701d1ed44a113345ecd21ba31d5fccdcc53d343a",
+      "path": "papers/complexity_energetics/out/assets/per_decision_breakdown.png",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 4831,
+      "checksum": "1a1a425711b3470afc4a7b5da7c8e7b6a8e984363146c8fc8bfea13c751a669f",
+      "content_identity": "sha256:1a1a425711b3470afc4a7b5da7c8e7b6a8e984363146c8fc8bfea13c751a669f",
+      "path": "papers/complexity_energetics/out/Generated.md",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "json",
+      "bytes": 146582,
+      "checksum": "4eef034916f84dc895cb704ffa0c81d617f0a12109ca0811f93d41f3e77adca8",
+      "content_identity": "sha256:4eef034916f84dc895cb704ffa0c81d617f0a12109ca0811f93d41f3e77adca8",
+      "path": "papers/complexity_energetics/out/summary.json",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "provenance",
+      "bytes": 12131,
+      "checksum": "88f99804eeb18746a29d61b0f669c719f9ea471abcd586617c0f7e7c98d7cd0d",
+      "content_identity": "sha256:88f99804eeb18746a29d61b0f669c719f9ea471abcd586617c0f7e7c98d7cd0d",
+      "path": "papers/complexity_energetics/out/provenance.json",
+      "producing_task": "complexity_energetics",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "csv",
+      "bytes": 36635,
+      "checksum": "791094842fbc0b47004a21c4e5403c10eec03fac4de82ef5ba3a6c3783b494e7",
+      "content_identity": "sha256:791094842fbc0b47004a21c4e5403c10eec03fac4de82ef5ba3a6c3783b494e7",
+      "path": "data/derived/complexity_energetics_results.csv",
+      "producing_task": "data",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "json",
+      "bytes": 146582,
+      "checksum": "4eef034916f84dc895cb704ffa0c81d617f0a12109ca0811f93d41f3e77adca8",
+      "content_identity": "sha256:4eef034916f84dc895cb704ffa0c81d617f0a12109ca0811f93d41f3e77adca8",
+      "path": "data/derived/complexity_energetics_summary.json",
+      "producing_task": "data",
+      "source_config": "complexity_energetics.manifest"
+    },
+    {
+      "artifact_type": "json",
+      "bytes": 1012,
+      "checksum": "ae70429e024470ded34f611e333db52aadff91bdec228cad4a51bbe7decf54c1",
+      "content_identity": "sha256:ae70429e024470ded34f611e333db52aadff91bdec228cad4a51bbe7decf54c1",
+      "path": "statistics/workload_summary.json",
+      "producing_task": "statistics",
+      "source_config": "manifest.statistics"
+    },
+    {
+      "artifact_type": "json",
+      "bytes": 3131,
+      "checksum": "a0f023ce76a5d0392dda9fc3cf36658e36f9201259272edddda1577178415228",
+      "content_identity": "sha256:a0f023ce76a5d0392dda9fc3cf36658e36f9201259272edddda1577178415228",
+      "path": "statistics/scaling_summary.json",
+      "producing_task": "statistics",
+      "source_config": "manifest.statistics"
+    },
+    {
+      "artifact_type": "csv",
+      "bytes": 268,
+      "checksum": "a7d8d8ea9cbce3856551d93a20924321b53a387ea8c7a62def8c911e2988983d",
+      "content_identity": "sha256:a7d8d8ea9cbce3856551d93a20924321b53a387ea8c7a62def8c911e2988983d",
+      "path": "statistics/bootstrap_intervals.csv",
+      "producing_task": "statistics",
+      "source_config": "manifest.statistics"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 121957,
+      "checksum": "9e84c3847e1e3b97a6d3f0c56abc473dc343f4ed2dc9a4e6fa552377ca34f4f1",
+      "content_identity": "sha256:9e84c3847e1e3b97a6d3f0c56abc473dc343f4ed2dc9a4e6fa552377ca34f4f1",
+      "path": "visualizations/static/complexity_energetics_energy.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 222720,
+      "checksum": "eb839b772c661ed63f2375ec70b77d56c0e92f9d53cdba318af3c2d2cdc4c401",
+      "content_identity": "sha256:eb839b772c661ed63f2375ec70b77d56c0e92f9d53cdba318af3c2d2cdc4c401",
+      "path": "visualizations/static/complexity_energetics_scale_body_J.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 215215,
+      "checksum": "d3ab76df1ccfc95efda5f99b35bec0de78a6b9e46886e8a3317373d9e96b9a2e",
+      "content_identity": "sha256:d3ab76df1ccfc95efda5f99b35bec0de78a6b9e46886e8a3317373d9e96b9a2e",
+      "path": "visualizations/static/complexity_energetics_scale_body_J_scatter.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 247716,
+      "checksum": "784964c74e5e217f49c386e753a92c9af2340c1e5770615ecb3513fe21ddb763",
+      "content_identity": "sha256:784964c74e5e217f49c386e753a92c9af2340c1e5770615ecb3513fe21ddb763",
+      "path": "visualizations/static/complexity_energetics_inverse_parameter_body_J.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 247094,
+      "checksum": "e144ec82ef9749775d20a98c4f4b6c3271149f198db5e51231f31a280d444335",
+      "content_identity": "sha256:e144ec82ef9749775d20a98c4f4b6c3271149f198db5e51231f31a280d444335",
+      "path": "visualizations/static/complexity_energetics_scale_brain_K.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 226294,
+      "checksum": "995612e48f9680a9c3eeba2e783b4fb9092125ada58e024f0781fff419df9a54",
+      "content_identity": "sha256:995612e48f9680a9c3eeba2e783b4fb9092125ada58e024f0781fff419df9a54",
+      "path": "visualizations/static/complexity_energetics_scale_brain_K_scatter.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 214549,
+      "checksum": "ec4557c656117a43f4f270e0eb89906c9612d380bbbdea6c5365ba38223a4fac",
+      "content_identity": "sha256:ec4557c656117a43f4f270e0eb89906c9612d380bbbdea6c5365ba38223a4fac",
+      "path": "visualizations/static/complexity_energetics_inverse_parameter_brain_K.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 202770,
+      "checksum": "4949e077d42476c985cc23ceaec4c24bbfd7d35ef09199f9b00f92ab1d75a390",
+      "content_identity": "sha256:4949e077d42476c985cc23ceaec4c24bbfd7d35ef09199f9b00f92ab1d75a390",
+      "path": "visualizations/static/complexity_energetics_scale_mind_H_p.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 241263,
+      "checksum": "a01e27a2eafe78302c3e5082049c4ba3bff0170e8d143e53fb4385f3d2c4d8f4",
+      "content_identity": "sha256:a01e27a2eafe78302c3e5082049c4ba3bff0170e8d143e53fb4385f3d2c4d8f4",
+      "path": "visualizations/static/complexity_energetics_scale_mind_H_p_scatter.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 230191,
+      "checksum": "740c373cb706fab4deb262f1ff140758b67d362186067fc1ccae924dc76c573f",
+      "content_identity": "sha256:740c373cb706fab4deb262f1ff140758b67d362186067fc1ccae924dc76c573f",
+      "path": "visualizations/static/complexity_energetics_inverse_parameter_mind_H_p.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 96065,
+      "checksum": "4b29b5a258ec1701c86ebc0460f6ae80cb975bf506e5c7cb895b0f93bcb28935",
+      "content_identity": "sha256:4b29b5a258ec1701c86ebc0460f6ae80cb975bf506e5c7cb895b0f93bcb28935",
+      "path": "visualizations/static/complexity_energetics_body_split.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 141319,
+      "checksum": "572710df4d6b8aa0dadb6252701d1ed44a113345ecd21ba31d5fccdcc53d343a",
+      "content_identity": "sha256:572710df4d6b8aa0dadb6252701d1ed44a113345ecd21ba31d5fccdcc53d343a",
+      "path": "visualizations/static/complexity_energetics_per_decision_breakdown.png",
+      "producing_task": "visualizations",
+      "source_config": "complexity_energetics.assets"
+    },
+    {
+      "artifact_type": "image",
+      "bytes": 65080,
+      "checksum": "b0cfdffc57272fbf1fa14785a00f59e6eb862f952156024ee4975f50736df37b",
+      "content_identity": "sha256:b0cfdffc57272fbf1fa14785a00f59e6eb862f952156024ee4975f50736df37b",
+      "path": "visualizations/static/workload_energy_summary.png",
+      "producing_task": "visualizations",
+      "source_config": "manifest.statistics"
+    },
+    {
+      "artifact_type": "animation",
+      "bytes": 60539,
+      "checksum": "e2dc987c007e5e478675d175bbe2826ee6d96b325e55c65d0649e152fd08bf96",
+      "content_identity": "sha256:e2dc987c007e5e478675d175bbe2826ee6d96b325e55c65d0649e152fd08bf96",
+      "path": "visualizations/animations/energy_components.gif",
+      "producing_task": "animations",
+      "source_config": "visualization.animation_formats"
+    },
+    {
+      "artifact_type": "animation",
+      "bytes": 56822,
+      "checksum": "25e3fa5309cd4d37f4e9fb10b8099e7fa208098a70e0ad42db8f1660b125878a",
+      "content_identity": "sha256:25e3fa5309cd4d37f4e9fb10b8099e7fa208098a70e0ad42db8f1660b125878a",
+      "path": "visualizations/animations/scaling_sweep.gif",
+      "producing_task": "animations",
+      "source_config": "visualization.animation_formats"
+    },
+    {
+      "artifact_type": "animation",
+      "bytes": 156716,
+      "checksum": "dcc650ded73271db198be953671cc3a1e21b8ed07c49977e26136026fafbbf93",
+      "content_identity": "sha256:dcc650ded73271db198be953671cc3a1e21b8ed07c49977e26136026fafbbf93",
+      "path": "visualizations/animations/preview.html",
+      "producing_task": "animations",
+      "source_config": "visualization.animation_formats"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 5299,
+      "checksum": "a8770b9f1025457d6b1fd6e567aa4654e11ea4d77e2848a4167415f49e6e08ba",
+      "content_identity": "sha256:a8770b9f1025457d6b1fd6e567aa4654e11ea4d77e2848a4167415f49e6e08ba",
+      "path": "reports/complexity_energetics_generated.md",
+      "producing_task": "reports",
+      "source_config": "complexity_energetics.generated"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 352,
+      "checksum": "68661d241f5253ef73552965da26d011a6ef62d27cc4000a9753bdecc93dbb84",
+      "content_identity": "sha256:68661d241f5253ef73552965da26d011a6ef62d27cc4000a9753bdecc93dbb84",
+      "path": "reports/run_summary.md",
+      "producing_task": "reports",
+      "source_config": "run_all.config"
+    },
+    {
+      "artifact_type": "historical_paper",
+      "bytes": 2461029,
+      "checksum": "6a01638ab9e1fd8b0165238c7a45e9bf23f89d3c13175e35fd57be80640a807c",
+      "content_identity": "sha256:6a01638ab9e1fd8b0165238c7a45e9bf23f89d3c13175e35fd57be80640a807c",
+      "path": "papers/2_complexity_energetics.pdf",
+      "producing_task": "papers",
+      "source_config": "complexity_energetics.pdf_sources"
+    },
+    {
+      "artifact_type": "markdown",
+      "bytes": 172,
+      "checksum": "b4204cffd0742abcf33a09a376c25e9398d4c221d85fe726e6553afc6d58c57d",
+      "content_identity": "sha256:b4204cffd0742abcf33a09a376c25e9398d4c221d85fe726e6553afc6d58c57d",
+      "path": "papers/paper_artifacts.md",
+      "producing_task": "papers",
+      "source_config": "complexity_energetics.paper_projection"
+    },
+    {
+      "artifact_type": "log",
+      "bytes": 247,
+      "checksum": "cee57cbe6df939981821fc5243f8c95410827f54ab877365a96ad5d3c1fda978",
+      "content_identity": "sha256:cee57cbe6df939981821fc5243f8c95410827f54ab877365a96ad5d3c1fda978",
+      "path": "logs/run_all_antstack.log",
+      "producing_task": "logging",
+      "source_config": "run.log_level"
+    },
+    {
+      "artifact_type": "json",
+      "bytes": 5947,
+      "checksum": "e704d6c3df17eef75364a1496d3c32786e26fcf5fbf410c519f68a993557fe1a",
+      "content_identity": "sha256:e704d6c3df17eef75364a1496d3c32786e26fcf5fbf410c519f68a993557fe1a",
+      "path": "statistics/validation_summary.json",
+      "producing_task": "validation",
+      "source_config": "validation.config"
+    },
+    {
+      "artifact_type": "provenance",
+      "bytes": 199,
+      "checksum": "50eb247af4ace0fddcd694824dedc3e7db0d5e1f97d80b0d0391eaf742005ddd",
+      "content_identity": "sha256:50eb247af4ace0fddcd694824dedc3e7db0d5e1f97d80b0d0391eaf742005ddd",
+      "path": "provenance/dependency_versions.json",
+      "producing_task": "provenance",
+      "source_config": "dependency_versions.json"
+    },
+    {
+      "artifact_type": "provenance",
+      "bytes": 9838,
+      "checksum": "a99de32ef314c2c521bb3e6740592181e68075df19e077882ab3bcc5c86215f4",
+      "content_identity": "sha256:a99de32ef314c2c521bb3e6740592181e68075df19e077882ab3bcc5c86215f4",
+      "path": "provenance/git_state.json",
+      "producing_task": "provenance",
+      "source_config": "git_state.json"
+    },
+    {
+      "artifact_type": "provenance",
+      "bytes": 14521,
+      "checksum": "83c27613c2076abd73e4c4293333f72b3404d7f86ca5cdc7f3146b4dd15c727f",
+      "content_identity": "sha256:83c27613c2076abd73e4c4293333f72b3404d7f86ca5cdc7f3146b4dd15c727f",
+      "path": "provenance/provenance.json",
+      "producing_task": "provenance",
+      "source_config": "run_all.provenance"
+    }
+  ]
+}

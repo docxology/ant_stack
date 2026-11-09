@@ -1,0 +1,353 @@
+{
+  "command": [],
+  "created_at_utc": "2026-11-09T02:02:57.099590+00:00",
+  "dependencies": {
+    "jinja2": "3.1.6",
+    "matplotlib": "3.11.2",
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "pillow": "13.0.0",
+    "psutil": "7.2.2",
+    "pyyaml": "6.0.3",
+    "scipy": "1.18.1",
+    "seaborn": "0.13.2"
+  },
+  "git_commit": "422c71e5a402d31e7b2a2676423a2651277509ce",
+  "git_dirty": false,
+  "input_identities": {
+    "data/raw/complexity_energetics_manifest.yaml": {
+      "bytes": 2980,
+      "sha256": "9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a"
+    },
+    "provenance/run_config.yaml": {
+      "bytes": 821,
+      "sha256": "969e2c231faa36472ba4114e76947dd022e08a9d48753936d9c2db18cdb4e84c"
+    }
+  },
+  "input_paths": [
+    "provenance/run_config.yaml",
+    "data/raw/complexity_energetics_manifest.yaml"
+  ],
+  "output_paths": [
+    "provenance/run_config.yaml",
+    "data/raw/complexity_energetics_manifest.yaml",
+    "papers/complexity_energetics/out/manifest.input.yaml",
+    "papers/complexity_energetics/out/results.csv",
+    "papers/complexity_energetics/out/assets/energy.png",
+    "papers/complexity_energetics/out/assets/scale_body_J.png",
+    "papers/complexity_energetics/out/assets/scale_body_J_scatter.png",
+    "papers/complexity_energetics/out/assets/inverse_parameter_body_J.png",
+    "papers/complexity_energetics/out/assets/scale_brain_K.png",
+    "papers/complexity_energetics/out/assets/scale_brain_K_scatter.png",
+    "papers/complexity_energetics/out/assets/inverse_parameter_brain_K.png",
+    "papers/complexity_energetics/out/assets/scale_mind_H_p.png",
+    "papers/complexity_energetics/out/assets/scale_mind_H_p_scatter.png",
+    "papers/complexity_energetics/out/assets/inverse_parameter_mind_H_p.png",
+    "papers/complexity_energetics/out/assets/body_split.png",
+    "papers/complexity_energetics/out/assets/per_decision_breakdown.png",
+    "papers/complexity_energetics/out/Generated.md",
+    "papers/complexity_energetics/out/summary.json",
+    "papers/complexity_energetics/out/provenance.json",
+    "data/derived/complexity_energetics_results.csv",
+    "data/derived/complexity_energetics_summary.json",
+    "statistics/workload_summary.json",
+    "statistics/scaling_summary.json",
+    "statistics/bootstrap_intervals.csv",
+    "visualizations/static/complexity_energetics_energy.png",
+    "visualizations/static/complexity_energetics_scale_body_J.png",
+    "visualizations/static/complexity_energetics_scale_body_J_scatter.png",
+    "visualizations/static/complexity_energetics_inverse_parameter_body_J.png",
+    "visualizations/static/complexity_energetics_scale_brain_K.png",
+    "visualizations/static/complexity_energetics_scale_brain_K_scatter.png",
+    "visualizations/static/complexity_energetics_inverse_parameter_brain_K.png",
+    "visualizations/static/complexity_energetics_scale_mind_H_p.png",
+    "visualizations/static/complexity_energetics_scale_mind_H_p_scatter.png",
+    "visualizations/static/complexity_energetics_inverse_parameter_mind_H_p.png",
+    "visualizations/static/complexity_energetics_body_split.png",
+    "visualizations/static/complexity_energetics_per_decision_breakdown.png",
+    "visualizations/static/workload_energy_summary.png",
+    "visualizations/animations/energy_components.gif",
+    "visualizations/animations/scaling_sweep.gif",
+    "visualizations/animations/preview.html",
+    "reports/complexity_energetics_generated.md",
+    "reports/run_summary.md",
+    "papers/2_complexity_energetics.pdf",
+    "papers/paper_artifacts.md",
+    "logs/run_all_antstack.log",
+    "statistics/validation_summary.json",
+    "provenance/dependency_versions.json",
+    "provenance/git_state.json",
+    "manifest.json",
+    "provenance/provenance.json",
+    "provenance/output_inventory.json"
+  ],
+  "package_version": "3.0.0",
+  "parameters": {
+    "output_path_base": "run_root",
+    "run_id": "ci-42548062547-1",
+    "seed_scope": "run.seed controls all bootstrap intervals; manifest seed identifies workload input"
+  },
+  "platform": "Linux-6.8.0-1070-azure-x86_64-with-glibc2.35",
+  "project": "ant-stack-run-all",
+  "python_version": "3.15.2",
+  "source_state": {
+    "generating_package": {
+      "files": {
+        "__init__.py": {
+          "bytes": 1207,
+          "sha256": "f535b9dee810ed6357591f5bb780db485c9f6c877da95fee28948342d92051b8"
+        },
+        "analysis/__init__.py": {
+          "bytes": 3831,
+          "sha256": "e94bf83946c7377975f3e8594fe066fe0d15ae3075361109c80a5011cba70c28"
+        },
+        "analysis/ce_active_inference.py": {
+          "bytes": 15044,
+          "sha256": "cdf5ff8d17834d002b593f77b6f869608a425e0fe13ae556bea9bb0dc19dc15d"
+        },
+        "analysis/ce_comprehensive_analysis.py": {
+          "bytes": 17311,
+          "sha256": "cc3efd89247a377eda01fdd8b89f292db790829d7af06b44f1ed4f7babe66576"
+        },
+        "analysis/ce_contact_dynamics.py": {
+          "bytes": 8512,
+          "sha256": "493d0ddf4dc3e842186b4cedfda2388e38be387d0168b08fdc7406822a9e0bea"
+        },
+        "analysis/ce_manuscript_figures.py": {
+          "bytes": 26124,
+          "sha256": "ee94ee5d8ea8fc923bcac078cc4d64dc2c68865ff5bfae9574dae672f558b502"
+        },
+        "analysis/ce_module_scaling_analysis.py": {
+          "bytes": 18210,
+          "sha256": "e31784e3f038540ccef28d07fd7330e1b081f230d98bd925fdb6f9b293d7e1bb"
+        },
+        "analysis/ce_multipanel_figures.py": {
+          "bytes": 20625,
+          "sha256": "bec75370531c1a2286f8f98d9eab814c66ece2cc2d05bed94de6cc6858dedb10"
+        },
+        "analysis/ce_neural_networks.py": {
+          "bytes": 11929,
+          "sha256": "c7a59398ecf9e0a01322337ccf1b59597f076a7b25ece5f2eb67e86d7a6ef27b"
+        },
+        "analysis/ce_publication_figures.py": {
+          "bytes": 12774,
+          "sha256": "2704011be6521e46805186edacc53e32f195bb0925c57772c5dc29a1a5144c58"
+        },
+        "analysis/ce_results_figures.py": {
+          "bytes": 9215,
+          "sha256": "5d8384837881b8dba44241dc86ddfbe1dc6258c4e1763bb9a621b0f64e478ee9"
+        },
+        "analysis/ce_tables_and_numbers.py": {
+          "bytes": 11931,
+          "sha256": "e7a0191bc672fa5c606ef6a241b4b0f116ac28067566c65cb10aeec8f0f75984"
+        },
+        "analysis/complexity_analysis.py": {
+          "bytes": 29080,
+          "sha256": "222ebe34c1e4ecb8b099f5b3b8e9b0bdb96298e851e77b02334588a7b4c7ccd2"
+        },
+        "analysis/config_validation.py": {
+          "bytes": 9496,
+          "sha256": "b8eab7ce158cbe8f2f0e881e418fff19edab4ffca9f951b760f53f1a49c7ba36"
+        },
+        "analysis/empirical_data.py": {
+          "bytes": 10004,
+          "sha256": "f76b8b459f87a0a62d928f99af8144ed490a7bac8931e590bfa83080617b841a"
+        },
+        "analysis/energy.py": {
+          "bytes": 17066,
+          "sha256": "ace12047bf205d14509e3809cab0ea8ffb8d3dcad181d3db16fec5d37c4535dd"
+        },
+        "analysis/enhanced_complexity_analysis.py": {
+          "bytes": 23019,
+          "sha256": "3c975426f483d1094daee6c0a6006bb048e2dec3d5c26cfeff1cbeb4c3d9aca4"
+        },
+        "analysis/enhanced_estimators.py": {
+          "bytes": 21198,
+          "sha256": "54ca39a8ac4d65ed4db1e7d3b203f415dcc96f47dbffc870434a786f4f08c5d3"
+        },
+        "analysis/experiment_config.py": {
+          "bytes": 25088,
+          "sha256": "6b09e9f0f373ce58d8d10eb73b390588d0e6bbd35eade1af11c64461f20c6fa1"
+        },
+        "analysis/key_numbers.py": {
+          "bytes": 16731,
+          "sha256": "0e454bd4faca53661be4d1fb5ef9a1bcc10fbb617b3bff5be007a5d8215a1f6b"
+        },
+        "analysis/key_numbers_updater.py": {
+          "bytes": 7370,
+          "sha256": "66658e60256835f7548f94ee51598bc755d7b42e4fe8c09816cc53d3bd3fa13b"
+        },
+        "analysis/power_meters.py": {
+          "bytes": 12325,
+          "sha256": "ba39d09652b0ffe6929c536d2fbaa73083fb176d5de59441e9b37af798c1eab9"
+        },
+        "analysis/report_generator.py": {
+          "bytes": 16882,
+          "sha256": "c01f99b1632edeac90cf20a2f47107919420339c1f92046e13c62f8f861037c0"
+        },
+        "analysis/scaling_analysis.py": {
+          "bytes": 15968,
+          "sha256": "63f950c6ed4378b6bda32fb4f7cd97c9a1ab81d9ed1c3af5e1b8aa53d1efb224"
+        },
+        "analysis/statistical_analysis.py": {
+          "bytes": 24564,
+          "sha256": "339ba4e7d1e081f3356b298ba2ecc488e21bc1ef07fc53f19c4354d6cbf541d7"
+        },
+        "analysis/statistics.py": {
+          "bytes": 12829,
+          "sha256": "ce316cdab5ef278f6422582f188d5ab1c654fa6b3b6693d15b26530240bfa55a"
+        },
+        "analysis/theoretical_limits.py": {
+          "bytes": 28894,
+          "sha256": "29652cc4a9a643301f8b420af96130333bc6bac82693780596ddde88c0a9a0ab"
+        },
+        "analysis/veridical_reporting.py": {
+          "bytes": 13538,
+          "sha256": "ad309b2731fb1a9fe7821064fa6114a3f81331728c591cd8dc994d74c75683a7"
+        },
+        "analysis/workloads.py": {
+          "bytes": 28785,
+          "sha256": "9fc1238d9594ebd9356fc9d91892f020baea7af3a8c418cbb11edb91df35e6e9"
+        },
+        "architecture.py": {
+          "bytes": 13989,
+          "sha256": "94855a0c645af3f6afa758bd9c5b4596bdf9fb2de58969356ca55b916e9f6695"
+        },
+        "cli/__init__.py": {
+          "bytes": 448,
+          "sha256": "69c5f31c18544541f38b4c0064ed1678318d4f106fb06f067f8b001bcd246622"
+        },
+        "cli/build.py": {
+          "bytes": 389,
+          "sha256": "ea86e1b255d913fd8fc66c795dbb6b2d94e7575b888519d9ce7143d3e9611790"
+        },
+        "cli/ce.py": {
+          "bytes": 539,
+          "sha256": "54a8f68d4573017b5ab424d6a14f768db33c675588328402ae1f5ce405f41d3a"
+        },
+        "cli/run_all.py": {
+          "bytes": 249,
+          "sha256": "3184eed192d9e805f588269056490273f7958037f129b3734ffd1aaee93cf343"
+        },
+        "cohereants/__init__.py": {
+          "bytes": 1371,
+          "sha256": "2bfeb68c4ccb3664fafd35a88744b14b126863c94f1e4e357a9c89f609980ea3"
+        },
+        "cohereants/behavioral.py": {
+          "bytes": 11229,
+          "sha256": "111d08c4f953bf57a767aeeb9f4ad847b4453289bfeb5e15c59deafd916b56f8"
+        },
+        "cohereants/core.py": {
+          "bytes": 4002,
+          "sha256": "e2e4241122d2b3b3bb249b23fee43351588ce3e69d9a76ff6096a5235f8db02a"
+        },
+        "cohereants/spectroscopy.py": {
+          "bytes": 13298,
+          "sha256": "3ebc9d87815f101ea5c121e5987e2c34af222ce8fa7effdfdfc71e8ed34ee3f7"
+        },
+        "figures/__init__.py": {
+          "bytes": 1406,
+          "sha256": "c156ed801618f449eeb4e682356cfb7cc48333252ff89d3373967a8770116e73"
+        },
+        "figures/advanced_plots.py": {
+          "bytes": 24988,
+          "sha256": "70af68da52157bf008270896d95cf3c4bce8ef8a39a9df6fe942455ea47c8e9c"
+        },
+        "figures/assets.py": {
+          "bytes": 12204,
+          "sha256": "3abde82e6b338ed3b163aa6875ec756c785798745396f59ef59da79798cc99fb"
+        },
+        "figures/mermaid.py": {
+          "bytes": 9410,
+          "sha256": "f86d0baae52489e15f17a685fb5017a725eeff9af39dc95e0dda6995fab9ac75"
+        },
+        "figures/plots.py": {
+          "bytes": 23360,
+          "sha256": "013be2496570f13565487737cabdd71ddb4be7fe633205619db1b83a43af8b2d"
+        },
+        "figures/publication_plots.py": {
+          "bytes": 21515,
+          "sha256": "7b36e114c8eb6f5182b3ba182fd45caad78df576bbf8dcee6412e60168fd710d"
+        },
+        "figures/references.py": {
+          "bytes": 7676,
+          "sha256": "6d72d7502f7e05f16a4645a863eadf95f81e0d2cc1b428bc06b7f43bd9a4bd63"
+        },
+        "mathematics/__init__.py": {
+          "bytes": 4432,
+          "sha256": "1bf440f6cc691c2b6e5cb34636391fd9550082d492a6019be19f35e10863bf9b"
+        },
+        "orchestration/__init__.py": {
+          "bytes": 936,
+          "sha256": "e4abf1848fa026cc7ed76a365ce8c51eacf23be9a2b6b671c495ff36af0f4d49"
+        },
+        "orchestration/complexity_energetics.py": {
+          "bytes": 30055,
+          "sha256": "cffad68a61e4f68d4c8eaaa792bee09cd04c37121df3b10ffc7dc12f094fe358"
+        },
+        "orchestration/demo.py": {
+          "bytes": 18082,
+          "sha256": "6c9b36c68cbaf052ec05018bd69e521016107aafca77f5da381a0ef16e75a575"
+        },
+        "orchestration/run_all.py": {
+          "bytes": 38454,
+          "sha256": "77eb8b7a33525d61379abd5708ddfc99b8935930242e791bebd56f9e05dfb61b"
+        },
+        "publishing/__init__.py": {
+          "bytes": 2716,
+          "sha256": "3ce035aa4f2e85a62d1e931dd3d2bf9a5ae317f78e30b0a84c290c7e25f2eecf"
+        },
+        "publishing/build_orchestrator.py": {
+          "bytes": 19297,
+          "sha256": "882d4fd3129a2f512e95f1b6b8227e2c26241452675aa8a42227bda5eac5dc15"
+        },
+        "publishing/formatting_fixes.py": {
+          "bytes": 3752,
+          "sha256": "9b1d85dd9104931fc80c8f55e542b8fa086b9ea144ec3d7553dc314999354dcc"
+        },
+        "publishing/paper_builder.py": {
+          "bytes": 13324,
+          "sha256": "c2d33a54f407d68246e65566667db06b4d91c5f06deffa7b2374a3b405ac2d47"
+        },
+        "publishing/pdf_generator.py": {
+          "bytes": 21483,
+          "sha256": "35f7c4f23ed8721323e045333dc1d53acd221b708b232a431b494727dfe9d33b"
+        },
+        "publishing/provenance.py": {
+          "bytes": 18253,
+          "sha256": "5df49efc4f7ca57d3d41c1c50dc41e0d8da9aea50181289f44630b15a0fa6608"
+        },
+        "publishing/quality_validator.py": {
+          "bytes": 24341,
+          "sha256": "3e39b59f6c864608e26420c510b491a4f4c4587909a7c699d737c11f67946965"
+        },
+        "publishing/reference_manager.py": {
+          "bytes": 22920,
+          "sha256": "1bd76557aa7862cea11e9c04c1bedb3df25de33f2e9e91c46ebfd360b58c3c9e"
+        },
+        "publishing/rendering_validator.py": {
+          "bytes": 15870,
+          "sha256": "e363134b9ff0c063e735e3506ee7c4d0f3ef7e013ea9009f9af982288e7192f3"
+        },
+        "publishing/template_engine.py": {
+          "bytes": 17708,
+          "sha256": "6c6f186e8553959b6260168b1fc80a6cc4feffb89dde72898df2b85ea26455d7"
+        }
+      },
+      "root": "/home/runner/work/ant_stack/ant_stack/antstack_core",
+      "source_checkout": {
+        "changes": [],
+        "commit": "422c71e5a402d31e7b2a2676423a2651277509ce",
+        "dirty": false,
+        "root": "/home/runner/work/ant_stack/ant_stack"
+      },
+      "version": "3.0.0"
+    },
+    "working_project": {
+      "changes": [],
+      "commit": "422c71e5a402d31e7b2a2676423a2651277509ce",
+      "dirty": false,
+      "root": "/home/runner/work/ant_stack/ant_stack"
+    }
+  }
+}

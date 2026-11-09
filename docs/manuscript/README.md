@@ -4,7 +4,7 @@ This directory contains manuscript **status guidance**, not the ordered sources 
 
 ## Read the Status Record Before Reusing Results
 
-[MANUSCRIPT_STATUS.md](MANUSCRIPT_STATUS.md) distinguishes conceptual proposals, analytical/synthetic outputs, missing empirical evidence, historical deposits and pending rendering/publication acceptance. Revised 3.0 sources are not a published 3.0 release. Both conceptual abstracts have repeated byte-matching exports, a source/output receipt and visual inspection; full three-paper rendering remains unqualified.
+[MANUSCRIPT_STATUS.md](MANUSCRIPT_STATUS.md) distinguishes conceptual proposals, analytical/synthetic outputs, missing empirical evidence and historical deposits from the actual source-bound render record. The [current manuscript receipt](../../papers/manuscripts.provenance.json) identifies the three reviewed PDFs and their exact inputs/resources; live refs, checks and GitHub Release state determine publication, not this navigation page.
 
 ## Edit the Configured Paper Sources, Not Generated Copies
 
@@ -20,6 +20,6 @@ Use [scientific validation](../scientific_validation.md), [theory and accounting
 
 ## Local Contents
 
-- `MANUSCRIPT_STATUS.md`: scientific/publication scope and pending evidence.
+- `MANUSCRIPT_STATUS.md`: scientific scope, actual render evidence and publication boundaries.
 - `README.md`: this navigation guide.
 - `AGENTS.md`: local contributor instructions, not scientific evidence or render configuration.

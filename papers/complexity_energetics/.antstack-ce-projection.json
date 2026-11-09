@@ -1,5 +1,5 @@
 {
-  "canonical_source": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack/outputs/release-v3-0-0-20261109/papers/complexity_energetics/out",
+  "canonical_source": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack/outputs/ci-42548062547-1/papers/complexity_energetics/out",
   "generated_paths": [
     "Generated.md",
     "assets/body_split.png",
@@ -25,68 +25,68 @@
       "sha256": "2e0d0b1ffdabc71b50ca964ef25c27405ee175b3050fe8adf6ed9a5d6a9f0a68"
     },
     "assets/body_split.png": {
-      "bytes": 89933,
-      "sha256": "aa71ae779c892692e7ed9fc007d8fdc096ef2c6587263afea606f50f84984a5e"
+      "bytes": 96065,
+      "sha256": "4b29b5a258ec1701c86ebc0460f6ae80cb975bf506e5c7cb895b0f93bcb28935"
     },
     "assets/energy.png": {
-      "bytes": 109423,
-      "sha256": "46cdf2c80f9ed7c8843166a39e5759008bf5740a6018d20ee0187a746a7da62a"
+      "bytes": 121957,
+      "sha256": "9e84c3847e1e3b97a6d3f0c56abc473dc343f4ed2dc9a4e6fa552377ca34f4f1"
     },
     "assets/inverse_parameter_body_J.png": {
-      "bytes": 231438,
-      "sha256": "03205719b08f417ae2fda2e3d471d4674c9c9789f3f96bbb0c0ea983056ce3bb"
+      "bytes": 247716,
+      "sha256": "784964c74e5e217f49c386e753a92c9af2340c1e5770615ecb3513fe21ddb763"
     },
     "assets/inverse_parameter_brain_K.png": {
-      "bytes": 199009,
-      "sha256": "747e63095e168a4f316999cffad5ffd0181c952f5c7a2f85ce5a29afddd7b0ff"
+      "bytes": 214549,
+      "sha256": "ec4557c656117a43f4f270e0eb89906c9612d380bbbdea6c5365ba38223a4fac"
     },
     "assets/inverse_parameter_mind_H_p.png": {
-      "bytes": 215627,
-      "sha256": "89557bef5e3fff43ebeddb51442902dd3d7d202f70da0aa8180e4a1e4d3a725c"
+      "bytes": 230191,
+      "sha256": "740c373cb706fab4deb262f1ff140758b67d362186067fc1ccae924dc76c573f"
     },
     "assets/per_decision_breakdown.png": {
-      "bytes": 124985,
-      "sha256": "6646378fb8cc37c75527baed4ae5ea36c608c3e37c4671440401263c3fc5fd40"
+      "bytes": 141319,
+      "sha256": "572710df4d6b8aa0dadb6252701d1ed44a113345ecd21ba31d5fccdcc53d343a"
     },
     "assets/scale_body_J.png": {
-      "bytes": 212670,
-      "sha256": "94928199def5860b898d509253441744c88a8aa41782ae706e2f828cefbaa161"
+      "bytes": 222720,
+      "sha256": "eb839b772c661ed63f2375ec70b77d56c0e92f9d53cdba318af3c2d2cdc4c401"
     },
     "assets/scale_body_J_scatter.png": {
-      "bytes": 201569,
-      "sha256": "4bf83f23603d8d956abbdb5e6c49abe1b0453797272be74ff6677f65ca1184af"
+      "bytes": 215215,
+      "sha256": "d3ab76df1ccfc95efda5f99b35bec0de78a6b9e46886e8a3317373d9e96b9a2e"
     },
     "assets/scale_brain_K.png": {
-      "bytes": 230804,
-      "sha256": "0d7d83823f1a5ed52985131f2d8a64350c59bbf89c8f844cb4d6e5ed1b285812"
+      "bytes": 247094,
+      "sha256": "e144ec82ef9749775d20a98c4f4b6c3271149f198db5e51231f31a280d444335"
     },
     "assets/scale_brain_K_scatter.png": {
-      "bytes": 211604,
-      "sha256": "e656d2649e6609f91879baaddb19c4a1ba77d464112055b21a1ce752d1e4c8d1"
+      "bytes": 226294,
+      "sha256": "995612e48f9680a9c3eeba2e783b4fb9092125ada58e024f0781fff419df9a54"
     },
     "assets/scale_mind_H_p.png": {
-      "bytes": 191943,
-      "sha256": "97b6279348752fd659eb79257d79f52e346bf8e3e9d7ffb5164fde732a9234a8"
+      "bytes": 202770,
+      "sha256": "4949e077d42476c985cc23ceaec4c24bbfd7d35ef09199f9b00f92ab1d75a390"
     },
     "assets/scale_mind_H_p_scatter.png": {
-      "bytes": 225277,
-      "sha256": "051033875260ec4bd260a5d28426d0c5ed1b41795f31285c16131a5301e5091b"
+      "bytes": 241263,
+      "sha256": "a01e27a2eafe78302c3e5082049c4ba3bff0170e8d143e53fb4385f3d2c4d8f4"
     },
     "out/manifest.input.yaml": {
       "bytes": 2980,
       "sha256": "9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a"
     },
     "out/provenance.json": {
-      "bytes": 12233,
-      "sha256": "b5d96314918e094806493e2eb4113435bd9a2daf2fcdcb59245328e50bbba2f6"
+      "bytes": 12131,
+      "sha256": "88f99804eeb18746a29d61b0f669c719f9ea471abcd586617c0f7e7c98d7cd0d"
     },
     "out/results.csv": {
       "bytes": 36635,
       "sha256": "791094842fbc0b47004a21c4e5403c10eec03fac4de82ef5ba3a6c3783b494e7"
     },
     "out/summary.json": {
-      "bytes": 146684,
-      "sha256": "e2b6c9a9f00f0ae48f68d7946a5078b061943d598c4bf78597d6c59da41577f8"
+      "bytes": 146582,
+      "sha256": "4eef034916f84dc895cb704ffa0c81d617f0a12109ca0811f93d41f3e77adca8"
     }
   },
   "schema_version": 1

@@ -67,8 +67,8 @@
     },
     {
       "artifact_type": "provenance",
-      "bytes": 11940,
-      "checksum": "607e2d49179b0932c1830b1e2ff3d52d0e59dfe971478a8a24a57966be519573",
+      "bytes": 11838,
+      "checksum": "1d32f38ccd59c2d868174fd32121b46233a9a0456ee82098c6c2bac1851cdde7",
       "path": "provenance/provenance.json",
       "producing_task": "enhanced_tables.generate",
       "source_config": "key_numbers.json"

@@ -15,8 +15,8 @@
       "figure_id": "ant_stack_graphical_abstract",
       "format": "png",
       "path": "ant_stack_graphical_abstract.png",
-      "sha256": "0ed6aa1d3fbc241ca08193063fbc88c8fed505cc1405d7037ee51a0f383a9b31",
-      "size_bytes": 343756
+      "sha256": "f67382a9f54094c255db51ee1b54c8fb2f16f50e29a149a70ccb248633a48bf7",
+      "size_bytes": 376073
     },
     {
       "caption": "Analytical complexity-to-energy accounting: declared assumptions produce workload counters, which are multiplied by illustrative energy prices. Module-isolated rows and a shared-system sum have different boundaries; a system sum requires a matched interval and one idle baseline. The schematic contains no numerical results or empirical calibration.",
@@ -33,8 +33,8 @@
       "figure_id": "complexity_energetics_graphical_abstract",
       "format": "png",
       "path": "complexity_energetics_graphical_abstract.png",
-      "sha256": "69c617a0776e00dca50b6a919c0ac3cbd3edc0be310469ce42350d6d79965c0a",
-      "size_bytes": 422099
+      "sha256": "df8f5987718cb32ab998da93278e80ee10cfdca2becf5be830c62d687c62c7f4",
+      "size_bytes": 464782
     }
   ],
   "captions": {

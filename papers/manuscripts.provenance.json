@@ -1,0 +1,168 @@
+{
+  "artifact_path_base": "repository_root",
+  "build_source_commit": "422c71e5a402d31e7b2a2676423a2651277509ce",
+  "canonical_manifest": {
+    "bytes": 23419,
+    "sha256": "5a2767fc51cc11b5950d239b3b9351b619e50de4569847eee707003b61d261d7"
+  },
+  "canonical_run": "outputs/ci-42548062547-1",
+  "ci": {
+    "conclusion": "success",
+    "head_sha": "422c71e5a402d31e7b2a2676423a2651277509ce",
+    "html_url": "https://github.com/docxology/ant_stack/actions/runs/42548062547",
+    "id": 42548062547,
+    "run_attempt": 1,
+    "updated_at": "2026-11-09T02:03:10Z"
+  },
+  "limits": [
+    "Analytical/synthetic examples, not empirical or biological validation",
+    "Canonical copied historical manuscript is explicitly labelled and is not a new full-paper render",
+    "No byte-identical PDF or cross-platform plotting claim"
+  ],
+  "manuscripts": {
+    "ant_stack": {
+      "bytes": 659024,
+      "pages": 23,
+      "path": "1_ant_stack.pdf",
+      "renderer_warnings": [],
+      "resource_sha256": {
+        "papers/graphical_abstracts/ant_stack_graphical_abstract.png": "f67382a9f54094c255db51ee1b54c8fb2f16f50e29a149a70ccb248633a48bf7"
+      },
+      "runtime_resources": [
+        {
+          "distribution": "matplotlib",
+          "resource": "mpl-data/fonts/ttf/DejaVuSansMono.ttf",
+          "sha256": "602ec86b8948cfcd956482fe64f94c36c867770149ef2f791d4613f443bcecb3"
+        }
+      ],
+      "sha256": "6c38a78edfc10c3b277cba7937e98200fea0e246988ccc3554dbd4763d60a9f1",
+      "source_sha256": {
+        "papers/ant_stack/Abstract.md": "fb9fbdee1114fa6db67bd91d5a021c4004dc4763a7ada59ba0a4d26039e4f354",
+        "papers/ant_stack/AntBody.md": "abfa0f3d2fd4b50aee56f6d20368eeb4633b43b9100e05b8e8c463b27c6a1287",
+        "papers/ant_stack/AntBrain.md": "a1a3fc853f7de29e1b23c024e8c80bb71912667d4e86e7ed3be28d1fd09cf437",
+        "papers/ant_stack/AntMind.md": "c6899403eecc6ff299fa8859947899c33b15a19e0e351c4abe4c4897c9167048",
+        "papers/ant_stack/Appendices.md": "93bbecc562ac85669f562c1857ac19c66daee1b28a47615c98e98a25d88f6b34",
+        "papers/ant_stack/Applications.md": "0ba87dd507606112285ac0e37631f7018076cc4fdfa75519e690f6971d57b32a",
+        "papers/ant_stack/Background.md": "0bc0dae7959bf43b6e506a781fff3b59c3357e633c9b5b590e3b3f24acba9a5b",
+        "papers/ant_stack/Discussion.md": "6dfb38e4cc27f8b0fdd85d63ae45bef28ce909664a19b63a8a298310b3020e86",
+        "papers/ant_stack/Glossary.md": "db5da1e05320f01785aa498b4621653a68cfde532f17847dce9f8df543eb42a7",
+        "papers/ant_stack/README.md": "4a0a127b85b42fb82d85421f99b38b4e0c2513f52002a316485aabef18a647e0",
+        "papers/ant_stack/Resources.md": "414616aeadf152b4c8828503c1cb9c340199216f1238596c91f4a29bdbe1a776"
+      },
+      "source_validation_warnings": [
+        "Unused definition: fig:ant_stack_graphical_abstract"
+      ]
+    },
+    "complexity_energetics": {
+      "bytes": 2878587,
+      "pages": 37,
+      "path": "2_complexity_energetics.pdf",
+      "renderer_warnings": [],
+      "resource_sha256": {
+        "papers/complexity_energetics/assets/body_split.png": "4b29b5a258ec1701c86ebc0460f6ae80cb975bf506e5c7cb895b0f93bcb28935",
+        "papers/complexity_energetics/assets/energy.png": "9e84c3847e1e3b97a6d3f0c56abc473dc343f4ed2dc9a4e6fa552377ca34f4f1",
+        "papers/complexity_energetics/assets/inverse_parameter_body_J.png": "784964c74e5e217f49c386e753a92c9af2340c1e5770615ecb3513fe21ddb763",
+        "papers/complexity_energetics/assets/inverse_parameter_brain_K.png": "ec4557c656117a43f4f270e0eb89906c9612d380bbbdea6c5365ba38223a4fac",
+        "papers/complexity_energetics/assets/inverse_parameter_mind_H_p.png": "740c373cb706fab4deb262f1ff140758b67d362186067fc1ccae924dc76c573f",
+        "papers/complexity_energetics/assets/per_decision_breakdown.png": "572710df4d6b8aa0dadb6252701d1ed44a113345ecd21ba31d5fccdcc53d343a",
+        "papers/complexity_energetics/assets/scale_body_J.png": "eb839b772c661ed63f2375ec70b77d56c0e92f9d53cdba318af3c2d2cdc4c401",
+        "papers/complexity_energetics/assets/scale_body_J_scatter.png": "d3ab76df1ccfc95efda5f99b35bec0de78a6b9e46886e8a3317373d9e96b9a2e",
+        "papers/complexity_energetics/assets/scale_brain_K.png": "e144ec82ef9749775d20a98c4f4b6c3271149f198db5e51231f31a280d444335",
+        "papers/complexity_energetics/assets/scale_brain_K_scatter.png": "995612e48f9680a9c3eeba2e783b4fb9092125ada58e024f0781fff419df9a54",
+        "papers/complexity_energetics/assets/scale_mind_H_p.png": "4949e077d42476c985cc23ceaec4c24bbfd7d35ef09199f9b00f92ab1d75a390",
+        "papers/complexity_energetics/assets/scale_mind_H_p_scatter.png": "a01e27a2eafe78302c3e5082049c4ba3bff0170e8d143e53fb4385f3d2c4d8f4",
+        "papers/graphical_abstracts/complexity_energetics_graphical_abstract.png": "df8f5987718cb32ab998da93278e80ee10cfdca2becf5be830c62d687c62c7f4"
+      },
+      "runtime_resources": [
+        {
+          "distribution": "matplotlib",
+          "resource": "mpl-data/fonts/ttf/DejaVuSansMono.ttf",
+          "sha256": "602ec86b8948cfcd956482fe64f94c36c867770149ef2f791d4613f443bcecb3"
+        }
+      ],
+      "sha256": "cb1c8d6cf6bd0c93ef361e7f440783208c6c78aee94e1f9c2e5ba95b0ad0e618",
+      "source_sha256": {
+        "papers/complexity_energetics/Abstract.md": "74c0c263e0221d227009ef017e4c90c81bdfe73ffe86adfe13f6fb6eb6ef3202",
+        "papers/complexity_energetics/Acknowledgements.md": "aa2bae765ae144d80504a64654596bb7cb341cd99377ec4359567ee602e3ba39",
+        "papers/complexity_energetics/Appendices.md": "2f2c2afd79ff7d3ad1cb454bc78546d9a1ab9a1b0b36036c119637e560b0922a",
+        "papers/complexity_energetics/Background.md": "9c300960f96eb739689d12dbc7c18bede99aa182e4b55bc1706ac899a9badc7e",
+        "papers/complexity_energetics/Complexity.md": "d21a2b1e3dc5dbf7f7a02d6ba07c7768ddfa66a98e33956dd5fd983259e25b01",
+        "papers/complexity_energetics/Discussion.md": "e2fddd000973f0b88181df29695d1a9f973eb38461b9c546c6af18bd324b2071",
+        "papers/complexity_energetics/Energetics.md": "f36086cc4c4f0202bd36a98266ea137fa451d21b7b689ee4db066c2f9e3fc43e",
+        "papers/complexity_energetics/Generated.md": "2e0d0b1ffdabc71b50ca964ef25c27405ee175b3050fe8adf6ed9a5d6a9f0a68",
+        "papers/complexity_energetics/Methods.md": "97e68f8bbaf7bca13a2d5715eb0ce2c965783610b1fb266c72130400053a12d4",
+        "papers/complexity_energetics/README.md": "746ad1ad30f17bab1d6081f01170372b5fb43403e14f6bef27e67d3dc399d0eb",
+        "papers/complexity_energetics/Resources.md": "953d269d95f7319492be719735a12642d7923ddb04fdd1c55988d6bb97a97fb2",
+        "papers/complexity_energetics/Results.md": "d21834b98c96641f5d61839f8958bbb3a3bdf88219d797bcbc5e8899a2f16c3b",
+        "papers/complexity_energetics/Scaling.md": "14f3f2f85e9876be9995174b0feff22cdd844c0e4d883e4df17e84c82d05fd4e"
+      },
+      "source_validation_warnings": [
+        "Unused definition: fig:complexity_energetics_graphical_abstract",
+        "Unused definition: fig:stack_overview",
+        "Unused definition: fig:complexity_tradeoffs",
+        "Unused definition: tab:contact_models",
+        "Unused definition: fig:complexity_overview",
+        "Unused definition: tab:param_ranges",
+        "Unused definition: fig:energy_overview",
+        "Unused definition: tab:coefficients",
+        "Unused definition: fig:energy_by_workload",
+        "Unused definition: fig:scaling_body_J",
+        "Unused definition: fig:scaling_body_J_scatter",
+        "Unused definition: fig:inverse_parameter_body_J",
+        "Unused definition: fig:scaling_brain_K",
+        "Unused definition: fig:scaling_brain_K_scatter",
+        "Unused definition: fig:inverse_parameter_brain_K",
+        "Unused definition: fig:scaling_mind_H_p",
+        "Unused definition: fig:scaling_mind_H_p_scatter",
+        "Unused definition: fig:inverse_parameter_mind_H_p",
+        "Unused definition: fig:body_partition",
+        "Unused definition: fig:per_decision",
+        "Unused definition: tab:complexity_per_decision",
+        "Unused definition: tab:energy_inputs",
+        "Unused definition: eq:shannon_capacity",
+        "Unused definition: eq:landauer_limit",
+        "Unused definition: eq:carnot_efficiency",
+        "Unused definition: eq:interaction_energy",
+        "Unused definition: eq:energy_conservation",
+        "Unused definition: eq:brain_energy",
+        "Unused definition: eq:body_work",
+        "Unused definition: eq:body_elec",
+        "Unused definition: eq:mind_energy",
+        "Unused definition: eq:decision"
+      ]
+    },
+    "documentation": {
+      "bytes": 59272,
+      "pages": 5,
+      "path": "1_ant_stack_documentation.pdf",
+      "renderer_warnings": [],
+      "resource_sha256": {},
+      "runtime_resources": [
+        {
+          "distribution": "matplotlib",
+          "resource": "mpl-data/fonts/ttf/DejaVuSansMono.ttf",
+          "sha256": "602ec86b8948cfcd956482fe64f94c36c867770149ef2f791d4613f443bcecb3"
+        }
+      ],
+      "sha256": "ba05852a966e5a031c48445f4e6d2b1612e5d72c8fbc0f9589dfbaa349506b87",
+      "source_sha256": {
+        "papers/documentation/PDF_RENDERING_GUIDE.md": "9d4e71d5bc5720cb49e2187cdb7bffc58fb88450acca01c53112020137e1066f",
+        "papers/documentation/README.md": "8c0123e84cf383d2ff87a28f7b41894efdede45739e1e65b5df7baca6e0af16b"
+      },
+      "source_validation_warnings": []
+    }
+  },
+  "native_numerical_replay": {
+    "maximum_absolute_difference": 0.0,
+    "maximum_relative_difference": 0.0,
+    "relative_tolerance": 1e-12,
+    "rows": 300
+  },
+  "package_version": "3.0.0",
+  "schema_version": 1,
+  "visual_review": {
+    "method": "All pages rasterized; every contact sheet and selected full-size graphical, mathematical, citation and code pages inspected",
+    "page_count": 65,
+    "reviewer": "wfz-ant-stack-release"
+  }
+}

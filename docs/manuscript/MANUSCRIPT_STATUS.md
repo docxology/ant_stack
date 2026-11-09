@@ -1,6 +1,6 @@
-# Manuscript Status: Scientific Scope and Pending Publication Evidence
+# Manuscript Status: Analytical Scope and Source-Bound Render Evidence
 
-This page tracks the revised 3.0 source state, not a published 3.0 release or a successful full-render receipt. Software versioning, scientific validation, document rendering and external publication are separate claims.
+Software versioning, scientific validation, document rendering and repository publication are separate claims. This page identifies the reviewed 3.0 manuscript sources and render evidence; live main/tag and GitHub Release observations determine publication state.
 
 ## Three Configured Papers Have Separate Source Ownership
 
@@ -41,15 +41,15 @@ Raw rows contain module-isolated compute plus idle over each workload window and
 
 Direct CE generation confines products to fresh `--out`; governed `outputs/<run_id>/` results carry schema-v2 relative artifact identities, input snapshots and current-invocation inventories. Explicit completed-result projection supplies paper-local compatibility products while preserving source-owned guides. Use the [reproducibility contract](../reproducibility.md), not a second hand-maintained workflow here.
 
-`Generated.md` is current numerical evidence only when bound to the selected completed generation and its figures/CSV/summary. Checked-in PDFs, figures and concatenations are historical until refreshed and inspected with current source bindings. Run-all's copied `historical_paper` products are not new renders; its optional generated-results PDF is not a full manuscript build.
+`Generated.md` is numerical evidence only when bound to its selected completed generation and figures/CSV/summary. The three PDFs identified in [manuscript provenance](../../papers/manuscripts.provenance.json) are refreshed, source-bound renders. Other retained PDFs, figures and concatenations remain historical unless a current receipt identifies them. Run-all's copied `historical_paper` products are not new renders; its optional generated-results PDF is not a full manuscript build.
 
-## Native Rendering, Graphical Assets and Release Acceptance Are Pending
+## Reviewed Full Renders, Graphical Assets and Publication Custody
 
-The release owner still needs current full native renders of **all three configured papers**, resolved document-wide citations/references/assets and visual inspection of resulting TeX/PDFs. Source-level reference/citation/template checks are not equivalent to native render success or scientific publication acceptance.
+[CI run 42548062547](https://github.com/docxology/ant_stack/actions/runs/42548062547) built all three configured papers from source `422c71e5a402d31e7b2a2676423a2651277509ce`. All 65 resulting pages were rasterized and reviewed for layout, legible graphics, informative headings, mathematics, citations, attached counters and literal code. The [per-manuscript receipt](../../papers/manuscripts.provenance.json) binds actual PDF bytes to authored/generated sources, graphical resources, runtime font and the completed CI run; compilation alone was not accepted as visual proof.
 
-Both conceptual abstracts were generated twice, all four SVG/PNG exports and their receipt were byte-identical in the recorded environment, and both 2700×1800 PNGs were visually inspected. The complete family and source/output identities are in `papers/graphical_abstracts/graphical_abstracts.provenance.json`. These schematics contain no numerical or empirical results. Full-manuscript acceptance remains open: the reported local Mermaid Chromium sandbox failure is not a successful render; disabling the sandbox is not acceptable. Prepared Linux CI is not launched/green evidence.
+Both conceptual abstracts have vector/raster exports and a source/output receipt in [the graphical family](../../papers/graphical_abstracts/graphical_abstracts.provenance.json). Repeated native exports matched bytes in the recorded environment, and the actual final manuscript schematics were inspected. These schematics contain no measured data. The canonical base-result projection and separately labelled enhanced-model supplements were refreshed from verified completed families, with prior trees preserved.
 
-No main-branch merge, release tag/push, published 3.0 release or registry publication is claimed here. GitHub Release publication requires the live enabled class, reviewed plan and its exact operator phrase; a local version change grants none of these. No registry publisher is supplied. See [release notes](../../RELEASE_NOTES.md), [software validation](../validation.md) and [PDF rendering](../../PDF_RENDERING_GUIDE.md) for acceptance and commands.
+Local Chromium sandbox and requested-font failures remain recorded limitations of those local attempts, not successful full renders. The Linux proof used the authored configurations and an enabled native browser sandbox. Repository publication requires live refs/checks plus the enabled class, reviewed plan and exact operator phrase; no registry publisher is supplied. See [release notes](../../RELEASE_NOTES.md), [software validation](../validation.md) and [PDF rendering](../../PDF_RENDERING_GUIDE.md).
 
 ## Historical DOI Identifies the 2025 v1, Not This Revision
 

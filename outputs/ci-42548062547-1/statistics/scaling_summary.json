@@ -1,0 +1,139 @@
+{
+  "curves": [
+    {
+      "duration_s": 0.25,
+      "intercept": 8.830344741457402e-08,
+      "log_intercept": -7.054022340998872,
+      "name": "configured model",
+      "parameter": "J",
+      "r_squared": 0.9749266709080369,
+      "sample_size": 5,
+      "scaling_exponent": 0.9993287408877615,
+      "scaling_regime": "linear",
+      "valid": true,
+      "workload": "body",
+      "x": [
+        6,
+        12,
+        18,
+        24,
+        30
+      ],
+      "y": [
+        5.812e-07,
+        9.41056e-07,
+        1.454416e-06,
+        2.12128e-06,
+        2.941648e-06
+      ]
+    },
+    {
+      "duration_s": 0.25,
+      "intercept": 9.287373793781102e-06,
+      "log_intercept": -5.032107074823493,
+      "name": "conservative",
+      "parameter": "K",
+      "r_squared": 0.9082167283472786,
+      "sample_size": 5,
+      "scaling_exponent": 0.16882559425723273,
+      "scaling_regime": "sub-linear",
+      "valid": true,
+      "workload": "brain",
+      "x": [
+        64,
+        128,
+        256,
+        512,
+        1024
+      ],
+      "y": [
+        1.9836071567688205e-05,
+        2.0645747567688206e-05,
+        2.2265099567688205e-05,
+        2.5519679567688205e-05,
+        3.2028839567688204e-05
+      ]
+    },
+    {
+      "duration_s": 0.25,
+      "intercept": 9.689906501906481e-06,
+      "log_intercept": -5.013680413444796,
+      "name": "neutral",
+      "parameter": "K",
+      "r_squared": 0.9119517847187922,
+      "sample_size": 5,
+      "scaling_exponent": 0.18453908699870702,
+      "scaling_regime": "sub-linear",
+      "valid": true,
+      "workload": "brain",
+      "x": [
+        64,
+        128,
+        256,
+        512,
+        1024
+      ],
+      "y": [
+        2.2186558459610256e-05,
+        2.3202622459610256e-05,
+        2.5234750459610256e-05,
+        2.9299006459610257e-05,
+        3.742751845961026e-05
+      ]
+    },
+    {
+      "duration_s": 0.25,
+      "intercept": 1.0670268378593444e-05,
+      "log_intercept": -4.971824657063217,
+      "name": "exploratory",
+      "parameter": "K",
+      "r_squared": 0.9118814780431173,
+      "sample_size": 5,
+      "scaling_exponent": 0.18446524795223648,
+      "scaling_regime": "sub-linear",
+      "valid": true,
+      "workload": "brain",
+      "x": [
+        64,
+        128,
+        256,
+        512,
+        1024
+      ],
+      "y": [
+        2.442591335153231e-05,
+        2.5537233351532307e-05,
+        2.7775749351532307e-05,
+        3.2252781351532306e-05,
+        4.119096935153231e-05
+      ]
+    },
+    {
+      "duration_s": 0.25,
+      "intercept": 2.6388793403196443e-17,
+      "log_intercept": -16.57858046693469,
+      "name": "configured model",
+      "parameter": "H_p",
+      "r_squared": 0.9472960931331303,
+      "sample_size": 5,
+      "scaling_exponent": 16.783678156540795,
+      "scaling_regime": "super-quadratic",
+      "valid": true,
+      "workload": "mind",
+      "x": [
+        5,
+        10,
+        15,
+        20,
+        25
+      ],
+      "y": [
+        0.000129472556,
+        0.13227187204399998,
+        135.44608894775598,
+        138696.79477447685,
+        142025517.84875625
+      ]
+    }
+  ]
+}

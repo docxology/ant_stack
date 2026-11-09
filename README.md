@@ -39,6 +39,8 @@ The CE projection consists of `papers/complexity_energetics/Generated.md`, produ
 
 The default run-all config copies the existing PDF as `historical_paper`; `build_pdf: false` does **not** compile a fresh manuscript. `build_pdf: true` creates a generated analytical-results report, not the complete manuscript. Full configured papers are built by `antstack-build`. Retained v2 PDFs, `outputs/example-run/`, `outputs/test-run/`, and top-level `complexity_energetics/` are historical comparison material unless a fresh source-bound receipt explicitly identifies them.
 
+The reviewed 3.0 publication set is identified by [manuscript provenance](papers/manuscripts.provenance.json): [architecture](1_ant_stack.pdf), [complexity–energetics](2_complexity_energetics.pdf) and [documentation](1_ant_stack_documentation.pdf). The [qualified CI capsule](outputs/ci-42548062547-1/manifest.json) and [native replay capsule](outputs/release-v3-0-0-20261109/manifest.json) preserve their own producing sources; neither turns copied historical papers or analytical estimates into empirical validation.
+
 ## Source map and evidence classes
 
 | Surface | Responsibility |

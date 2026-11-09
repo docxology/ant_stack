@@ -1,0 +1,91 @@
+# Illustrative analytical input; no measured calibration or biological validation.
+experiment_name: ant_stack_base_complexity_energetics
+description: "Base closed-form operation and energy models with assumed coefficients; null meter."
+seed: 123
+
+# Monte Carlo effort and descriptive fit configuration, not empirical sample size/power.
+statistics:
+  bootstrap_samples: 1000
+  confidence_level: 0.95
+
+# Numerical input authority. All prices/powers below are illustrative assumptions.
+coefficients:
+  flops_pj: 1.0
+  sram_pj_per_byte: 0.10
+  dram_pj_per_byte: 20.0
+  spike_aj: 1.0
+  baseline_w: 0.50
+  body_per_joint_w: 2.0
+  body_sensor_w_per_channel: 0.005
+
+# Selected closed_form dispatch uses BASE models, not enhanced per-decision helpers.
+# 100 repeats recalculate deterministic values; they are not independent measurements.
+workloads:
+  body:
+    name: body
+    duration_s: 0.5
+    repeats: 100
+    mode: closed_form
+    params:
+      J: 18
+      C: 12
+      S: 256
+      hz: 100
+      contact_solver: pgs  # Supported models: pgs, si, ldlt; no accuracy ranking implied.
+  brain:
+    name: brain
+    duration_s: 0.5
+    repeats: 100
+    mode: closed_form
+    params:
+      K: 128
+      N_KC: 50000
+      rho: 0.02  # Assumed active fraction, not a measured biological optimum.
+      H: 64
+      hz: 100
+      connectivity_pattern: structured  # Supported: random, structured; not ant topology.
+  mind:
+    name: mind
+    duration_s: 0.5
+    repeats: 100
+    mode: closed_form
+    params:
+      B: 4  # Canonical branching factor; base model sums exact tree nodes.
+      H_p: 15  # Decision steps, not seconds or a validated tractability limit.
+      hz: 100
+      state_dim: 16
+      action_dim: 6
+      precision_steps: 3
+
+# Finite-range model sweeps; descriptions do not prescribe desired fit outcomes.
+scaling:
+  analyses:
+    - workload: body
+      param: J
+      values: [6, 12, 18, 24, 30]
+      description: "Base Body joint-count analytical sweep"
+    - workload: brain
+      param: K
+      values: [64, 128, 256, 512, 1024]
+      description: "Base Brain channel-count analytical sweep"
+    - workload: mind
+      param: H_p
+      values: [5, 10, 15, 20, 25]
+      description: "Base exact-tree planning-horizon analytical sweep"
+  # Hypothetical activity/gating multipliers, not validated behavioral strategies.
+  mind_policies:
+    - {name: conservative, rho_multiplier: 0.8, K_gate: 0.8}
+    - {name: neutral, rho_multiplier: 1.0, K_gate: 1.0}
+    - {name: exploratory, rho_multiplier: 1.2, K_gate: 1.1}
+
+meter:
+  meter_type: null  # No physical energy measurement in this analytical example.
+# Freeform notes, not switches: source/version identities are always recorded.
+provenance:
+  evidence_class: analytical_model
+  coefficient_basis: illustrative_assumptions
+
+# Nominal engineering context, not species data. No matched locomotion interval:
+# the runner reports CoT unavailable rather than assigning this distance to compute.
+mass_kg: 0.02
+distance_m: 1.0
