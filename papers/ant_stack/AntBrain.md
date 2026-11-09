@@ -6,6 +6,7 @@ The proposed architecture draws inspiration from mapped insect brains, with func
 
 ```mermaid
 graph TD
+    accTitle: Proposed insect-inspired processing stages and unvalidated neural interfaces
     subgraph "Foundational Models"
         A["Drosophila Connectome<br/>(e.g., Hemibrain)"]
         B["Apis Mellifera Brain Models"]
@@ -103,7 +104,7 @@ While a full connectome is absent, we can model the primary functions of key, co
 
 - See `Resources.md` for core literature on insect brain organization and active inference, and for datasets/tools (e.g., VFB) used to template modules.
 
-### Section Summary
+### Neural Design Assumptions and Integration Targets
 
 - Compact, biologically grounded AL$\to$MB$\to$CX control stack with sparse coding and local plasticity
 - Tight interfaces with `AntBody` (sensorimotor) and `AntMind` (policy/context)

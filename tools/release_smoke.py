@@ -26,6 +26,7 @@ import time
 import tomllib
 import traceback
 import zipfile
+import xml.etree.ElementTree as ET
 
 
 class SmokeFailure(RuntimeError):
@@ -422,7 +423,8 @@ except OSError as error:
         paper.mkdir(parents=True)
         first, second = paper / "z-first.md", paper / "a-second.md"
         first.write_text("# First ordered source\n\nA caller-owned analytical document.\n\nEvidence.[^support] and [supporting link][support-link].\n", encoding="utf-8")
-        second.write_text("# Second ordered source\n\nSynthetic model smoke, not empirical validation.\n\n[^support]: Cross-source supporting evidence survives.\n\n[support-link]: https://example.test/support\n\n```python\nlabel = 'α ≤ β'\n```\n", encoding="utf-8")
+        long_code = "literal_token_" + "0123456789" * 24 + "_VISIBLE_END"
+        second.write_text("# Second ordered source\n\nSynthetic model smoke, not empirical validation.\n\n[^support]: Cross-source supporting evidence survives.\n\n[support-link]: https://example.test/support\n\n```python\nlabel = 'α ≤ β'\npath = '" + long_code + "'\n```\n", encoding="utf-8")
         config = paper / "paper_config.yaml"
         save_json(config, {"paper": {"title": "Installed consumer smoke", "output_filename": "consumer.pdf"},
                            "content": {"files": [first.name, second.name]}, "build": {}, "latex": {}})
@@ -455,6 +457,30 @@ except OSError as error:
             self.flush()
             require(not self.args.require_pdf, f"Required PDF render unavailable: {', '.join(missing)}")
             return
+        caption_program = r"""import json
+from antstack_core.figures.mermaid import _generate_diagram_caption
+from antstack_core.publishing.pdf_generator import PDFGenerator
+title = '[A] *B* <C> & D_7'
+caption = _generate_diagram_caption('flowchart LR\n    accTitle: ' + title + '\n    A-->B', 'diagram_input')
+document = PDFGenerator()._parse_markdown('![' + caption + '](figure.png)')
+def images(value):
+    if isinstance(value, dict):
+        if value.get('t') == 'Image':
+            yield value
+        for child in value.values():
+            yield from images(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from images(child)
+nodes = list(images(document))
+assert len(nodes) == 1
+inlines = nodes[0]['c'][1]
+assert all(node['t'] in ('Str', 'Space') for node in inlines)
+assert ''.join(' ' if node['t'] == 'Space' else node['c'] for node in inlines) == title
+print(json.dumps({'literal_title_preserved': True}))
+"""
+        caption_log = self.run("build-literal-caption", [Path(build).with_name("python"), "-c", caption_program])
+        result["caption_literal_boundary"] = load_json(caption_log)
         rendered = load_json(self.run("build-render", base, timeout=420))
         require(rendered["success"] is True and pdf.is_file() and pdf.read_bytes().startswith(b"%PDF-"),
                 "Installed publication command failed to create a genuine PDF")
@@ -477,7 +503,18 @@ except OSError as error:
                 "Actual PDF lost Unicode code glyphs or reused stale content")
         require("Cross-source supporting evidence survives." in text and "[^support]" not in text,
                 "Actual PDF lost cross-source footnote definitions")
-        result.update(render="passed", pdf=identity(pdf), readable_text=identity(text_log), source_binding=binding)
+        require(long_code in "".join(text.split()), "Wrapped code lost or rewrote literal characters")
+        boxes = self.run("build-text-geometry", [versions["pdftotext"]["executable"], "-bbox", pdf, "-"], timeout=30)
+        document = ET.fromstring(boxes.read_text())
+        require(long_code in "".join(word.text or "" for word in document.iter("{http://www.w3.org/1999/xhtml}word")),
+                "PDF text geometry omitted the wrapped literal code")
+        for page in document.iter("{http://www.w3.org/1999/xhtml}page"):
+            width = float(page.attrib["width"])
+            for word in page.iter("{http://www.w3.org/1999/xhtml}word"):
+                require(36 <= float(word.attrib["xMin"]) <= float(word.attrib["xMax"]) <= width - 36,
+                        f"PDF text clips the page or its safety margin: {word.text!r}")
+        result.update(render="passed", pdf=identity(pdf), readable_text=identity(text_log), source_binding=binding,
+                      literal_code_preserved=True, text_geometry=identity(boxes))
 
 
 def verify_rows(rows):

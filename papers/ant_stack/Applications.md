@@ -84,10 +84,10 @@ Secure systems at the cognitive layer: resilience to deception, spoofing, and ma
 - Colony social welfare under scarcity; deviation from norms under adversarial pheromones
 - Collateral risk vs objective attainment; robustness to deceptive gradients
 
-### Section Summary
+### Proposed Testbeds and Requirements for Fair Comparisons
 
-- One compact stack supports robotics, security, networks, biosurveillance, foundational AI, and alignment tasks
-- Shared metrics enable apples-to-apples comparisons and principled ablations
+- The application domains are proposed testbeds, not demonstrated implementations or performance results.
+- Comparisons require implemented baselines, matched measurement boundaries and declared evaluation protocols.
 
 ### Terminology Note
 

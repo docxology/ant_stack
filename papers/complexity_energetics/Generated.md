@@ -1,136 +1,98 @@
-# Generated Results (from src)
+# Analytical Complexity and Energy Results
 
-Provenance: commit=cce9f91, seed=123, python=3.14.6
+These are analytical/synthetic workloads, not independent biological or hardware observations.
+
+## Per-Workload Estimated Energy
+
+Each row includes that module's compute and isolated idle over its workload duration. These isolated rows must not be summed as a system total; locomotion is excluded.
+
+| Workload | Mean (J/window) | 95% CI Low | 95% CI High | N |
+|---|---:|---:|---:|---:|
+| body | 0.25000291 | 0.25000291 | 0.25000291 | 100 |
+| brain | 0.25004641 | 0.25004641 | 0.25004641 | 100 |
+| mind | 271.14218 | 271.14218 | 271.14218 | 100 |
+
+## Figure: Module-Isolated Energy {#fig:energy_by_workload}
+
+![Mean module-isolated compute plus idle, with 95% bootstrap intervals for the mean. Repeating deterministic values does not establish empirical precision; positive wide-range values use a labelled logarithmic axis.](assets/energy.png)
 
 
-## Per-Workload Estimated Energy (mean [95% CI], J)
+## Figure: Body configured compute curves {#fig:scaling_body_J}
 
-Only Body and Brain expend energy; Mind is a symbolic layer (0 J by convention).
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. No fixed biological scaling law is inferred.](assets/scale_body_J.png)
 
-| Workload | Mean (J) | 95% CI Low | 95% CI High | N |
-|---|---:|---:|---:|
-| body | 0.250003 | 0.250003 | 0.250003 | 100 |
-| brain | 0.250117 | 0.250117 | 0.250117 | 100 |
 
-## Figure: Total Energy by Workload {#fig:energy_by_workload}
+## Figure: Body lowest configured compute points {#fig:scaling_body_J_scatter}
 
-![Total estimated energy by workload](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/energy.png)
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. No fixed biological scaling law is inferred.](assets/scale_body_J_scatter.png)
 
-**Caption:** Total estimated energy by workload. Only Body and Brain expend energy; Mind is symbolic (0 J).
 
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/energy.png}{(View absolute file)}
+## Figure: Body inverse-parameter illustration {#fig:inverse_parameter_body_J}
+
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. The inverse-parameter curve is a proxy, not measured performance or a nondominated frontier.](assets/inverse_parameter_body_J.png)
+
+
+## Figure: Brain configured compute curves {#fig:scaling_brain_K}
+
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. No fixed biological scaling law is inferred.](assets/scale_brain_K.png)
+
+
+## Figure: Brain lowest configured compute points {#fig:scaling_brain_K_scatter}
+
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. No fixed biological scaling law is inferred.](assets/scale_brain_K_scatter.png)
+
+
+## Figure: Brain inverse-parameter illustration {#fig:inverse_parameter_brain_K}
+
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. The inverse-parameter curve is a proxy, not measured performance or a nondominated frontier.](assets/inverse_parameter_brain_K.png)
+
+
+## Figure: Mind configured compute curves {#fig:scaling_mind_H_p}
+
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. No fixed biological scaling law is inferred.](assets/scale_mind_H_p.png)
+
+
+## Figure: Mind lowest configured compute points {#fig:scaling_mind_H_p_scatter}
+
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. No fixed biological scaling law is inferred.](assets/scale_mind_H_p_scatter.png)
+
+
+## Figure: Mind inverse-parameter illustration {#fig:inverse_parameter_mind_H_p}
+
+![Calculated values over a 0.25 s compute-only window; lines connect model outputs, not empirical replicates. The inverse-parameter curve is a proxy, not measured performance or a nondominated frontier.](assets/inverse_parameter_mind_H_p.png)
+
 
 ## Figure: Body Energy Partition {#fig:body_partition}
 
-![Body energy partition](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/body_split.png)
+![Separate sensing and actuation assumptions integrated over the common 10 ms interval, not the compute-only workload row.](assets/body_split.png)
 
-**Caption:** Estimated Body energy partition into Sensing and Actuation, aggregated over runs.
 
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/body_split.png}{(View absolute file)}
+## Figure: Common-Window Compute Accounting {#fig:per_decision}
 
-## Figure: AntBody Energy Scaling vs Joint Count (J) {#fig:scaling_body_J}
+![Selected workload counters over a common 10 ms window, inverse maximum configured update rate, with shared idle counted once. Integer update flooring can omit slower modules; this is not their time-averaged load or necessarily one decision each. Sensing and actuation are separate assumptions, not observed locomotion.](assets/per_decision_breakdown.png)
 
-![antbody energy scaling vs joint count (j)](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J.png)
-
-**Caption:** AntBody energy scaling with joint count (J). Demonstrates flat scaling $E \propto J^{1.00}$ $R^2=0.975$ due to baseline power dominance (50 mW from sensors and controllers), making morphological complexity essentially free in terms of energy cost.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J.png}{(View absolute file)}
-
-## Figure: AntBody Energy Scaling vs Joint Count (J) [scatter] {#fig:scaling_body_J_scatter}
-
-![antbody energy scaling vs joint count (j) [scatter]](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J_scatter.png)
-
-**Caption:** Scatter plot of AntBody energy consumption across different joint counts (J). Shows the dominance of baseline power consumption over joint-dependent computation, resulting in essentially flat energy scaling $E \propto J^{1.00}$.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_body_J_scatter.png}{(View absolute file)}
-
-## Figure: Pareto Frontier (Energy vs Performance) {#fig:pareto_body_J}
-
-![pareto frontier (energy vs performance)](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_body_J.png)
-
-**Caption:** Pareto frontier for AntBody showing energy-performance trade-offs with varying joint counts. Performance proxy represents morphological dexterity.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_body_J.png}{(View absolute file)}
-
-## Figure: AntBrain Energy Scaling vs AL Channels (K) {#fig:scaling_brain_K}
-
-![antbrain energy scaling vs al channels (k)](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K.png)
-
-**Caption:** AntBrain energy scaling as a function of antennal lobe input channels (K). Demonstrates sub-linear scaling $E \propto K^{0.09}$ $R^2=0.890$ due to biological sparsity patterns ($\rho = 0.02$), enabling massive sensory expansion (64 to 1024 channels) without proportional energy increase. Multiple curves represent different AntMind policy variants affecting neural processing efficiency.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K.png}{(View absolute file)}
-
-## Figure: Pareto Frontier (Energy vs Performance) {#fig:pareto_brain_K}
-
-![pareto frontier (energy vs performance)](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_brain_K.png)
-
-**Caption:** Pareto frontier analysis showing the trade-off between energy consumption and sensory processing capacity in AntBrain. Performance is proxied by inverse AL input channels (1/K), representing information processing capability.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_brain_K.png}{(View absolute file)}
-
-## Figure: AntBrain Energy Scaling vs AL Channels (K) [scatter] {#fig:scaling_brain_K_scatter}
-
-![antbrain energy scaling vs al channels (k) [scatter]](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K_scatter.png)
-
-**Caption:** Scatter plot representation of AntBrain energy scaling with antennal lobe input channels (K). Individual data points show experimental measurements with variability, complementing the line plot smoothing. Demonstrates the robustness of sub-linear scaling $E \propto K^{0.09}$ across different sensory configurations.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_brain_K_scatter.png}{(View absolute file)}
-
-## Figure: AntMind Energy Scaling vs Planning Horizon (H_p) {#fig:scaling_mind_H_p}
-
-![antmind energy scaling vs planning horizon (h_p)](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p.png)
-
-**Caption:** AntMind energy scaling with policy planning horizon (H_p). Shows super-linear exponential growth $E \propto H_p^{13.30}$ $R^2=0.947$ due to combinatorial explosion in policy evaluation, establishing fundamental limits for real-time active inference.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p.png}{(View absolute file)}
-
-## Figure: AntMind Energy Scaling vs Planning Horizon (H_p) [scatter] {#fig:scaling_mind_H_p_scatter}
-
-![antmind energy scaling vs planning horizon (h_p) [scatter]](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png)
-
-**Caption:** Scatter plot showing exponential energy growth $E \propto H_p^{13.30}$ in AntMind as planning horizon (H_p) increases. Illustrates the fundamental computational barriers of exact active inference beyond 15-step horizons.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/scale_mind_H_p_scatter.png}{(View absolute file)}
-
-## Figure: Pareto Frontier (Energy vs Performance) {#fig:pareto_mind_H_p}
-
-![pareto frontier (energy vs performance)](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_mind_H_p.png)
-
-**Caption:** Pareto frontier for AntMind showing fundamental trade-offs between planning horizon and computational feasibility.
-
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/pareto_mind_H_p.png}{(View absolute file)}
-
-## Figure: Per-Decision Energy Breakdown {#fig:per_decision}
-
-![Per-decision energy breakdown](/Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/assets/per_decision_breakdown.png)
-
-**Caption:** Average per-decision (10 ms) energy components at 100 Hz. Mind compute is 0 by convention; baseline is system idle.
-
-### Table: Per-Decision Energy Breakdown (mJ)
-
-| Component | Energy (mJ) |
+| Component | Energy (mJ / 10 ms) |
 |---|---:|
-| Actuation | 360.000 |
-| Sensing | 12.800 |
-| Brain compute | 0.003 |
-| Mind compute | 0.000 |
-| Baseline/idle | 5.000 |
-| Total | 377.803 |
+| body | 5.817664e-05 |
+| brain | 0.0009281049 |
+| mind | 5417.8436 |
+| Body actuation | 360 |
+| Body sensing | 12.8 |
+| Shared idle | 5 |
+| Modeled system total | 5795.6445 |
 
-## Raw Results (CSV)
+## Table: Common-Window Complexity {#tab:complexity_per_decision}
 
-\href{file:///Volumes/external_drive/Git/projects/ongoing/Bioinformatics/ant_stack/outputs/example-run/papers/complexity_energetics/out/results.csv}{View Results CSV}
-
-## Derived Metric: Cost of Transport (dimensionless)
-
-CoT $\approx$ 1.2747 (assuming mass=0.02 kg, distance=1.0 m).
-
-Biological ants achieve CoT 0.1-0.3, indicating 6.4$\times$ optimization potential in mechanical efficiency.
-
-## Table: Per-Decision Complexity (Compute/Memory) {#tab:complexity_per_decision}
-
-| Workload | FLOPs/decision | SRAM bytes/decision | DRAM bytes/decision | Spikes/decision |
+| Workload | FLOPs / 10 ms | SRAM bytes / 10 ms | DRAM bytes / 10 ms | Spikes / 10 ms |
 |---|---:|---:|---:|---:|
-| body | 89543 | 7554 | 2518 | 0 |
-| brain | 1005236 | 514488 | 90792 | 100 |
-| mind | 2950000 | 124800 | 31200 | 0 |
+| body | 26320 | 6246.4 | 1561.6 | 0 |
+| brain | 23619.778 | 389491.2 | 43276.8 | 100 |
+| mind | 3.8883771e+12 | 1.7637999e+11 | 7.5591425e+10 | 0 |
+
+## Cost of Transport
+
+Unavailable: compute-window energy is not locomotion energy, and no matching modeled locomotion interval/distance is supplied by this producer.
+
+## Raw Results
+
+[Results CSV](out/results.csv)

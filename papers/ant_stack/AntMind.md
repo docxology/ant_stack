@@ -4,6 +4,7 @@
 
 ```mermaid
 graph TD
+    accTitle: Proposed individual inference and colony coordination; closed-loop behavior is unverified
     %% Individual Cognition Layer
     subgraph "Individual Agent (Cognition)"
         A["AntBrain<br/>(Neural Substrate)"] --> B(Cognitive Layer)
@@ -109,8 +110,8 @@ Conceptual symbolic processing does not eliminate physical compute energy. Polic
 - Safety: monitor for deceptive gradients; trigger re-exploration and attenuate deposit under conflict
  - Belief sharing: lossy compression of shared statistics (e.g., recent reward rates, local gradient summaries)
 
-### Section Summary
+### Cognitive Design Goals and Unverified Collective Behavior
 
-- Cognitive bridge from neural substrate to behavior and collective intelligence
-- Minimal, testable generative model with explicit stigmergy dynamics
-- Small-footprint policies that compose across agents
+- Proposed interfaces connect neural processing, policy selection and collective behavior.
+- The generative model and stigmergy dynamics require an implemented closed-loop evaluation.
+- Compact policies and cross-agent composition remain design goals, not measured results.

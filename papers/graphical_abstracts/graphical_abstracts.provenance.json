@@ -102,8 +102,8 @@
         "Morphology and Biomechanics",
         "Sensory Apparatus"
       ],
-      "sha256": "6d7f8d6da842923f8397a590124c74529421556278b2ba6202f8508a090fb80b",
-      "size_bytes": 6706,
+      "sha256": "abfa0f3d2fd4b50aee56f6d20368eeb4633b43b9100e05b8e8c463b27c6a1287",
+      "size_bytes": 6828,
       "supports": "Proposed morphology, actuation, sensing, observation and action interfaces."
     },
     {
@@ -114,8 +114,8 @@
         "Integration",
         "Proposed Implementation Choices and Timing Targets"
       ],
-      "sha256": "469ea40649f93c2623841351e569bbed60618f8927854da54b6e33da89ed9a89",
-      "size_bytes": 8105,
+      "sha256": "a1a3fc853f7de29e1b23c024e8c80bb71912667d4e86e7ed3be28d1fd09cf437",
+      "size_bytes": 8230,
       "supports": "Proposed insect-inspired sensory, memory and navigation abstractions; no ant connectome validation."
     },
     {
@@ -127,8 +127,8 @@
         "Proposed Diffusion–Decay Pheromone Field",
         "Technical Pointers and References"
       ],
-      "sha256": "174c002c4f7624444c3b57b1ab3298af5786714eafeecf7c34f1298c607d0562",
-      "size_bytes": 7518,
+      "sha256": "c6899403eecc6ff299fa8859947899c33b15a19e0e351c4abe4c4897c9167048",
+      "size_bytes": 7733,
       "supports": "Proposed beliefs, policy selection and stigmergy; decision-step horizon; base/enhanced distinction."
     },
     {
@@ -165,8 +165,8 @@
         "Integrated Per-Decision Accounting",
         "Units and Conversions"
       ],
-      "sha256": "5ef08f6db18a8dc02cabda81918c5892b5daf56855b085805ed21513bfca4c25",
-      "size_bytes": 9422,
+      "sha256": "f36086cc4c4f0202bd36a98266ea137fa451d21b7b689ee4db066c2f9e3fc43e",
+      "size_bytes": 9516,
       "supports": "Joule conversions, matched time windows, physical terms, shared idle once, Mind physical compute retained."
     },
     {

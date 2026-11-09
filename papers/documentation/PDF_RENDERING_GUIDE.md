@@ -82,6 +82,8 @@ label = 'α ≤ β'
 
 That code needs a font containing those glyphs; mathematical normalization must not rewrite it into different program text. Missing glyphs are render failures, not warnings to suppress. The selected font/toolchain and final rasterized page determine readability.
 
+The renderer uses `fvextra` to wrap long fenced-code lines, including unbroken paths, without changing the source or normalizing literal code. Keep that TeX package available and inspect the final page; a successful build does not excuse clipped examples.
+
 ## Source-relative assets must remain unambiguous
 
 An image path is resolved relative to its own Markdown file. Two source directories can both contain `figure.png`; do not flatten them by basename or search the process working directory as an undocumented fallback. Images must be explicit local resources. SVG conversion requires `rsvg-convert`; conversion/producer failure must not reuse a stale PNG.
@@ -92,11 +94,14 @@ Document-wide references and ordered source assembly matter across module bounda
 
 Active Mermaid fences are rendered locally with the pinned CLI. Code examples nested inside longer Markdown fences are examples, not diagrams to execute. Preserve graph labels and topology; deleting syntax or semantic edges is not a valid repair.
 
+Give each real diagram a native Mermaid `accTitle: ...` declaration after its diagram type. The renderer uses that accessibility title as its descriptive figure caption, escaping Markdown syntax rather than exposing a cache hash as the only explanation.
+
 ````markdown
 ## Figure: Assumptions-to-output workflow {#fig:analytical_workflow}
 
 ```mermaid
 flowchart LR
+    accTitle: Declared assumptions determine analytical counters and estimated energy
     A[Declared assumptions] --> B[Analytical counters]
     B --> C[Estimated energy]
 ```

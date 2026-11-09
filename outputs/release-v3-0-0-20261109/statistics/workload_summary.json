@@ -1,0 +1,35 @@
+{
+  "bootstrap_samples": 1000,
+  "confidence_level": 0.95,
+  "row_count": 300,
+  "seed": 123,
+  "workloads": {
+    "body": {
+      "ci_high_energy_est_j": 0.250002908832,
+      "ci_low_energy_est_j": 0.250002908832,
+      "max_energy_est_j": 0.250002908832,
+      "mean_energy_est_j": 0.250002908832,
+      "min_energy_est_j": 0.250002908832,
+      "n": 100,
+      "std_energy_est_j": 0.0
+    },
+    "brain": {
+      "ci_high_energy_est_j": 0.2500464052449192,
+      "ci_low_energy_est_j": 0.2500464052449192,
+      "max_energy_est_j": 0.2500464052449192,
+      "mean_energy_est_j": 0.2500464052449192,
+      "min_energy_est_j": 0.2500464052449192,
+      "n": 100,
+      "std_energy_est_j": 0.0
+    },
+    "mind": {
+      "ci_high_energy_est_j": 271.14217789551196,
+      "ci_low_energy_est_j": 271.14217789551196,
+      "max_energy_est_j": 271.14217789551196,
+      "mean_energy_est_j": 271.14217789551196,
+      "min_energy_est_j": 271.14217789551196,
+      "n": 100,
+      "std_energy_est_j": 0.0
+    }
+  }
+}

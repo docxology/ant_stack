@@ -10,6 +10,7 @@ Parameterized formulas are useful for identifying which dimensions drive work. T
 
 ```mermaid
 graph TD
+    accTitle: Conditional workload trade-offs; deadlines and hardware limits are not measured outcomes
     T["Operation count"] --> RT["Target deadline, not measured latency"]
     S["State and traffic model"] --> HW["Hardware capacity and bandwidth"]
     E["Assumed energy model"] --> HW
@@ -84,6 +85,7 @@ would require justified coefficients with units $\mathrm{J}^{-1}$ and $\mathrm{J
 
 ```mermaid
 graph TD
+    accTitle: Declared dimensions drive separate Body, Brain and Mind analytical counters
     subgraph Body["AntBody inputs"]
         J["Joint count J"]
         C["Contact count C"]

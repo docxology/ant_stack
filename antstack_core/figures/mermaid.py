@@ -191,4 +191,7 @@ def _is_valid_image(path: str) -> bool:
 
 
 def _generate_diagram_caption(diagram_content: str, diagram_id: str) -> str:
-    return "Mermaid diagram " + diagram_id.removeprefix("diagram_")
+    title = re.search(r"(?m)^[ \t]*accTitle[ \t]*:[ \t]*(\S[^\n]*)$", diagram_content)
+    caption = title.group(1).strip() if title else "Mermaid diagram " + diagram_id.removeprefix("diagram_")
+    # Entities avoid turning literal brackets into Pandoc's single-backslash math.
+    return re.sub(r"([\\`*_{}\[\]<>&])", lambda match: f"&#{ord(match.group())};", caption)

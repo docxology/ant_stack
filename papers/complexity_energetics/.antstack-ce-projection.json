@@ -1,0 +1,93 @@
+{
+  "canonical_source": "/Users/friedman/Documents/Git/gitvault/Username/docxology/Public/ant_stack/outputs/release-v3-0-0-20261109/papers/complexity_energetics/out",
+  "generated_paths": [
+    "Generated.md",
+    "assets/body_split.png",
+    "assets/energy.png",
+    "assets/inverse_parameter_body_J.png",
+    "assets/inverse_parameter_brain_K.png",
+    "assets/inverse_parameter_mind_H_p.png",
+    "assets/per_decision_breakdown.png",
+    "assets/scale_body_J.png",
+    "assets/scale_body_J_scatter.png",
+    "assets/scale_brain_K.png",
+    "assets/scale_brain_K_scatter.png",
+    "assets/scale_mind_H_p.png",
+    "assets/scale_mind_H_p_scatter.png",
+    "out/manifest.input.yaml",
+    "out/provenance.json",
+    "out/results.csv",
+    "out/summary.json"
+  ],
+  "identities": {
+    "Generated.md": {
+      "bytes": 4835,
+      "sha256": "2e0d0b1ffdabc71b50ca964ef25c27405ee175b3050fe8adf6ed9a5d6a9f0a68"
+    },
+    "assets/body_split.png": {
+      "bytes": 89933,
+      "sha256": "aa71ae779c892692e7ed9fc007d8fdc096ef2c6587263afea606f50f84984a5e"
+    },
+    "assets/energy.png": {
+      "bytes": 109423,
+      "sha256": "46cdf2c80f9ed7c8843166a39e5759008bf5740a6018d20ee0187a746a7da62a"
+    },
+    "assets/inverse_parameter_body_J.png": {
+      "bytes": 231438,
+      "sha256": "03205719b08f417ae2fda2e3d471d4674c9c9789f3f96bbb0c0ea983056ce3bb"
+    },
+    "assets/inverse_parameter_brain_K.png": {
+      "bytes": 199009,
+      "sha256": "747e63095e168a4f316999cffad5ffd0181c952f5c7a2f85ce5a29afddd7b0ff"
+    },
+    "assets/inverse_parameter_mind_H_p.png": {
+      "bytes": 215627,
+      "sha256": "89557bef5e3fff43ebeddb51442902dd3d7d202f70da0aa8180e4a1e4d3a725c"
+    },
+    "assets/per_decision_breakdown.png": {
+      "bytes": 124985,
+      "sha256": "6646378fb8cc37c75527baed4ae5ea36c608c3e37c4671440401263c3fc5fd40"
+    },
+    "assets/scale_body_J.png": {
+      "bytes": 212670,
+      "sha256": "94928199def5860b898d509253441744c88a8aa41782ae706e2f828cefbaa161"
+    },
+    "assets/scale_body_J_scatter.png": {
+      "bytes": 201569,
+      "sha256": "4bf83f23603d8d956abbdb5e6c49abe1b0453797272be74ff6677f65ca1184af"
+    },
+    "assets/scale_brain_K.png": {
+      "bytes": 230804,
+      "sha256": "0d7d83823f1a5ed52985131f2d8a64350c59bbf89c8f844cb4d6e5ed1b285812"
+    },
+    "assets/scale_brain_K_scatter.png": {
+      "bytes": 211604,
+      "sha256": "e656d2649e6609f91879baaddb19c4a1ba77d464112055b21a1ce752d1e4c8d1"
+    },
+    "assets/scale_mind_H_p.png": {
+      "bytes": 191943,
+      "sha256": "97b6279348752fd659eb79257d79f52e346bf8e3e9d7ffb5164fde732a9234a8"
+    },
+    "assets/scale_mind_H_p_scatter.png": {
+      "bytes": 225277,
+      "sha256": "051033875260ec4bd260a5d28426d0c5ed1b41795f31285c16131a5301e5091b"
+    },
+    "out/manifest.input.yaml": {
+      "bytes": 2980,
+      "sha256": "9089b88c2e809c20e89272427c1140ec74c3ff7fbd221b81ce8f39b26ac20c9a"
+    },
+    "out/provenance.json": {
+      "bytes": 12233,
+      "sha256": "b5d96314918e094806493e2eb4113435bd9a2daf2fcdcb59245328e50bbba2f6"
+    },
+    "out/results.csv": {
+      "bytes": 36635,
+      "sha256": "791094842fbc0b47004a21c4e5403c10eec03fac4de82ef5ba3a6c3783b494e7"
+    },
+    "out/summary.json": {
+      "bytes": 146684,
+      "sha256": "e2b6c9a9f00f0ae48f68d7946a5078b061943d598c4bf78597d6c59da41577f8"
+    }
+  },
+  "schema_version": 1
+}

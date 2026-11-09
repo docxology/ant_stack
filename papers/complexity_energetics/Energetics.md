@@ -64,6 +64,7 @@ The generated per-decision table uses the selected base compute functions and th
 
 ```mermaid
 graph TD
+    accTitle: Modeled physical and compute terms share one interval and one idle contribution
     T["Terrain and motion assumptions"] --> A["AntBody actuation model"]
     S["Sensor channels"] --> ES["Assumed sensing power times interval"]
     A --> EA["Assumed actuation power times interval"]

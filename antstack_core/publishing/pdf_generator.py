@@ -93,7 +93,13 @@ class PDFGenerator:
                 staged_input.write_text(json.dumps(document), encoding="utf-8")
                 staged_output = workspace / "document.pdf"
                 header = workspace / "references.tex"
-                header.write_text("\\usepackage{hyperref}\n\\usepackage{cleveref}\n", encoding="utf-8")
+                header.write_text(
+                    "\\usepackage{hyperref}\n\\usepackage{cleveref}\n"
+                    "\\usepackage{fvextra}\n"
+                    "\\fvset{breaklines=true,breakanywhere=true,breaknonspaceingroup=true,"
+                    "breaksymbolleft={},breakanywheresymbolpre={}}\n",
+                    encoding="utf-8",
+                )
                 command = self._build_pandoc_command([staged_input], staged_output, metadata or {})
                 command.extend(["--from=json", "--include-in-header", str(header)])
                 completed = subprocess.run(command, cwd=workspace, stdin=subprocess.DEVNULL,
@@ -359,7 +365,7 @@ class PDFGenerator:
         lookup = shutil.which("kpsewhich")
         results["latex_packages"] = bool(lookup) and all(
             subprocess.run([lookup, package], stdin=subprocess.DEVNULL, capture_output=True, timeout=10).returncode == 0
-            for package in ("amsmath.sty", "cleveref.sty")
+            for package in ("amsmath.sty", "cleveref.sty", "fvextra.sty")
         )
         return results
 

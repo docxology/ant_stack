@@ -41,6 +41,8 @@ Figure, table, equation and section IDs must name actual counters. A label insid
 
 Mermaid renders locally through pinned `mmdc`/Puppeteer by default. A remote Kroki endpoint is opt-in, credential-free and caller-trusted; there is no implicit public upload or Docker fallback. Failed rendering never reuses an old diagram as fresh evidence. Do not disable a browser sandbox merely to make a gate pass.
 
+Native Mermaid `accTitle:` values become literal descriptive captions. Markdown/TeX delimiter characters remain text, not injected formatting or mathematics. Fenced code uses `fvextra` line breaking, including highlighted unbroken tokens, without inserting characters into copied literal code; native rendering requires that TeX package.
+
 ## Explicit, trusted templates
 
 `TemplateEngine(TemplateConfig(template_dir=Path(...)))` requires a caller-selected directory. `create_publication_template(paper_type, template_dir)` never generates into an installed package and refuses conflicting template files. `render_scientific_document(..., template_dir=...)` uses that explicit directory. Removed ignored base-configuration arguments have no shim.

@@ -24,6 +24,7 @@ For governed canonical orchestration and compatibility projection, use the root 
 
 ```mermaid
 graph TD
+    accTitle: Analytical module counters and assumed physical loads feed matched-interval accounting
     Body["Base Body counters and assumed physical loads"] --> Accounting["Explicit common-interval energy accounting"]
     Brain["Base Brain counters"] --> Accounting
     Mind["Base Mind tree counters"] --> Accounting

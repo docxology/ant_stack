@@ -31,14 +31,9 @@ from antstack_core.analysis.statistical_analysis import (
     StatisticalAnalyzer,
     analyze_measurement_quality,
     detect_significance,
-    HAS_NUMPY
 )
 
-try:
-    import numpy as np
-    HAS_NUMPY_REAL = True
-except ImportError:
-    HAS_NUMPY_REAL = False
+import numpy as np
 
 
 class TestStatisticalAnalyzer(unittest.TestCase):
@@ -81,9 +76,7 @@ class TestStatisticalAnalyzer(unittest.TestCase):
             self.sample_data, method="standard_error"
         )
 
-        self.assertIsInstance(uncertainty, float)
-        self.assertGreater(uncertainty, 0)
-        self.assertLess(uncertainty, 1.0)  # Should be reasonable for this data
+        self.assertAlmostEqual(uncertainty, math.sqrt(0.06 / 8), places=14)
 
     def test_calculate_measurement_uncertainty_std_dev(self):
         """Test uncertainty calculation using standard deviation method."""
@@ -91,8 +84,7 @@ class TestStatisticalAnalyzer(unittest.TestCase):
             self.sample_data, method="std_dev"
         )
 
-        self.assertIsInstance(uncertainty, float)
-        self.assertGreater(uncertainty, 0)
+        self.assertAlmostEqual(uncertainty, math.sqrt(0.06), places=14)
 
         # Standard deviation should be larger than standard error
         se_uncertainty = self.analyzer.calculate_measurement_uncertainty(
@@ -121,33 +113,6 @@ class TestStatisticalAnalyzer(unittest.TestCase):
                 self.sample_data, method="invalid_method"
             )
 
-    def test_calculate_measurement_uncertainty_without_numpy(self):
-        """Test uncertainty calculation fallback when numpy is unavailable."""
-        if not HAS_NUMPY_REAL:
-            self.skipTest("NumPy is available")
-
-        # Temporarily simulate numpy unavailability
-        original_np = sys.modules.get('numpy')
-        if 'numpy' in sys.modules:
-            del sys.modules['numpy']
-
-        try:
-            # Force re-evaluation of HAS_NUMPY
-            import importlib
-            import antstack_core.analysis.statistical_analysis as sa_module
-            importlib.reload(sa_module)
-
-            analyzer = sa_module.StatisticalAnalyzer()
-            uncertainty = analyzer.calculate_measurement_uncertainty(
-                self.sample_data, method="standard_error"
-            )
-
-            self.assertIsInstance(uncertainty, float)
-            self.assertGreater(uncertainty, 0)
-
-        finally:
-            if original_np:
-                sys.modules['numpy'] = original_np
 
     def test_calculate_confidence_intervals(self):
         """Test confidence interval calculation."""

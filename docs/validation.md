@@ -35,7 +35,7 @@ uv build --wheel dist/ant_stack-3.0.0.tar.gz --out-dir dist
 uv run python tools/release_smoke.py --wheel dist/ant_stack-3.0.0-py3-none-any.whl --work-dir cache/install-proof --require-pdf
 ```
 
-The wheel comes from the new sdist, not an old `build/lib`. The work directory must not exist. The gate provisions an independent environment, runs consumers outside the checkout with no editable/source-tree fallback, compares installed Python payload and locked dependency identities, exercises all console commands, checks current artifact bytes and actually renders caller-owned ordered paper inputs. `--offline` requires cached pinned distributions plus isolated build requirements; absence is a failed prerequisite, never permission to use global packages.
+The wheel comes from the new sdist, not an old `build/lib`. The work directory must not exist. The gate provisions an independent environment under a fresh repository-private work directory and runs consumers from a caller-owned directory outside the package/source import trees, with no editable/source-tree fallback. It compares installed Python payload and locked dependency identities, exercises all console commands, checks current artifact bytes and actually renders caller-owned ordered paper inputs. `--offline` requires cached pinned distributions plus isolated build requirements; absence is a failed prerequisite, never permission to use global packages.
 
 `--require-pdf` makes missing native tools a failure. In optional mode the receipt distinguishes unavailable tools from passed render; present-but-broken tools fail. Retain its receipt, exact command logs, wheel/sdist hashes and selected environment identifiers. This Unix-style gate is not proof of every supported Python/platform combination.
 

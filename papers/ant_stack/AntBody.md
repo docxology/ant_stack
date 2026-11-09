@@ -4,6 +4,7 @@ The proposed `AntBody` would couple morphology, biomechanics, actuation, and sen
 
 ```mermaid
 graph TD
+    accTitle: Proposed sensorimotor interfaces; no implemented physics engine is claimed
     subgraph "Environment"
         A["Physics Engine<br/>(e.g., MuJoCo, PyBullet)"]
         B["Terrain, Obstacles, Resources"]
@@ -112,7 +113,7 @@ Strict units and update rates enable drop-in replacement of bodies and simplify 
 
 Illustrative assumed defaults: 3–4 DOF per modeled leg, physics step $\Delta t=1$ ms, 100 Hz control, Gaussian normalized-channel noise $\sigma\in[0.01,0.05]$. Stability and task suitability require evaluation; these are not physiological measurements.
 
-### Section Summary
+### Sensorimotor Scope and Verification Requirements
 
 - Proposed physics/sensing substrate with explicit I/O targets and units
 - Low-level stabilization and robustness require implemented-controller evaluation

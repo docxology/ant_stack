@@ -43,7 +43,7 @@ This manuscript does not establish a high-fidelity, closed-loop ant brain/body e
 - Energy/compute constraints modeled as design targets, not hardware-fitted
 - Biological realism is subordinated to functional parsimony where trade-offs are explicit and documented
 
-### Section Summary
+### Prior-Work Evidence and Remaining Integration Gaps
 
 - Prior component work motivates this proposal; it does not validate a full embodied Ant Stack agent.
 - Data gaps and hardware constraints justify functional abstraction and simulation-first scope

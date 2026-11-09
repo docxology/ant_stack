@@ -6,6 +6,7 @@ The framework is composed of three primary layers: `AntBody`, `AntBrain`, and `A
 
 ```mermaid
 graph TD
+    accTitle: Proposed Body, Brain and Mind interfaces; not a complete implemented agent
     subgraph "Ant Stack"
         A["AntBody<br/>Physical Simulation"]
         B["AntBrain<br/>Neural Architecture"]
