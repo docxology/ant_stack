@@ -14,6 +14,7 @@ Source version: **3.0.1**. A commit, CI result, tag and published repository rel
 
 - Python/package/private Node and the editable-project lock metadata are synchronized at 3.0.1; the existing 3.0.0 tag and prior producer receipts remain immutable. Bun's workspace lock does not duplicate the root package version; its exact dependency pins are unchanged.
 - CI and executable packaging examples derive distribution filenames from the project version instead of duplicating a release literal. The wheel still comes from a fresh sdist, and the isolated installed-consumer/native-PDF gate remains mandatory.
+- The version-aware evidence collector also runs with the pinned project Python, not the runner's older host `python3`; no host package change or gate bypass is required.
 - Removes incidental metadata/import/export/name-shape tests rather than repinning them. Behavioral dependency/import-side-effect regressions and the real installed-package consumer gate remain.
 - Retained reviewed manuscript PDFs, numerical capsules and visual-review identities keep their original producing commits. New candidate/main/tag qualification must identify its own source; it does not relabel historical output as a fresh run or a new human page review.
 

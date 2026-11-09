@@ -382,7 +382,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          python3 - <<'PY'
+          uv run --no-sync python - <<'PY'
           import hashlib, json, pathlib, shutil, tomllib
           root = pathlib.Path.cwd().resolve()
           destination = root / 'cache/ci/artifacts'
