@@ -51,34 +51,34 @@ from .energy import EnergyBreakdown, EnergyCoefficients
 
 @dataclass
 class ComplexityMetrics:
-    """Comprehensive complexity metrics for system analysis."""
+    """Optional quantities: None is unavailable, not a computed or supplied zero."""
     
     # Information-theoretic measures
-    entropy: float = 0.0
+    entropy: Optional[float] = None
     mutual_information: Optional[float] = None
-    information_density: float = 0.0
+    information_density: Optional[float] = None
     
     # Structural complexity
-    network_density: float = 0.0
-    clustering_coefficient: float = 0.0
-    path_length: float = 0.0
-    modularity: float = 0.0
+    network_density: Optional[float] = None
+    clustering_coefficient: Optional[float] = None
+    path_length: Optional[float] = None
+    modularity: Optional[float] = None
     
     # Thermodynamic measures
-    thermodynamic_efficiency: float = 0.0
-    entropy_production_rate: float = 0.0
-    entropy_change: float = 0.0  # J/K per cycle
-    free_energy: float = 0.0
+    thermodynamic_efficiency: Optional[float] = None
+    entropy_production_rate: Optional[float] = None
+    entropy_change: Optional[float] = None  # J/K per cycle
+    free_energy: Optional[float] = None
     
     # Scaling measures
-    scaling_exponent: float = 0.0
-    scaling_confidence: float = 0.0
+    scaling_exponent: Optional[float] = None
+    scaling_confidence: Optional[float] = None
     regime_classification: str = "unknown"
     
     # Statistical measures
-    variance: float = 0.0
-    skewness: float = 0.0
-    kurtosis: float = 0.0
+    variance: Optional[float] = None
+    skewness: Optional[float] = None
+    kurtosis: Optional[float] = None
 
 
 @dataclass

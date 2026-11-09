@@ -6,11 +6,11 @@ This script orchestrates a complete analysis pipeline incorporating:
 - Network complexity metrics and structural analysis
 - Thermodynamic efficiency frameworks
 - Complexity-entropy diagrams for intrinsic computation
-- Multi-scale visualization and statistical validation
-- Veridical reporting with complete empirical evidence
+- Multi-scale visualization and descriptive model-sweep resampling
+- Analytical reporting without empirical validation claims
 
 Usage:
-    python scripts/complexity_energetics/comprehensive_analysis.py [--manifest path/to/manifest.yaml] [--output output_dir]
+    python scripts/complexity_energetics/comprehensive_analysis.py --output fresh_dir [--manifest path/to/manifest.yaml]
 
 References:
 - Agent-based modeling: https://eprints.whiterose.ac.uk/81723/
@@ -22,7 +22,6 @@ References:
 import argparse
 import os
 import sys
-from pathlib import Path
 
 # Add the project root to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -33,11 +32,11 @@ from antstack_core.analysis.ce_comprehensive_analysis import run
 def main():
     """Main analysis orchestration function."""
     parser = argparse.ArgumentParser(description="Generate comprehensive complexity energetics analysis")
-    parser.add_argument("--manifest", default="complexity_energetics/manifest.example.yaml",
-                       help="Path to experiment manifest")
-    parser.add_argument("--output", default="comprehensive_analysis_output",
-                       help="Output directory for results")
-    parser.add_argument("--modules", nargs="+", default=["body", "brain", "mind"],
+    parser.add_argument("--manifest", default="papers/complexity_energetics/manifest.example.yaml",
+                       help="Path to experiment manifest (coefficient source, not sweep grid)")
+    parser.add_argument("--output", required=True,
+                       help="Explicit absent or empty output family directory")
+    parser.add_argument("--modules", nargs="+", choices=["body", "brain", "mind"], default=["body", "brain", "mind"],
                        help="Modules to analyze")
     
     args = parser.parse_args()

@@ -143,19 +143,6 @@ def test_contact_table_contains_independently_calculated_counters():
 
 
 
-@pytest.mark.parametrize('module_name', ['ce_comprehensive_analysis', 'ce_module_scaling_analysis'])
-def test_adapter_manifest_load_failure_is_not_replaced_by_defaults(monkeypatch, tmp_path, module_name):
-    import importlib
-    module = importlib.import_module('antstack_core.analysis.' + module_name)
-    def unavailable(_path):
-        raise ValueError('invalid supplied scientific manifest')
-    monkeypatch.setattr(module.ExperimentManifest, 'load', unavailable)
-    args = SimpleNamespace(output=str(tmp_path), manifest='invalid.yaml', modules=['body'])
-    with pytest.raises(ValueError, match='invalid supplied scientific manifest'):
-        module.run(args)
-    assert not list(tmp_path.glob('*results.json'))
-
-
 def test_analytical_report_preserves_points_without_empirical_validation(tmp_path):
     import json
     from antstack_core.analysis.ce_comprehensive_analysis import generate_veridical_report

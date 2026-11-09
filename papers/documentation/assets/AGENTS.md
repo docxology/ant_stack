@@ -6,7 +6,7 @@
 This file applies to `papers/documentation/assets`.
 
 ## Directory contract
-Assets and render intermediates for the documentation paper.
+Static/retained documentation-paper assets; new configured renders use private workspaces rather than certifying all retained files.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

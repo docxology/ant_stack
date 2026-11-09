@@ -134,6 +134,10 @@ class BuildOrchestrator:
         target._render_config = settings
 
     def add_build_target(self, target: BuildTarget):
+        destination = target.output_path.resolve()
+        for name, registered in self.targets.items():
+            if name != target.name and registered.output_path.resolve() == destination:
+                raise ValueError(f"Duplicate PDF output destination for targets '{name}' and '{target.name}': {destination}")
         self._sync_render_config(target)
         self.targets[target.name] = target
 

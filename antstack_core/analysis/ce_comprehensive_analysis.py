@@ -1,7 +1,9 @@
 """Comprehensive complexity energetics analysis with advanced methodologies. Moved verbatim from scripts/complexity_energetics/comprehensive_analysis.py; thin wrapper retained for CLI compatibility."""
 
 import json
+import math
 import time
+from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List, Any
 
@@ -20,6 +22,7 @@ from antstack_core.figures.advanced_plots import (
     multi_scale_visualization
 )
 from antstack_core.figures.publication_plots import FigureManager
+from antstack_core.publishing.provenance import _publish_analysis_family
 
 
 def analyze_module_with_advanced_methods(module_name: str, 
@@ -118,7 +121,12 @@ def analyze_module_with_advanced_methods(module_name: str,
     
     # Network complexity analysis
     network_analyzer = NetworkComplexityAnalyzer()
-    network_complexity = network_analyzer.analyze_network_complexity(network_data[0])
+    network_complexity = asdict(network_analyzer.analyze_network_complexity(network_data[0]))
+    if math.isinf(network_complexity['path_length']):
+        # JSON has no infinity token; retain its mathematical meaning explicitly.
+        network_complexity['path_length'] = None
+        network_complexity['path_length_status'] = 'infinite: constructed graph is disconnected'
+    complexity_results['network_analysis'] = network_complexity
     
     # Thermodynamic analysis
     thermo_analyzer = ThermodynamicComplexityAnalyzer()
@@ -131,7 +139,11 @@ def analyze_module_with_advanced_methods(module_name: str,
     
     # Complexity-entropy analysis
     ce_analyzer = ComplexityEntropyAnalyzer()
-    ce_results = ce_analyzer.create_complexity_entropy_diagram(time_series_data)
+    # One whole-grid diagnostic, not a time-series window or empirical sample.
+    ce_results = ce_analyzer.create_complexity_entropy_diagram(
+        time_series_data, window_size=len(time_series_data)
+    )
+    complexity_results['complexity_entropy_analysis'] = ce_results
     
     # Bootstrap analysis
     bootstrap_analyzer = EnhancedBootstrapAnalyzer()
@@ -147,7 +159,7 @@ def analyze_module_with_advanced_methods(module_name: str,
     ce_plot_path = plot_dir / f"{module_name}_{param_name}_complexity_entropy.png"
     complexity_entropy_diagram(
         ce_results['complexity'], ce_results['entropy'],
-        f"{module_name.title()} Complexity-Entropy Analysis",
+        f"{module_name.title()} Ordered Model-Sweep Complexity-Entropy Diagnostic",
         str(ce_plot_path)
     )
     
@@ -189,7 +201,8 @@ def analyze_module_with_advanced_methods(module_name: str,
                        'network': 'illustrative constructed graph, not module topology',
                        'agent_simulation': 'illustrative model, not independent validation',
                        'sequence': 'ordered parameter sweep, not measured time series',
-                       'bootstrap': 'resampling sensitivity of model sweep, not empirical uncertainty'},
+                       'bootstrap': 'resampling sensitivity of model sweep, not empirical uncertainty',
+                       'complexity_entropy': 'one whole fixed-grid window; descriptive sequence diagnostic, not temporal evidence'},
         'module': module_name,
         'parameter': param_name,
         'parameter_values': param_values,
@@ -216,6 +229,7 @@ def generate_veridical_report(all_results: Dict[str, Any], output_dir: Path) -> 
     independent physical measurements, replication or calibration evidence.
     """
     description = ('Enhanced analytical compute-plus-idle workload model with assumed manifest coefficients. '
+                   'Fixed parameter grids are independent of canonical manifest workload selection. '
                    'Mind uses at most 1000 policies. No mechanical power, independent measurements, '
                    'device calibration or external validation is supplied. This separate model family '
                    'does not validate canonical base-run manuscript numbers.')
@@ -241,52 +255,30 @@ def generate_veridical_report(all_results: Dict[str, Any], output_dir: Path) -> 
     report_dir = output_dir / 'reports'
     report_dir.mkdir(parents=True, exist_ok=True)
     (report_dir / 'comprehensive_analysis_report.md').write_text('\n'.join(lines), encoding='utf-8')
-    (output_dir / 'data_driven_summary.json').write_text(json.dumps(summary, indent=2) + '\n', encoding='utf-8')
+    (output_dir / 'data_driven_summary.json').write_text(json.dumps(summary, indent=2, allow_nan=False) + '\n', encoding='utf-8')
 
 
-def run(args):
-    # Create output directory
-    output_dir = Path(args.output)
-    output_dir.mkdir(exist_ok=True)
-    
+def _produce_analysis(output_dir, *, manifest_path, modules, analysis_configs):
+    """Generate the declared family only inside the publisher's private stage."""
     print("=" * 80)
     print("COMPREHENSIVE COMPLEXITY ENERGETICS ANALYSIS")
     print("=" * 80)
-    print(f"Output directory: {output_dir}")
-    print(f"Modules to analyze: {args.modules}")
+    print(f"Modules to analyze: {modules}")
     print()
     
     # Manifest failure is fatal: do not silently substitute unrelated parameters.
-    manifest = ExperimentManifest.load(args.manifest)
+    manifest = ExperimentManifest.load(manifest_path)
     valid, errors = manifest.validate()
     if not valid:
         raise ValueError("Invalid manifest: " + "; ".join(errors))
     coeffs = manifest.coefficients.to_energy_coefficients()
     
-    # Define analysis configurations
-    analysis_configs = {
-        'body': {
-            'param': 'J',
-            'values': [6, 12, 18, 24, 36],
-            'base_params': {'J': 18, 'C': 12, 'S': 256, 'hz': 100, 'contact_solver': 'pgs'}
-        },
-        'brain': {
-            'param': 'K',
-            'values': [64, 128, 256, 512, 1024],
-            'base_params': {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100, 'connectivity_pattern': 'random'}
-        },
-        'mind': {
-            'param': 'H_p',
-            'values': [5, 10, 15, 20, 25],
-            'base_params': {'B': 4, 'H_p': 20, 'hz': 100, 'state_dim': 16, 'action_dim': 6, 'hierarchical': False}
-        }
-    }
     
     # Perform comprehensive analyses
     module_analyses = []
     start_time = time.time()
     
-    for module in args.modules:
+    for module in modules:
         if module in analysis_configs:
             print(f"\nAnalyzing {module} module...")
             config = analysis_configs[module]
@@ -309,12 +301,14 @@ def run(args):
     
     # Compile all results
     all_results = {
-        'provenance': 'enhanced analytical compute-plus-idle model; assumed manifest coefficients; Mind max_policies=1000; no mechanics, device calibration or independent empirical validation; not canonical base-run evidence',
+        'provenance': 'enhanced analytical compute-plus-idle model; fixed grids independent of canonical manifest workload selection; assumed manifest coefficients; Mind max_policies=1000; no mechanics, device calibration or independent empirical validation; not canonical base-run evidence',
         'module_analyses': module_analyses,
         'configuration': {
-            'manifest_path': args.manifest,
+            'manifest_path': str(manifest_path),
             'coefficients': manifest.coefficients.to_dict(),
-            'modules_analyzed': args.modules,
+            'modules_analyzed': modules,
+            'analysis_configs': analysis_configs,
+            'decision_seconds': 0.01,
             'analysis_time': total_analysis_time
         },
         'timestamp': time.time()
@@ -323,20 +317,64 @@ def run(args):
     # Save results as JSON
     results_path = output_dir / "comprehensive_analysis_results.json"
     with open(results_path, 'w') as f:
-        json.dump(all_results, f, indent=2, default=str)
+        json.dump(all_results, f, indent=2, default=asdict, allow_nan=False)
     
     print(f"Analysis results saved: {results_path}")
     
     # Generate veridical report
     generate_veridical_report(all_results, output_dir)
     
-    print("\n" + "=" * 80)
-    print("ANALYSIS COMPLETE")
-    print("=" * 80)
-    print(f"Results saved in: {output_dir}")
-    print(f"- Analysis results: {results_path}")
-    print(f"- Comprehensive report: {output_dir / 'reports' / 'comprehensive_analysis_report.md'}")
-    print(f"- Data summary: {output_dir / 'data_driven_summary.json'}")
-    print(f"- Plots directory: {output_dir / 'plots'}")
-    print(f"- Supporting data: {output_dir / 'data'}")
-    print(f"- Analysis details: {output_dir / 'analysis'}")
+
+
+def run(args):
+    """Publish a complete, portable analytical family into an absent/empty root."""
+    modules = list(args.modules)
+    if not modules:
+        raise ValueError("At least one analysis module is required")
+    unknown = [module for module in modules if module not in ('body', 'brain', 'mind')]
+    if unknown:
+        raise ValueError(f"Unknown modules: {unknown}")
+    analysis_configs = {
+        'body': {
+            'param': 'J',
+            'values': [6, 12, 18, 24, 36],
+            'base_params': {'J': 18, 'C': 12, 'S': 256, 'hz': 100, 'contact_solver': 'pgs'}
+        },
+        'brain': {
+            'param': 'K',
+            'values': [64, 128, 256, 512, 1024],
+            'base_params': {'K': 128, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100, 'connectivity_pattern': 'random'}
+        },
+        'mind': {
+            'param': 'H_p',
+            'values': [5, 10, 15, 20, 25],
+            'base_params': {'B': 4, 'H_p': 20, 'hz': 100, 'state_dim': 16, 'action_dim': 6, 'hierarchical': False}
+        }
+    }
+    selected_configs = {module: analysis_configs[module] for module in modules}
+    required = ['comprehensive_analysis_results.json', 'data_driven_summary.json',
+                'reports/comprehensive_analysis_report.md']
+    required.extend(
+        f"plots/{module}_{config['param']}_{kind}.png"
+        for module, config in selected_configs.items()
+        for kind in ('complexity_entropy', 'network', 'multi_scale')
+    )
+    manifest_path = Path(args.manifest)
+    result = _publish_analysis_family(
+        args.output, project='ce-comprehensive-analysis',
+        produce=lambda stage: _produce_analysis(
+            stage, manifest_path=manifest_path, modules=modules,
+            analysis_configs=selected_configs),
+        required_paths=required, input_paths=(manifest_path,),
+        parameters={
+            'modules': modules, 'analysis_configs': selected_configs,
+            'model_scope': 'enhanced analytical compute-plus-idle; fixed grids, not canonical manifest workloads',
+            'coefficient_source': 'original manifest snapshot',
+            'decision_seconds': 0.01, 'mind_max_policies': 1000,
+            'complexity_entropy_window': 'entire ordered parameter grid',
+            'bootstrap_seed': 0, 'bootstrap_attempted': 1000,
+        },
+    )
+    print(f"Complete analytical family published: {result.parent}")
+    print(f"- Family manifest: {result}")
+    return result

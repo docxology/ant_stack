@@ -2,6 +2,8 @@
 
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -77,3 +79,96 @@ def test_stale_preferred_file_is_not_replaced_by_a_loose_fallback(tmp_path, monk
     assert not manager.validate_key_numbers()["valid"]
     with pytest.raises(ValueError):
         manager.generate_report()
+
+
+@pytest.mark.parametrize("mode,placeholder,bucket", [
+    ("--validate", "{{key_numbers.scaling.brain.exponent}}", "Missing"),
+    ("--validate", "{{key_numbers.energy.body:not-a-format}}", "Invalid"),
+    ("--validate", "{{key_numbers.scaling.body.exponent}}", "Invalid"),
+    ("update", "{{key_numbers.scaling.brain.exponent}}", None),
+    ("update", "{{key_numbers.energy.body:not-a-format}}", None),
+    ("update", "{{key_numbers.scaling.body.exponent}}", None),
+])
+def test_actual_updater_cli_reports_failed_placeholders_without_changing_section(tmp_path, mode, placeholder, bucket):
+    supplied = generate_key_numbers()
+    if placeholder == "{{key_numbers.scaling.body.exponent}}":
+        supplied["scaling_exponents"].update(
+            body_energy=None, body_r_squared=None, body_regime="unavailable",
+        )
+    paper = tmp_path / "papers/complexity_energetics"
+    generated = paper / "generated_content"
+    generated.mkdir(parents=True)
+    (generated / "key_numbers.json").write_text(json.dumps(supplied))
+    section = paper / "Results.md"
+    original = "Literal 123.45; {{key_numbers.energy.body:.9f}}\n" + placeholder
+    section.write_text(original)
+    wrapper = Path(__file__).resolve().parents[2] / "scripts/common_pipeline/update_paper_key_numbers.py"
+    command = [sys.executable, "-B", str(wrapper), "--section", "results"]
+    if mode == "--validate":
+        command.append(mode)
+    result = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
+    assert result.returncode != 0
+    if bucket:
+        assert f"{bucket}: 1" in result.stdout
+        assert placeholder.removeprefix("{{key_numbers.").removesuffix("}}") in result.stdout
+    else:
+        assert "Key-number operation failed:" in result.stdout
+    assert section.read_text() == original
+
+
+def test_actual_updater_cli_accepts_coherent_caller_input_and_exact_formats(tmp_path):
+    supplied = generate_key_numbers()
+    paper = tmp_path / "papers/complexity_energetics"
+    generated = paper / "generated_content"
+    generated.mkdir(parents=True)
+    (generated / "key_numbers.json").write_text(json.dumps(supplied))
+    section = paper / "Results.md"
+    section.write_text("Literal 123.45; {{key_numbers.energy.body:.9f}}")
+    wrapper = Path(__file__).resolve().parents[2] / "scripts/common_pipeline/update_paper_key_numbers.py"
+    command = [sys.executable, "-B", str(wrapper), "--section", "results"]
+    validated = subprocess.run([*command, "--validate"], cwd=tmp_path, capture_output=True, text=True)
+    assert validated.returncode == 0, validated.stdout + validated.stderr
+    updated = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
+    assert updated.returncode == 0, updated.stdout + updated.stderr
+    assert section.read_text() == "Literal 123.45; {{key_numbers.per_decision_energy.body_mj:.9f}}"
+    rendered = KeyNumbersManager(generated / "key_numbers.json").replace_placeholders(section.read_text())
+    assert rendered == "Literal 123.45; " + format(supplied["per_decision_energy"]["body_mj"], ".9f")
+
+
+@pytest.mark.parametrize("arguments", [
+    ["--validate"],
+    ["--validate", "--section", "results"],
+    ["--section", "results"],
+    [],
+])
+def test_actual_updater_cli_missing_section_inputs_fail(tmp_path, arguments):
+    wrapper = Path(__file__).resolve().parents[2] / "scripts/common_pipeline/update_paper_key_numbers.py"
+    result = subprocess.run(
+        [sys.executable, "-B", str(wrapper), *arguments],
+        cwd=tmp_path, capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    assert "section" in result.stdout.lower()
+
+
+@pytest.mark.parametrize("payload", [None, "not JSON"])
+def test_actual_updater_cli_missing_or_invalid_metric_input_fails(tmp_path, payload):
+    paper = tmp_path / "papers/complexity_energetics"
+    generated = paper / "generated_content"
+    generated.mkdir(parents=True)
+    if payload is not None:
+        (generated / "key_numbers.json").write_text(payload)
+    section = paper / "Results.md"
+    original = "{{key_numbers.energy.body:.9f}}"
+    section.write_text(original)
+    wrapper = Path(__file__).resolve().parents[2] / "scripts/common_pipeline/update_paper_key_numbers.py"
+    result = subprocess.run(
+        [sys.executable, "-B", str(wrapper), "--validate", "--section", "results"],
+        cwd=tmp_path, capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    if payload is None:
+        assert "Key-number operation failed:" in result.stdout
+    else:
+        assert "Invalid: 1" in result.stdout
+    assert section.read_text() == original

@@ -11,6 +11,7 @@ from antstack_core.analysis import (
     enhanced_brain_workload_closed_form, enhanced_mind_workload_closed_form
 )
 from antstack_core.figures import bar_plot, line_plot, scatter_plot
+from antstack_core.publishing.provenance import _publish_analysis_family
 
 
 def analyze_module_scaling(module_name: str, param_name: str, param_values: List[float],
@@ -216,7 +217,7 @@ def generate_comprehensive_report(all_results: Dict[str, Any], output_dir: Path)
         f.write("and energy consumption across the Ant Stack architecture, including ")
         f.write("AntBody (physical dynamics), AntBrain (neural processing), and AntMind ")
         f.write("(cognitive inference). This is a separate enhanced-model analytical sweep, not canonical base-run evidence. ")
-        f.write("Energy is compute-plus-idle with assumed manifest coefficients, no modeled mechanics or device calibration. Mind uses at most 1000 policies. Fits are descriptive, not empirical validation.\n\n")
+        f.write("Energy is compute-plus-idle with assumed manifest coefficients, no modeled mechanics or device calibration. Fixed parameter grids are independent of canonical manifest workload selection. Mind uses at most 1000 policies. Fits are descriptive, not empirical validation.\n\n")
         
         # Key Findings
         f.write("### Key Findings\n\n")
@@ -314,19 +315,64 @@ def generate_comprehensive_report(all_results: Dict[str, Any], output_dir: Path)
     print(f"Comprehensive report generated: {report_path}")
 
 
-def run(args):
-    # Create output directory
-    output_dir = Path(args.output)
-    output_dir.mkdir(exist_ok=True)
+def _produce_analysis(output_dir, *, manifest_path, modules, analysis_configs):
+    """Generate the declared family only inside the publisher's private stage."""
     
     # Manifest failure is fatal: never silently fabricate replacement parameters.
-    manifest = ExperimentManifest.load(args.manifest)
+    manifest = ExperimentManifest.load(manifest_path)
     valid, errors = manifest.validate()
     if not valid:
         raise ValueError("Invalid manifest: " + "; ".join(errors))
     coeffs = manifest.coefficients.to_energy_coefficients()
     
-    # Define analysis configurations
+    
+    # Perform scaling analyses
+    scaling_results = []
+    for module in modules:
+        config = analysis_configs[module]
+        result = analyze_module_scaling(
+            module, config['param'], config['values'],
+            config['base_params'], coeffs, output_dir
+        )
+        scaling_results.append(result)
+    
+    # Compare with theoretical limits
+    theoretical_analysis = compare_theoretical_limits(scaling_results, coeffs, output_dir)
+    
+    # Compile all results
+    all_results = {
+        'provenance': 'enhanced analytical compute-plus-idle model; fixed grids independent of canonical manifest workload selection; assumed manifest coefficients; Mind max_policies=1000; no mechanics, calibration or empirical measurements; not canonical base-run evidence',
+        'scaling_analyses': scaling_results,
+        'theoretical_limits': theoretical_analysis,
+        'configuration': {
+            'manifest_path': str(manifest_path),
+            'coefficients': manifest.coefficients.to_dict(),
+            'modules_analyzed': modules,
+            'analysis_configs': analysis_configs,
+            'decision_seconds': 0.01
+        }
+    }
+    
+    # Save results as JSON
+    results_path = output_dir / "analysis_results.json"
+    with open(results_path, 'w') as f:
+        json.dump(all_results, f, indent=2, allow_nan=False)
+    
+    print(f"Analysis results saved: {results_path}")
+    
+    # Generate comprehensive report
+    generate_comprehensive_report(all_results, output_dir)
+    
+
+
+def run(args):
+    """Publish a complete, portable analytical family into an absent/empty root."""
+    modules = list(args.modules)
+    if not modules:
+        raise ValueError("At least one analysis module is required")
+    unknown = [module for module in modules if module not in ('body', 'brain', 'mind')]
+    if unknown:
+        raise ValueError(f"Unknown modules: {unknown}")
     analysis_configs = {
         'body': {
             'param': 'J',
@@ -344,45 +390,29 @@ def run(args):
             'base_params': {'B': 4, 'H_p': 20, 'hz': 100, 'state_dim': 16, 'action_dim': 6, 'hierarchical': False}
         }
     }
-    
-    # Perform scaling analyses
-    scaling_results = []
-    for module in args.modules:
-        if module in analysis_configs:
-            config = analysis_configs[module]
-            result = analyze_module_scaling(
-                module, config['param'], config['values'],
-                config['base_params'], coeffs, output_dir
-            )
-            scaling_results.append(result)
-    
-    # Compare with theoretical limits
-    theoretical_analysis = compare_theoretical_limits(scaling_results, coeffs, output_dir)
-    
-    # Compile all results
-    all_results = {
-        'provenance': 'enhanced analytical compute-plus-idle model; assumed manifest coefficients; Mind max_policies=1000; no mechanics, calibration or empirical measurements; not canonical base-run evidence',
-        'scaling_analyses': scaling_results,
-        'theoretical_limits': theoretical_analysis,
-        'configuration': {
-            'manifest_path': args.manifest,
-            'coefficients': manifest.coefficients.to_dict(),
-            'modules_analyzed': args.modules
-        }
-    }
-    
-    # Save results as JSON
-    results_path = output_dir / "analysis_results.json"
-    with open(results_path, 'w') as f:
-        json.dump(all_results, f, indent=2, default=str)
-    
-    print(f"Analysis results saved: {results_path}")
-    
-    # Generate comprehensive report
-    generate_comprehensive_report(all_results, output_dir)
-    
-    print(f"\nComprehensive analysis complete!")
-    print(f"Results saved in: {output_dir}")
-    print(f"- Analysis results: {results_path}")
-    print(f"- Comprehensive report: {output_dir / 'comprehensive_analysis_report.md'}")
-    print(f"- Plots directory: {output_dir / 'plots'}")
+    selected_configs = {module: analysis_configs[module] for module in modules}
+    required = ['analysis_results.json', 'comprehensive_analysis_report.md',
+                'plots/theoretical_limits_comparison.png']
+    required.extend(
+        f"plots/{module}_{config['param']}_{kind}.png"
+        for module, config in selected_configs.items()
+        for kind in ('energy_scaling', 'flops_scaling', 'combined')
+    )
+    manifest_path = Path(args.manifest)
+    result = _publish_analysis_family(
+        args.output, project='ce-module-scaling-analysis',
+        produce=lambda stage: _produce_analysis(
+            stage, manifest_path=manifest_path, modules=modules,
+            analysis_configs=selected_configs),
+        required_paths=required, input_paths=(manifest_path,),
+        parameters={
+            'modules': modules, 'analysis_configs': selected_configs,
+            'model_scope': 'enhanced analytical compute-plus-idle; fixed grids, not canonical manifest workloads',
+            'coefficient_source': 'original manifest snapshot',
+            'decision_seconds': 0.01, 'mind_max_policies': 1000,
+            'erasure_reference': {'bits_per_flop': 1, 'temperature_k': 300},
+        },
+    )
+    print(f"Complete analytical family published: {result.parent}")
+    print(f"- Family manifest: {result}")
+    return result

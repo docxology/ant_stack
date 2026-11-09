@@ -95,31 +95,31 @@ DIRECTORIES: dict[str, dict[str, str]] = {
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/ant_stack/assets": {
-        "role": "Local assets and render intermediates for the Ant Stack manuscript.",
+        "role": "Local/static and retained manuscript assets; directory membership alone is not fresh render evidence. Configured builds use private render workspaces.",
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/ant_stack/assets/figures": {
-        "role": "Figure assets for the Ant Stack manuscript.",
+        "role": "Static and retained Ant Stack figure assets; active manuscript source/resource bindings identify what a fresh PDF actually used.",
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/ant_stack/assets/mermaid": {
-        "role": "Rendered Mermaid diagram assets for the Ant Stack manuscript.",
+        "role": "Retained Mermaid exports, not freshness proof. Configured builds render current fenced diagram sources in private workspaces.",
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/complexity_energetics": {
-        "role": "Complexity energetics manuscript, manifest, runner sources, generated content, outputs, and references.",
+        "role": "Complexity energetics manuscript, explicit manifest, separate enhanced supplements, inventory-owned canonical compatibility projection and references.",
         "commands": "uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only",
     },
     "papers/complexity_energetics/assets": {
-        "role": "Paper-local complexity energetics assets and render intermediates.",
+        "role": "Inventory-owned current projection images plus preserved historical/unrelated assets; consult the paper-root projection receipt rather than treating every file as current evidence.",
         "commands": "uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only",
     },
     "papers/complexity_energetics/assets/figures": {
-        "role": "Paper-local generated figure images for complexity energetics.",
+        "role": "Retained supplemental figure exports, not canonical-base evidence. New standalone generators require fresh caller-selected output families.",
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/complexity_energetics/assets/mermaid": {
-        "role": "Rendered Mermaid diagrams for the complexity energetics manuscript.",
+        "role": "Retained Mermaid exports, not freshness proof. Configured builds render current fenced diagram sources in private workspaces.",
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/complexity_energetics/generated_content": {
@@ -147,15 +147,15 @@ DIRECTORIES: dict[str, dict[str, str]] = {
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/documentation/assets": {
-        "role": "Assets and render intermediates for the documentation paper.",
+        "role": "Static/retained documentation-paper assets; new configured renders use private workspaces rather than certifying all retained files.",
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/documentation/assets/figures": {
-        "role": "Figure assets for the documentation paper.",
+        "role": "Optional static/retained documentation figures; actual source/resource bindings, not directory membership, identify fresh PDF inputs.",
         "commands": "uv run antstack-build --validate-only",
     },
     "papers/documentation/assets/mermaid": {
-        "role": "Rendered Mermaid diagrams for the documentation paper.",
+        "role": "Retained Mermaid exports, not freshness proof. Configured builds render current fenced diagram sources in private workspaces.",
         "commands": "uv run antstack-build --validate-only",
     },
     "scripts": {

@@ -6,7 +6,7 @@
 This file applies to `papers/complexity_energetics/assets/mermaid`.
 
 ## Directory contract
-Rendered Mermaid diagrams for the complexity energetics manuscript.
+Retained Mermaid exports, not freshness proof. Configured builds render current fenced diagram sources in private workspaces.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

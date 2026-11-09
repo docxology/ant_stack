@@ -200,6 +200,88 @@ def test_validate_only_creates_no_run_artifacts(tmp_path: Path) -> None:
     assert not (output_root / "test-run").exists()
 
 
+@pytest.mark.parametrize("entrypoint", ["config", "api", "cli"])
+@pytest.mark.parametrize("override", ["run_id", "output_root", "tasks"])
+def test_effective_overrides_supersede_unusable_config(tmp_path, monkeypatch, capsys, entrypoint, override):
+    import importlib
+    module = importlib.import_module("antstack_core.orchestration.run_all")
+    path = _write_run_config(tmp_path)
+    original_run = tmp_path / "outputs/test-run"
+    options = {}
+    arguments = []
+    expected = original_run
+    if override == "tasks":
+        raw = yaml.safe_load(path.read_text())
+        raw["complexity_energetics"]["build_pdf"] = True
+        raw["complexity_energetics"]["pdf_sources"] = [str(tmp_path / "absent.pdf")]
+        path.write_text(yaml.safe_dump(raw))
+        monkeypatch.setattr(module.shutil, "which", lambda executable: None)
+        options["tasks"] = "data"
+        arguments = ["--tasks", "data"]
+    else:
+        original_run.mkdir(parents=True)
+        (original_run / "keep.bin").write_bytes(b"previous unowned output")
+        if override == "run_id":
+            options["run_id"] = "fresh-run"
+            arguments = ["--run-id", "fresh-run"]
+            expected = original_run.with_name("fresh-run")
+        else:
+            options["output_root"] = str(tmp_path / "fresh-output")
+            arguments = ["--out", options["output_root"]]
+            expected = tmp_path / "fresh-output/test-run"
+    source_bytes = path.read_bytes()
+    with pytest.raises(ValueError):
+        RunAllConfig.from_file(path)
+    if entrypoint == "config":
+        config = RunAllConfig.from_file(path, **options)
+        assert Path(config.run.output_root) / config.run.run_id == expected
+        assert config.source_bytes == source_bytes
+        if override == "tasks":
+            assert config.tasks.enabled() == ("data",)
+    elif entrypoint == "api":
+        result = run_all(path, validate_only=True, **options)
+        assert result.run_dir == expected
+        assert result.artifacts == ()
+    else:
+        assert module.main(["--config", str(path), "--validate-only", *arguments]) == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert Path(payload["run_dir"]) == expected
+    assert not expected.exists()
+    assert path.read_bytes() == source_bytes
+    if override != "tasks":
+        assert (original_run / "keep.bin").read_bytes() == b"previous unowned output"
+        assert list(original_run.iterdir()) == [original_run / "keep.bin"]
+
+
+@pytest.mark.parametrize("entrypoint", ["config", "api", "with_overrides"])
+@pytest.mark.parametrize("unsafe", ["run_id", "occupied", "symlink"])
+def test_effective_overrides_still_reject_unsafe_destinations(tmp_path, entrypoint, unsafe):
+    path = _write_run_config(tmp_path)
+    config = RunAllConfig.from_file(path)
+    protected = tmp_path / "protected/test-run"
+    protected.mkdir(parents=True)
+    marker = protected / "keep.bin"
+    marker.write_bytes(b"do not replace")
+    if unsafe == "run_id":
+        options = {"run_id": "../escape"}
+    elif unsafe == "occupied":
+        options = {"output_root": str(protected.parent)}
+    else:
+        alias = tmp_path / "alias"
+        alias.symlink_to(protected.parent, target_is_directory=True)
+        options = {"output_root": str(alias)}
+    with pytest.raises(ValueError):
+        if entrypoint == "config":
+            RunAllConfig.from_file(path, **options)
+        elif entrypoint == "api":
+            run_all(path, tasks="", **options)
+        else:
+            config.with_overrides(**options)
+    assert marker.read_bytes() == b"do not replace"
+    assert list(protected.iterdir()) == [marker]
+    assert not (tmp_path / "outputs").exists()
+
+
 def test_run_all_generates_canonical_outputs(tmp_path: Path) -> None:
     result = run_all(_write_run_config(tmp_path), run_id="integration-run")
     run_dir = tmp_path / "outputs" / "integration-run"

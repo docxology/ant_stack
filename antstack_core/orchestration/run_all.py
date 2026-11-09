@@ -196,7 +196,7 @@ class RunAllConfig:
     source_bytes: bytes | None = field(default=None, repr=False)
 
     @classmethod
-    def from_file(cls, path):
+    def from_file(cls, path, *, output_root=None, run_id=None, tasks=None, log_level=None):
         path = _resolve_repo_path(path)
         source_bytes = path.read_bytes()
         raw = yaml.safe_load(source_bytes)
@@ -206,7 +206,8 @@ class RunAllConfig:
                    TaskSelection.from_mapping(_mapping(raw, "tasks")),
                    ComplexityEnergeticsSection.from_mapping(_mapping(raw, "complexity_energetics")),
                    VisualizationSection.from_mapping(_mapping(raw, "visualization")),
-                   ValidationSection.from_mapping(_mapping(raw, "validation")), source_bytes).validate()
+                   ValidationSection.from_mapping(_mapping(raw, "validation")), source_bytes).with_overrides(
+                       output_root=output_root, run_id=run_id, tasks=tasks, log_level=log_level)
 
     def with_overrides(self, *, output_root=None, run_id=None, tasks=None, log_level=None):
         values = {key: value for key, value in {"output_root": output_root, "run_id": run_id, "log_level": log_level}.items() if value is not None}
@@ -688,7 +689,7 @@ def _write_final_metadata(ctx):
 
 def run_all(config_path, *, output_root=None, run_id=None, validate_only=False, tasks=None, log_level=None):
     _bool(validate_only, "validate_only")
-    config = RunAllConfig.from_file(config_path).with_overrides(output_root=output_root, run_id=run_id, tasks=tasks, log_level=log_level)
+    config = RunAllConfig.from_file(config_path, output_root=output_root, run_id=run_id, tasks=tasks, log_level=log_level)
     destination = _preflight_paths(config)
     snapshot = load_manifest_snapshot(_resolve_repo_path(config.complexity_energetics.manifest))[0]
     if validate_only:

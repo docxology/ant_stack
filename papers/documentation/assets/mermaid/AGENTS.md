@@ -6,7 +6,7 @@
 This file applies to `papers/documentation/assets/mermaid`.
 
 ## Directory contract
-Rendered Mermaid diagrams for the documentation paper.
+Retained Mermaid exports, not freshness proof. Configured builds render current fenced diagram sources in private workspaces.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

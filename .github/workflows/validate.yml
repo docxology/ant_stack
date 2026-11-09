@@ -287,6 +287,30 @@ jobs:
           uv run python scripts/complexity_energetics/generate_results_figures.py --output cache/ci/figure-families/results 2>&1 | tee cache/ci/logs/results-figures.log
           uv run python scripts/complexity_energetics/generate_publication_figures.py --output cache/ci/figure-families/publication --format svg 2>&1 | tee cache/ci/logs/publication-figures.log
           uv run python scripts/complexity_energetics/generate_multipanel_figures.py --output cache/ci/figure-families/multipanel 2>&1 | tee cache/ci/logs/multipanel-figures.log
+          uv run python scripts/complexity_energetics/analyze_contact_dynamics.py --output cache/ci/analyses/contact 2>&1 | tee cache/ci/logs/contact-analysis.log
+          uv run python scripts/complexity_energetics/analyze_neural_networks.py --output cache/ci/analyses/neural 2>&1 | tee cache/ci/logs/neural-analysis.log
+          uv run python scripts/complexity_energetics/analyze_active_inference.py --output cache/ci/analyses/planning 2>&1 | tee cache/ci/logs/planning-analysis.log
+          uv run python scripts/complexity_energetics/comprehensive_analysis.py --output cache/ci/analyses/comprehensive 2>&1 | tee cache/ci/logs/comprehensive-analysis.log
+          uv run python scripts/complexity_energetics/generate_comprehensive_analysis.py --output cache/ci/analyses/scaling 2>&1 | tee cache/ci/logs/module-scaling-analysis.log
+
+      - name: Render the supplementary multipanel captions
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY' 2>&1 | tee cache/ci/logs/multipanel-tex.log
+          import pathlib, shutil, subprocess
+          source = pathlib.Path('cache/ci/figure-families/multipanel')
+          work = pathlib.Path('cache/ci/multipanel-tex')
+          work.mkdir()
+          for name in ('comprehensive_scaling_multipanel.png', 'theoretical_limits_multipanel.png', 'multipanel_figures.tex'):
+              shutil.copyfile(source / name, work / name)
+          commands = ('documentclass{article}', 'usepackage[margin=1in]{geometry}', 'usepackage{graphicx}', 'begin{document}', 'input{multipanel_figures.tex}', 'end{document}')
+          (work / 'document.tex').write_text(''.join(chr(92) + command for command in commands))
+          subprocess.run(['xelatex', '-interaction=nonstopmode', '-halt-on-error', 'document.tex'], cwd=work, stdin=subprocess.DEVNULL, check=True, timeout=180)
+          text = subprocess.check_output(['pdftotext', str(work / 'document.pdf'), '-'], stdin=subprocess.DEVNULL).decode()
+          (work / 'document.txt').write_text(text)
+          if 'extbf' in text:
+              raise SystemExit('Corrupt TeX command visible in rendered captions')
+          PY
 
       - name: Actually build every configured paper in the staged project
         run: |
@@ -357,10 +381,10 @@ jobs:
               for path in sorted((root / directory).glob('*')):
                   if path.suffix in suffixes:
                       copy(path.relative_to(root), pathlib.Path(pathlib.Path(directory).name) / path.name)
-          for directory in ('cache/ci/enhanced-supplements', 'cache/ci/figure-families'):
+          for directory in ('cache/ci/enhanced-supplements', 'cache/ci/figure-families', 'cache/ci/analyses', 'cache/ci/multipanel-tex'):
               base = root / directory
               for path in sorted(base.rglob('*')):
-                  if path.is_file() and path.suffix in {'.json', '.md', '.png', '.svg', '.pdf', '.tex'}:
+                  if path.is_file() and path.suffix in {'.json', '.md', '.png', '.svg', '.pdf', '.tex', '.yaml', '.yml', '.csv', '.txt'}:
                       copy(path.relative_to(root), pathlib.Path(base.name) / path.relative_to(base))
           for name in ('1_ant_stack.pdf', '2_complexity_energetics.pdf', '1_ant_stack_documentation.pdf', 'build_report.md'):
               copy(pathlib.Path('cache/ci/paper-project') / name, pathlib.Path('papers') / name)

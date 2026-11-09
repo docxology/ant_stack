@@ -2,8 +2,8 @@
 """
 Update Paper Sections with Key Numbers Integration
 
-Automatically replaces hardcoded numbers in paper sections with key_numbers.json
-placeholders for dynamic content generation.
+Canonicalizes explicit metric placeholders in caller-owned paper sections without
+rewriting literal measurements.
 """
 
 import argparse
@@ -31,4 +31,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

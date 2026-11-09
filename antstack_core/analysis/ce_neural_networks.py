@@ -1,18 +1,16 @@
-"""Neural network connectivity, sparsity, and brain scaling analysis. Moved verbatim from scripts/complexity_energetics/analyze_neural_networks.py; thin wrapper retained for CLI compatibility."""
+"""Sample analytical neural workloads in an isolated publication family."""
 
 import json
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 
 from antstack_core.analysis import (
     calculate_sparse_neural_complexity, enhanced_brain_workload_closed_form
 )
-from antstack_core.analysis import (
-    estimate_detailed_energy, analyze_scaling_relationship,
-    calculate_energy_efficiency_metrics
-)
+from antstack_core.analysis import estimate_detailed_energy, analyze_scaling_relationship
 from antstack_core.analysis import EnergyCoefficients
-from antstack_core.figures import line_plot, scatter_plot, bar_plot
+from antstack_core.figures import line_plot, scatter_plot
+from antstack_core.publishing.provenance import _publish_analysis_family
 
 
 def analyze_connectivity_patterns(network_sizes: List[int], sparsity: float,
@@ -162,7 +160,8 @@ def analyze_sparsity_effects(network_size: int, sparsity_levels: List[float],
     return results
 
 
-def analyze_brain_scaling(K_values: List[int], output_dir: Path) -> Dict[str, Any]:
+def analyze_brain_scaling(K_values: List[int], output_dir: Path, *,
+                          network_size: int = 50000) -> Dict[str, Any]:
     """Analyze brain energy scaling with different AL input channel counts."""
     print("Analyzing brain scaling with AL channels...")
 
@@ -175,7 +174,7 @@ def analyze_brain_scaling(K_values: List[int], output_dir: Path) -> Dict[str, An
 
     for K in K_values:
         params = {
-            'K': K, 'N_KC': 50000, 'rho': 0.02, 'H': 64, 'hz': 100,
+            'K': K, 'N_KC': network_size, 'rho': 0.02, 'H': 64, 'hz': 100,
             'connectivity_pattern': 'random'
         }
 
@@ -200,11 +199,6 @@ def analyze_brain_scaling(K_values: List[int], output_dir: Path) -> Dict[str, An
     flops_scaling = analyze_scaling_relationship(K_values, flops_values)
     memory_scaling = analyze_scaling_relationship(K_values, memory_values)
 
-    # Calculate efficiency metrics
-    performance_proxy = [1.0 / K for K in K_values]  # Inverse for efficiency analysis
-    efficiency_metrics = calculate_energy_efficiency_metrics(
-        energy_values, performance_proxy
-    )
 
     # Generate brain scaling plots
     plot_dir = output_dir / "plots"
@@ -234,7 +228,7 @@ def analyze_brain_scaling(K_values: List[int], output_dir: Path) -> Dict[str, An
         'energy_scaling': energy_scaling,
         'flops_scaling': flops_scaling,
         'memory_scaling': memory_scaling,
-        'efficiency_metrics': efficiency_metrics,
+        'network_size': network_size,
         'plots': {
             'energy_scaling': str(energy_plot),
             'combined': str(combined_plot)
@@ -245,16 +239,44 @@ def analyze_brain_scaling(K_values: List[int], output_dir: Path) -> Dict[str, An
 
 
 def run(args):
-    # Create output directory
-    output_dir = Path(args.output)
-    output_dir.mkdir(exist_ok=True)
+    maximum = args.max_size
+    if isinstance(maximum, bool) or not isinstance(maximum, int) or maximum < 1:
+        raise ValueError("max_size must be a positive integer")
+    network_sizes = sorted({size for size in (1000, 5000, 10000, 25000, 50000, maximum)
+                            if 0 < size <= maximum})
+    reference_size = min(50000, maximum)
+    return _publish_analysis_family(
+        getattr(args, "output", None), project="neural_networks",
+        produce=lambda stage: _produce(stage, network_sizes, maximum, reference_size),
+        required_paths=(
+            "neural_network_analysis.json",
+            "plots/connectivity_flops_comparison.png",
+            "plots/connectivity_spikes_comparison.png",
+            "plots/sparsity_energy_scaling.png",
+            "plots/sparsity_spikes_scaling.png",
+            "plots/brain_K_energy_scaling.png",
+            "plots/brain_K_energy_flops.png",
+        ),
+        parameters={
+            "max_size": maximum, "network_sizes": network_sizes,
+            "reference_network_size": reference_size,
+            "patterns": ["random", "structured"], "connectivity_sparsity": 0.02,
+            "sparsity_levels": [0.005, 0.01, 0.02, 0.05, 0.1],
+            "K_values": [32, 64, 128, 256, 512, 1024],
+            "decision_duration_s": 0.01, "hz": 100, "hidden_units": 64,
+            "evidence_class": "analytical/synthetic workload and model-energy estimates",
+        },
+    )
+
+
+def _produce(output_dir: Path, network_sizes: List[int], maximum: int, reference_size: int):
 
     print("=" * 60)
     print("Neural Network Analysis Orchestrator")
     print("=" * 60)
 
     # Define analysis parameters
-    network_sizes = [1000, 5000, 10000, 25000, 50000, args.max_size]
+    # All network-size studies respect the requested cap.
     sparsity_levels = [0.005, 0.01, 0.02, 0.05, 0.1]
     K_values = [32, 64, 128, 256, 512, 1024]
 
@@ -264,10 +286,10 @@ def run(args):
     )
 
     # Analyze sparsity effects
-    sparsity_results = analyze_sparsity_effects(50000, sparsity_levels, output_dir)
+    sparsity_results = analyze_sparsity_effects(reference_size, sparsity_levels, output_dir)
 
     # Analyze brain scaling
-    brain_results = analyze_brain_scaling(K_values, output_dir)
+    brain_results = analyze_brain_scaling(K_values, output_dir, network_size=reference_size)
 
     # Compile comprehensive results
     all_results = {
@@ -278,8 +300,11 @@ def run(args):
             'network_sizes': network_sizes,
             'sparsity_levels': sparsity_levels,
             'K_values': K_values,
-            'primary_pattern': args.pattern,
-            'max_size': args.max_size
+            'patterns': ['random', 'structured'],
+            'max_size': maximum,
+            'reference_network_size': reference_size,
+            'decision_duration_s': 0.01,
+            'evidence_class': 'analytical/synthetic estimates; not empirical measurements'
         }
     }
 
@@ -289,9 +314,6 @@ def run(args):
         json.dump(all_results, f, indent=2, default=str)
 
     print(f"\nNeural network analysis complete!")
-    print(f"Results saved in: {output_dir}")
-    print(f"- Analysis results: {results_path}")
-    print(f"- Plots directory: {output_dir / 'plots'}")
 
     # Print key findings
     print(f"\nKey Findings:")
@@ -299,13 +321,15 @@ def run(args):
     # Best connectivity pattern
     patterns = ["random", "structured"]
     best_pattern = min(patterns, key=lambda p: connectivity_results[p]['flops'][-1])
-    print(f"- Most efficient connectivity: {best_pattern}")
+    print(f"- Lowest sampled FLOPs at N={network_sizes[-1]}: {best_pattern}")
 
     # Sparsity scaling
-    sparsity_regime = sparsity_results['summary']['energy_scaling'].get('regime', 'unknown')
-    print(f"- Sparsity energy scaling: {sparsity_regime}")
-
-    # Brain scaling
-    brain_regime = brain_results['summary']['energy_scaling'].get('regime', 'unknown')
-    brain_exponent = brain_results['summary']['energy_scaling'].get('scaling_exponent', 0)
-    print(f"- Brain K scaling: {brain_regime} (exponent: {brain_exponent:.3f})")
+    for label, fit in (
+        ("Sparsity model-energy", sparsity_results['summary']['energy_scaling']),
+        ("Brain K model-energy", brain_results['summary']['energy_scaling']),
+    ):
+        if fit['valid']:
+            print(f"- {label} scaling: {fit['scaling_regime']} "
+                  f"(exponent: {fit['scaling_exponent']:.3f})")
+        else:
+            print(f"- {label} scaling unavailable: {fit['error']}")

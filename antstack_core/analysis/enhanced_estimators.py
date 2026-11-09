@@ -20,6 +20,12 @@ from .workloads import (
     calculate_active_inference_complexity
 )
 
+_AGGREGATION_CONTEXT = (
+    "Analytical sum of isolated module sweep means, including idle energy once per module "
+    "and the body's modeled mechanical work; not whole-device energy or an empirical measurement"
+)
+
+
 
 @dataclass
 class ModuleScalingData:
@@ -64,9 +70,10 @@ class ComprehensiveEnergyAnalysis:
 
     system_efficiency: Optional[float] = None  # Sum of matched bounds / sum of modeled energies.
     total_energy_per_decision_j: float = 0.0
-    cost_of_transport: float = 0.0
+    cost_of_transport: Optional[float] = None
 
     key_numbers: Dict[str, Any] = field(default_factory=dict)
+    aggregation_context: str = _AGGREGATION_CONTEXT
 
 
 class EnhancedEnergyEstimator:
@@ -288,7 +295,7 @@ class EnhancedEnergyEstimator:
         return {
             "system_efficiency": fraction,
             "valid": fraction is not None and fraction <= 1,
-            "aggregation": "Matched component bounds and mean modeled energies over module sweeps; not an empirical system measurement",
+            "aggregation": _AGGREGATION_CONTEXT,
             "energy_distribution": distribution,
             "bottlenecks": bottlenecks,
         }
@@ -323,7 +330,8 @@ class EnhancedEnergyEstimator:
             ])
         lines.extend([
             f"Modeled aggregate bound/energy fraction: {analysis.system_efficiency if analysis.system_efficiency is not None else 'undefined'}",
-            f"Total energy per decision (J): {analysis.total_energy_per_decision_j:.6g}",
+            f"Sum of isolated module mean energies per decision (J): {analysis.total_energy_per_decision_j:.6g}",
+            analysis.aggregation_context,
         ])
         return "\n".join(lines)
 
@@ -372,24 +380,16 @@ class EnhancedEnergyEstimator:
         brain_analysis.theoretical_limit_j = brain_limits.get('total_theoretical_j')
         mind_analysis.theoretical_limit_j = mind_limits.get('total_theoretical_j')
 
-        # Calculate system-level metrics
+        # Check decision windows before summing isolated module sweep means.
+        system_efficiency = self.calculate_efficiency_metrics(body_analysis, brain_analysis, mind_analysis)['system_efficiency']
         total_energy = (statistics.mean(body_analysis.energy_values) +
                        statistics.mean(brain_analysis.energy_values) +
                        statistics.mean(mind_analysis.energy_values))
 
-        # Cost of transport (assuming typical mass and distance)
-        mass_kg = 0.02
-        distance_m = 1.0
-        gravity = 9.81
-        cost_of_transport = total_energy / (mass_kg * gravity * distance_m)
-
-        # Energy-weighted bound fraction, never a harmonic mean of overheads.
-        system_efficiency = self.calculate_efficiency_metrics(body_analysis, brain_analysis, mind_analysis)['system_efficiency']
-
         # Generate key numbers dictionary
         key_numbers = self._generate_key_numbers_dict(
             body_analysis, brain_analysis, mind_analysis,
-            total_energy, cost_of_transport, system_efficiency,
+            total_energy, system_efficiency,
             float(body_params.get('dt', 0.01)), float(body_params.get('hz', 100)),
         )
 
@@ -399,7 +399,6 @@ class EnhancedEnergyEstimator:
             mind_analysis=mind_analysis,
             system_efficiency=system_efficiency,
             total_energy_per_decision_j=total_energy,
-            cost_of_transport=cost_of_transport,
             key_numbers=key_numbers
         )
 
@@ -408,7 +407,6 @@ class EnhancedEnergyEstimator:
                                  brain_analysis: ModuleScalingData,
                                  mind_analysis: ModuleScalingData,
                                  total_energy: float,
-                                 cost_of_transport: float,
                                  system_efficiency: Optional[float],
                                  duration_s: float,
                                  control_frequency_hz: float) -> Dict[str, Any]:
@@ -418,8 +416,7 @@ class EnhancedEnergyEstimator:
             body_analysis: Body scaling analysis results
             brain_analysis: Brain scaling analysis results
             mind_analysis: Mind scaling analysis results
-            total_energy: Total energy per decision
-            cost_of_transport: Cost of transport metric
+            total_energy: Sum of isolated module mean energies per decision
 
         Returns:
             Dictionary with all key numbers
@@ -440,14 +437,14 @@ class EnhancedEnergyEstimator:
                 "mind_memory_kb": statistics.mean(mind_analysis.memory_values) / 1024
             },
             "scaling_exponents": {
-                "body_energy": body_analysis.scaling_exponent or 0,
-                "body_r_squared": body_analysis.r_squared or 0,
+                "body_energy": body_analysis.scaling_exponent,
+                "body_r_squared": body_analysis.r_squared,
                 "body_regime": body_analysis.scaling_regime or "unknown",
-                "brain_energy": brain_analysis.scaling_exponent or 0,
-                "brain_r_squared": brain_analysis.r_squared or 0,
+                "brain_energy": brain_analysis.scaling_exponent,
+                "brain_r_squared": brain_analysis.r_squared,
                 "brain_regime": brain_analysis.scaling_regime or "unknown",
-                "mind_energy": mind_analysis.scaling_exponent or 0,
-                "mind_r_squared": mind_analysis.r_squared or 0,
+                "mind_energy": mind_analysis.scaling_exponent,
+                "mind_r_squared": mind_analysis.r_squared,
                 "mind_regime": mind_analysis.scaling_regime or "unknown"
             },
             "system_parameters": {
@@ -455,7 +452,8 @@ class EnhancedEnergyEstimator:
                 "decision_period_ms": duration_s * 1000,
                 "baseline_power_mw": self.coefficients.baseline_w * 1000,
                 "total_power_w": total_energy / duration_s,
-                "cost_of_transport": cost_of_transport,
+                "cost_of_transport": None,
+                "total_power_boundary": _AGGREGATION_CONTEXT,
                 "system_efficiency": system_efficiency * 100 if system_efficiency is not None else None
             },
             "theoretical_limits": {
@@ -465,5 +463,6 @@ class EnhancedEnergyEstimator:
                 "body_theoretical_j": body_analysis.theoretical_limit_j,
                 "brain_theoretical_j": brain_analysis.theoretical_limit_j,
                 "mind_theoretical_j": mind_analysis.theoretical_limit_j
-            }
+            },
+            "aggregation_context": _AGGREGATION_CONTEXT,
         }

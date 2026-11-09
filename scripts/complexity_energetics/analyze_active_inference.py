@@ -5,7 +5,7 @@ Thin orchestrator for active inference complexity analysis using ce.workloads me
 Analyzes policy horizons, branching factors, and bounded rationality effects.
 
 Usage:
-    python scripts/analyze_active_inference.py [--output output_dir] [--max-horizon 20]
+    python scripts/complexity_energetics/analyze_active_inference.py --output NEW_DIRECTORY
 """
 
 import argparse
@@ -21,15 +21,18 @@ from antstack_core.analysis.ce_active_inference import run
 def main():
     """Main orchestration function."""
     parser = argparse.ArgumentParser(description="Analyze active inference complexity and scaling")
-    parser.add_argument("--output", default="active_inference_output",
-                       help="Output directory for results")
+    parser.add_argument("--output", required=True,
+                       help="Explicit absent or empty output family directory")
     parser.add_argument("--max-horizon", type=int, default=15,
                        help="Maximum policy horizon to analyze")
     parser.add_argument("--branching", type=int, default=4,
                        help="Default branching factor")
 
     args = parser.parse_args()
-    run(args)
+    try:
+        run(args)
+    except ValueError as exc:
+        parser.error(str(exc))
 
 
 if __name__ == "__main__":

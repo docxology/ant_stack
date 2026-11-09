@@ -6,7 +6,7 @@
 This file applies to `papers/documentation/assets/figures`.
 
 ## Directory contract
-Figure assets for the documentation paper.
+Optional static/retained documentation figures; actual source/resource bindings, not directory membership, identify fresh PDF inputs.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

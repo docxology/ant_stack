@@ -26,6 +26,93 @@ from antstack_core import __version__
 DEFAULT_DEPENDENCIES = ("jinja2", "matplotlib", "numpy", "pandas", "pillow", "psutil", "pyyaml", "scipy", "seaborn")
 
 
+def _fresh_family_path(output):
+    if output is None:
+        raise ValueError("An explicit fresh family output directory is required")
+    destination = publication_path(output, tree=True)
+    if destination.exists() and (not destination.is_dir() or any(destination.iterdir())):
+        raise ValueError(f"Output family must be absent or empty: {destination}")
+    return destination
+
+
+def _publish_analysis_family(output, *, project, produce, required_paths, input_paths=(), parameters=None):
+    """Publish one complete, source-bound analytical/synthetic family into a fresh root."""
+    destination = _fresh_family_path(output)
+    required = tuple(required_paths)
+    if not required or any(Path(name).is_absolute() or '..' in Path(name).parts for name in required):
+        raise ValueError("A standalone family requires explicit relative product paths")
+    sources = [ordinary_path(path) for path in input_paths]
+    inputs = {str(path): path.read_bytes() for path in sources}
+    source_state = capture_source_state()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=f'.{destination.name}.stage-', dir=destination.parent) as directory:
+        stage = Path(directory)
+        bindings = {}
+        for index, (original, data) in enumerate(inputs.items()):
+            relative = f'inputs/{index}-{Path(original).name}'
+            target = stage / relative
+            target.parent.mkdir(exist_ok=True)
+            target.write_bytes(data)
+            bindings[original] = {'snapshot': relative, 'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)}
+        produce(stage)
+        ordinary_path(stage, tree=True)
+        for name in required:
+            if not (stage / name).is_file():
+                raise ValueError(f"Missing declared analytical product: {name}")
+        def rebase(value):
+            if isinstance(value, dict):
+                return {key: rebase(item) for key, item in value.items()}
+            if isinstance(value, list):
+                return [rebase(item) for item in value]
+            if isinstance(value, str) and (value == str(stage) or value.startswith(str(stage) + os.sep)):
+                return Path(value).relative_to(stage).as_posix()
+            return value
+        for path in sorted(stage.rglob('*')):
+            if path.is_file() and path.suffix == '.json':
+                def invalid_number(value):
+                    raise ValueError(f"Nonfinite analytical JSON: {path}: {value}")
+                atomic_json(path, rebase(json.loads(path.read_text(encoding='utf-8'), parse_constant=invalid_number)))
+            elif path.is_file() and path.suffix == '.md':
+                atomic_text(path, path.read_text(encoding='utf-8').replace(str(stage) + os.sep, ''))
+        for original, binding in bindings.items():
+            expected = {key: binding[key] for key in ('sha256', 'bytes')}
+            if file_identity(original) != expected or file_identity(stage / binding['snapshot']) != expected:
+                raise ValueError(f"Analytical input changed during generation: {original}")
+        products = sorted(path.relative_to(stage).as_posix() for path in stage.rglob('*') if path.is_file())
+        reserved = {'analysis_manifest.json', 'provenance/provenance.json', 'provenance/output_inventory.json'}
+        if reserved.intersection(products):
+            raise ValueError("Producer attempted to replace family publication metadata")
+        atomic_json(stage / 'analysis_manifest.json', {'schema_version': 1, 'complete': True,
+            'family': project, 'artifact_path_base': 'family_root', 'required_paths': list(required),
+            'input_snapshots': bindings, 'parameters': parameters or {},
+            'evidence_class': 'analytical/synthetic estimates; not canonical-base evidence or empirical validation'})
+        products += ['analysis_manifest.json', 'provenance/provenance.json']
+        inventory = 'provenance/output_inventory.json'
+        record = build_run_provenance(project=project, input_paths=sources,
+            output_paths=products + [inventory], parameters=parameters, source_state=source_state)
+        write_provenance(stage / 'provenance/provenance.json', record)
+        artifacts = []
+        for name in products:
+            identity = file_identity(stage / name)
+            if not identity['bytes'] or (stage / name).stat().st_nlink != 1:
+                raise ValueError(f"Analytical product must be nonempty and exclusive: {name}")
+            kind = 'image' if Path(name).suffix in ('.png', '.svg', '.pdf') else 'markdown' if name.endswith('.md') else 'json' if name.endswith('.json') else 'input'
+            artifacts.append({'path': name, 'artifact_type': kind, 'producing_task': project,
+                              'checksum': identity['sha256'], 'bytes': identity['bytes']})
+        atomic_json(stage / inventory, {'schema_version': 1, 'complete': True,
+                                       'artifact_path_base': 'family_root', 'artifacts': artifacts})
+        for artifact in artifacts:
+            if file_identity(stage / artifact['path']) != {'sha256': artifact['checksum'], 'bytes': artifact['bytes']}:
+                raise RuntimeError(f"Analytical family changed before publication: {artifact['path']}")
+        _fresh_family_path(destination)
+        if destination.exists():
+            os.chmod(stage, stat.S_IMODE(destination.stat().st_mode))
+        os.replace(stage, destination)
+    return destination / 'analysis_manifest.json'
+
+
+
+
 def ordinary_path(path: str | Path, *, tree: bool = False) -> Path:
     """Reject symlinks/special nodes without resolving away evidence of a link."""
     candidate = Path(os.path.abspath(Path(path).expanduser()))
@@ -219,9 +306,18 @@ def detect_git_state(cwd: str | Path = ".") -> tuple[str | None, bool | None]:
 
 def capture_source_state(cwd: str | Path = ".") -> dict[str, Any]:
     """Capture before generation; package file hashes work for installed distributions too."""
-    package = Path(__file__).resolve().parents[1]
-    implementation = {str(path.relative_to(package)): file_identity(path)
-                      for path in sorted(package.rglob("*.py")) if not path.is_symlink()}
+    source = Path(__file__).absolute()
+    if any(path.is_symlink() for path in (source, source.parent, source.parents[1])):
+        raise ValueError("Generating implementation must not traverse linked package files/directories")
+    package = source.resolve().parents[1]
+    implementation = {}
+    for path in sorted(package.rglob("*")):
+        if path.is_symlink():
+            raise ValueError(f"Linked generating implementation member: {path}")
+        if path.suffix == ".py":
+            if not path.is_file():
+                raise ValueError(f"Generating implementation is not a regular file: {path}")
+            implementation[str(path.relative_to(package))] = file_identity(path)
     checkout = _git_snapshot(package)
     if Path(checkout["root"]) != package.parent:
         checkout = {"root": str(package), "commit": None, "dirty": None, "changes": None}

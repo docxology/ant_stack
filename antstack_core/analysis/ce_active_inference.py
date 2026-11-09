@@ -1,4 +1,4 @@
-"""Active inference complexity and scaling analysis. Moved verbatim from scripts/complexity_energetics/analyze_active_inference.py; thin wrapper retained for CLI compatibility."""
+"""Sample analytical aggregate-policy workloads in an isolated family."""
 
 import json
 from pathlib import Path
@@ -9,10 +9,11 @@ from antstack_core.analysis import (
 )
 from antstack_core.analysis import (
     estimate_detailed_energy, analyze_scaling_relationship,
-    estimate_theoretical_limits, calculate_energy_efficiency_metrics
+    estimate_theoretical_limits
 )
 from antstack_core.analysis import EnergyCoefficients
-from antstack_core.figures import line_plot, scatter_plot, bar_plot
+from antstack_core.figures import line_plot, bar_plot
+from antstack_core.publishing.provenance import _publish_analysis_family
 
 from .workloads import effective_policy_count
 
@@ -62,7 +63,7 @@ def analyze_horizon_scaling(horizons: List[int], branching: int, state_dim: int,
             'flops': load.flops,
             'memory': load.sram_bytes,
             'theoretical_limit': limits['total_theoretical_j'],
-            'efficiency_ratio': breakdown.total / limits['total_theoretical_j']
+            'model_to_theoretical_energy_ratio': breakdown.total / limits['total_theoretical_j']
         }
 
     # Analyze scaling relationships
@@ -94,8 +95,8 @@ def analyze_horizon_scaling(horizons: List[int], branching: int, state_dim: int,
     limits_plot = plot_dir / "horizon_theoretical_limits.png"
     line_plot(
         horizons, [energy_values, theoretical_limits],
-        ["Actual Energy", "Theoretical Limit"],
-        "Actual vs Theoretical Energy Limits",
+        ["Model Energy", "Theoretical Bound"],
+        "Model Energy vs Theoretical Bound",
         "Policy Horizon (steps)", "Energy per Decision (J)",
         str(limits_plot)
     )
@@ -151,6 +152,7 @@ def analyze_branching_effects(horizon: int, branching_factors: List[int],
 
         results[f"B_{B}"] = {
             'branching': B,
+            'horizon': horizon,
             'model': 'bounded_aggregate_policy_evaluation',
             'max_policies': 1000,
             'total_policies': total_policies,
@@ -244,12 +246,12 @@ def analyze_bounded_rationality(horizon: int, branching: int, state_dim: int,
 
         results[name] = {
             'strategy': strategy,
+            'horizon': horizon,
             'model': 'exact_aggregate_policy_evaluation' if strategy['max_policies'] is None else 'bounded_aggregate_policy_evaluation',
             'total_policies': total_policies,
             'effective_policies': effective_policies,
             'energy_total': energy_values[-1],
-            'flops': flops_values[-1],
-            'tractable': effective_policies <= 1000
+            'flops': flops_values[-1]
         }
 
     # Generate bounded rationality comparison plots
@@ -284,33 +286,63 @@ def analyze_bounded_rationality(horizon: int, branching: int, state_dim: int,
 
 
 def run(args):
-    # Create output directory
-    output_dir = Path(args.output)
-    output_dir.mkdir(exist_ok=True)
+    maximum = args.max_horizon
+    if isinstance(maximum, bool) or not isinstance(maximum, int) or maximum < 5:
+        raise ValueError("max_horizon must be an integer of at least 5")
+    branching = args.branching
+    if isinstance(branching, bool) or not isinstance(branching, int) or branching < 1:
+        raise ValueError("branching must be a positive integer")
+    horizons = sorted(set(range(5, maximum + 1, 2)) | {maximum})
+    return _publish_analysis_family(
+        getattr(args, "output", None), project="active_inference",
+        produce=lambda stage: _produce(stage, horizons, maximum, branching),
+        required_paths=(
+            "active_inference_analysis.json",
+            "plots/horizon_energy_scaling.png",
+            "plots/horizon_flops_scaling.png",
+            "plots/horizon_theoretical_limits.png",
+            "plots/branching_energy_scaling.png",
+            "plots/branching_policy_count.png",
+            "plots/bounded_rationality_energy.png",
+            "plots/bounded_rationality_flops.png",
+        ),
+        parameters={
+            "max_horizon": maximum, "horizons": horizons, "branching": branching,
+            "branching_factors": [2, 3, 4, 5, 6],
+            "branching_study_horizon": min(10, maximum),
+            "strategy_study_horizon": min(12, maximum), "state_dim": 16, "action_dim": 6,
+            "max_policies": 1000, "strategy_budgets": [None, 1000, 1000, 100],
+            "decision_duration_s": 0.01, "hz": 100,
+            "evidence_class": "analytical/synthetic aggregate-policy model; not runtime feasibility",
+        },
+    )
+
+
+def _produce(output_dir: Path, horizons: List[int], maximum: int, branching: int):
 
     print("=" * 60)
     print("Active Inference Analysis Orchestrator")
     print("=" * 60)
 
     # Define analysis parameters
-    horizons = list(range(5, args.max_horizon + 1, 2))
+    # Include the exact upper endpoint even when the stride does not reach it.
     branching_factors = [2, 3, 4, 5, 6]
     state_dim = 16
     action_dim = 6
 
     # Analyze horizon scaling
     horizon_results = analyze_horizon_scaling(
-        horizons, args.branching, state_dim, action_dim, output_dir
+        horizons, branching, state_dim, action_dim, output_dir
     )
 
     # Analyze branching effects
     branching_results = analyze_branching_effects(
-        10, branching_factors, state_dim, action_dim, output_dir
+        min(10, maximum), branching_factors, state_dim, action_dim, output_dir
     )
 
     # Analyze bounded rationality
     bounded_results = analyze_bounded_rationality(
-        12, args.branching, state_dim, action_dim, output_dir
+        min(12, maximum), branching, state_dim, action_dim, output_dir
     )
 
     # Compile comprehensive results
@@ -323,9 +355,20 @@ def run(args):
             'branching_factors': branching_factors,
             'state_dim': state_dim,
             'action_dim': action_dim,
-            'max_horizon': args.max_horizon,
-            'default_branching': args.branching
+            'max_horizon': maximum,
+            'default_branching': branching,
+            'branching_study_horizon': min(10, maximum),
+            'strategy_study_horizon': min(12, maximum),
+            'decision_duration_s': 0.01,
+            'evidence_class': 'analytical/synthetic estimates; not runtime feasibility'
         }
+    }
+    # This is a descriptive cutoff over sampled model energies, not tractability.
+    below_cut = [h for h in horizons if horizon_results[f"H_p_{h}"]['energy_total'] < 1.0]
+    all_results['sampled_model_energy_summary'] = {
+        'cutoff_j': 1.0,
+        'horizons_strictly_below_cutoff': below_cut,
+        'largest_sampled_horizon_below_cutoff': max(below_cut) if below_cut else None,
     }
 
     # Save results
@@ -334,29 +377,30 @@ def run(args):
         json.dump(all_results, f, indent=2, default=str)
 
     print(f"\nActive inference analysis complete!")
-    print(f"Results saved in: {output_dir}")
-    print(f"- Analysis results: {results_path}")
-    print(f"- Plots directory: {output_dir / 'plots'}")
 
     # Print key findings
     print(f"\nKey Findings:")
 
     # Horizon scaling
-    horizon_regime = horizon_results['summary']['energy_scaling'].get('regime', 'unknown')
-    horizon_exponent = horizon_results['summary']['energy_scaling'].get('scaling_exponent', 0)
-    print(f"- Horizon energy scaling: {horizon_regime} (exponent: {horizon_exponent:.1f})")
+    fit = horizon_results['summary']['energy_scaling']
+    if fit['valid']:
+        print(f"- Sampled horizon model-energy scaling: {fit['scaling_regime']} "
+              f"(exponent: {fit['scaling_exponent']:.3f})")
+    else:
+        print(f"- Sampled horizon model-energy scaling unavailable: {fit['error']}")
 
     # Branching effects
-    branching_regime = branching_results['summary']['energy_scaling'].get('regime', 'unknown')
-    print(f"- Branching energy scaling: {branching_regime}")
+    fit = branching_results['summary']['energy_scaling']
+    description = fit['scaling_regime'] if fit['valid'] else f"unavailable ({fit['error']})"
+    print(f"- Sampled branching model-energy scaling: {description}")
 
     # Bounded rationality effectiveness
     strategies = bounded_results['summary']['strategy_names']
     energies = bounded_results['summary']['energy_values']
     best_strategy = strategies[energies.index(min(energies))]
-    print(f"- Most efficient strategy: {best_strategy}")
-
-    # Tractability threshold
-    max_tractable_horizon = max(h for h in horizons
-                               if horizon_results[f"H_p_{h}"]['energy_total'] < 1.0)
-    print(f"- Tractability threshold: H_p ≤ {max_tractable_horizon}")
+    print(f"- Lowest sampled model-energy strategy: {best_strategy}")
+    if below_cut:
+        print(f"- Sampled horizons with model energy below 1 J: {below_cut}")
+    else:
+        print("- No sampled horizon has model energy below 1 J")
+    print("- These aggregate-policy estimates do not establish runtime feasibility or physical efficiency")

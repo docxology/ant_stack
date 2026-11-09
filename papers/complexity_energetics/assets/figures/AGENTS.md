@@ -6,7 +6,7 @@
 This file applies to `papers/complexity_energetics/assets/figures`.
 
 ## Directory contract
-Paper-local generated figure images for complexity energetics.
+Retained supplemental figure exports, not canonical-base evidence. New standalone generators require fresh caller-selected output families.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

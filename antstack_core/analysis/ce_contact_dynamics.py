@@ -1,4 +1,4 @@
-"""Contact dynamics and terrain effects analysis. Moved verbatim from scripts/complexity_energetics/analyze_contact_dynamics.py; thin wrapper retained for CLI compatibility."""
+"""Sample analytical contact-solver and terrain workloads in an isolated family."""
 
 import json
 from pathlib import Path
@@ -7,7 +7,8 @@ from typing import Dict, List, Any
 from antstack_core.analysis import calculate_contact_complexity, enhanced_body_workload_closed_form
 from antstack_core.analysis import estimate_detailed_energy, analyze_scaling_relationship
 from antstack_core.analysis import EnergyCoefficients
-from antstack_core.figures import line_plot, scatter_plot, bar_plot
+from antstack_core.figures import line_plot, bar_plot
+from antstack_core.publishing.provenance import _publish_analysis_family
 
 
 def analyze_solver_comparison(contact_counts: List[int], output_dir: Path) -> Dict[str, Any]:
@@ -133,17 +134,39 @@ def analyze_terrain_effects(terrain_configs: List[Dict[str, Any]], output_dir: P
 
 
 def run(args):
-    # Create output directory
-    output_dir = Path(args.output)
-    output_dir.mkdir(exist_ok=True)
+    maximum = args.max_contacts
+    if isinstance(maximum, bool) or not isinstance(maximum, int) or maximum < 1:
+        raise ValueError("max_contacts must be a positive integer")
+    contact_counts = sorted({count for count in (5, 10, 15, 20, 25, 30, 40, maximum)
+                             if 0 < count <= maximum})
+    return _publish_analysis_family(
+        getattr(args, "output", None), project="contact_dynamics",
+        produce=lambda stage: _produce(stage, contact_counts, maximum),
+        required_paths=(
+            "contact_dynamics_analysis.json",
+            "plots/contact_solver_flops_comparison.png",
+            "plots/contact_solver_memory_comparison.png",
+            "plots/terrain_energy_comparison.png",
+            "plots/terrain_flops_comparison.png",
+        ),
+        parameters={
+            "max_contacts": maximum, "contact_counts": contact_counts,
+            "solvers": ["pgs", "si", "ldlt"], "solver_joints": 18,
+            "terrain_contacts": {name: min(count, maximum) for name, count in
+                                 (("Smooth", 8), ("Rough", 16), ("Steep", 20), ("Soft", 12))},
+            "decision_duration_s": 0.01, "hz": 100,
+            "evidence_class": "analytical/synthetic workload and model-energy estimates",
+        },
+    )
+
+
+def _produce(output_dir: Path, contact_counts: List[int], maximum: int):
 
     print("=" * 60)
     print("Contact Dynamics Analysis Orchestrator")
     print("=" * 60)
 
-    # Define analysis parameters
-    contact_counts = [5, 10, 15, 20, 25, 30, 40, args.max_contacts]
-
+    # The sorted grid includes the requested endpoint and never exceeds it.
     # Analyze solver comparison
     solver_results = analyze_solver_comparison(contact_counts, output_dir)
 
@@ -178,6 +201,8 @@ def run(args):
             }
         }
     ]
+    for config in terrain_configs:
+        config['params']['C'] = min(config['params']['C'], maximum)
 
     # Analyze terrain effects
     terrain_results = analyze_terrain_effects(terrain_configs, output_dir)
@@ -188,8 +213,10 @@ def run(args):
         'terrain_analysis': terrain_results,
         'configuration': {
             'contact_counts': contact_counts,
-            'primary_solver': args.solver,
-            'max_contacts': args.max_contacts
+            'solvers': ['pgs', 'si', 'ldlt'],
+            'max_contacts': maximum,
+            'decision_duration_s': 0.01,
+            'evidence_class': 'analytical/synthetic estimates; not empirical measurements'
         }
     }
 
@@ -199,20 +226,18 @@ def run(args):
         json.dump(all_results, f, indent=2, default=str)
 
     print(f"\nContact dynamics analysis complete!")
-    print(f"Results saved in: {output_dir}")
-    print(f"- Analysis results: {results_path}")
-    print(f"- Plots directory: {output_dir / 'plots'}")
 
     # Print key findings
     print(f"\nKey Findings:")
-    print(f"- PGS scaling: {solver_results['pgs']['flops_scaling'].get('regime', 'unknown')}")
-    print(f"- SI scaling: {solver_results['si']['flops_scaling'].get('regime', 'unknown')}")
-    print(f"- LDLT scaling: {solver_results['ldlt']['flops_scaling'].get('regime', 'unknown')}")
+    for solver in ("pgs", "si", "ldlt"):
+        fit = solver_results[solver]['flops_scaling']
+        description = fit['scaling_regime'] if fit['valid'] else f"unavailable ({fit['error']})"
+        print(f"- {solver.upper()} sampled FLOP scaling: {description}")
 
     max_energy_terrain = max(terrain_results['summary']['terrain_names'],
                            key=lambda x: terrain_results[x]['energy_total'])
     min_energy_terrain = min(terrain_results['summary']['terrain_names'],
                            key=lambda x: terrain_results[x]['energy_total'])
 
-    print(f"- Highest energy terrain: {max_energy_terrain}")
-    print(f"- Lowest energy terrain: {min_energy_terrain}")
+    print(f"- Highest sampled model-energy terrain: {max_energy_terrain}")
+    print(f"- Lowest sampled model-energy terrain: {min_energy_terrain}")

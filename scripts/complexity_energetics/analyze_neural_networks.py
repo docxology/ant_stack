@@ -5,7 +5,7 @@ Thin orchestrator for sparse neural network analysis using ce.workloads methods.
 Analyzes different connectivity patterns and sparsity levels.
 
 Usage:
-    python scripts/analyze_neural_networks.py [--output output_dir] [--pattern biological]
+    python scripts/complexity_energetics/analyze_neural_networks.py --output NEW_DIRECTORY
 """
 
 import argparse
@@ -21,15 +21,16 @@ from antstack_core.analysis.ce_neural_networks import run
 def main():
     """Main orchestration function."""
     parser = argparse.ArgumentParser(description="Analyze neural network patterns and scaling")
-    parser.add_argument("--output", default="neural_analysis_output",
-                       help="Output directory for results")
-    parser.add_argument("--pattern", choices=["random", "small_world", "scale_free", "biological"],
-                       default="biological", help="Primary connectivity pattern")
+    parser.add_argument("--output", required=True,
+                       help="Explicit absent or empty output family directory")
     parser.add_argument("--max-size", type=int, default=100000,
                        help="Maximum network size to analyze")
 
     args = parser.parse_args()
-    run(args)
+    try:
+        run(args)
+    except ValueError as exc:
+        parser.error(str(exc))
 
 
 if __name__ == "__main__":

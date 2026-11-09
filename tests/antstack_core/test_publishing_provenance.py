@@ -126,3 +126,29 @@ def test_tex_resource_mask_preserves_document_reference_identity():
     assert report["valid"] is True
     assert report["definitions"] == ["sec:one"]
     assert report["references"] == ["sec:one"]
+
+
+@pytest.mark.parametrize("kind", ["module", "directory", "provenance-file"])
+def test_linked_generating_implementation_cannot_publish_incomplete_identity(tmp_path, monkeypatch, kind):
+    import antstack_core.publishing.provenance as module
+    package = tmp_path / "implementation"
+    publishing = package / "publishing"
+    publishing.mkdir(parents=True)
+    source = publishing / "provenance.py"
+    source.write_text("# provenance fixture\n")
+    target = tmp_path / "external"
+    target.mkdir()
+    (target / "energy.py").write_text("joules = 17\n")
+    if kind == "module":
+        (package / "energy.py").symlink_to(target / "energy.py")
+    elif kind == "directory":
+        (package / "analysis").symlink_to(target, target_is_directory=True)
+    else:
+        source.unlink()
+        source.symlink_to(target / "energy.py")
+    monkeypatch.setattr(module, "__file__", str(source))
+    with pytest.raises(ValueError):
+        module.capture_source_state(tmp_path)
+    (target / "energy.py").write_text("joules = 9001\n")
+    with pytest.raises(ValueError):
+        module.capture_source_state(tmp_path)

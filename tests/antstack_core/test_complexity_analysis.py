@@ -507,26 +507,6 @@ class TestComplexityAnalysisRobustness(unittest.TestCase):
         result = bootstrap_analyzer.analyze_scaling_with_bootstrap(x_data, y_data)
         self.assertIsInstance(result, dict)
 
-    def test_complexity_metrics_edge_cases(self):
-        """Test ComplexityMetrics with extreme values."""
-        # Test with very large values
-        large_metrics = ComplexityMetrics(
-            entropy=1e6,
-            mutual_information=1e6,
-            network_density=1.0,
-            thermodynamic_efficiency=1.0
-        )
-        self.assertIsInstance(large_metrics, ComplexityMetrics)
-
-        # Test with very small values
-        small_metrics = ComplexityMetrics(
-            entropy=1e-6,
-            mutual_information=1e-6,
-            network_density=0.0,
-            thermodynamic_efficiency=0.0
-        )
-        self.assertIsInstance(small_metrics, ComplexityMetrics)
-
 
 if __name__ == '__main__':
     unittest.main()
@@ -671,3 +651,27 @@ def test_bootstrap_retains_undefined_fit_statistics(module_name, response):
         low, high = result["confidence_intervals"]["r_squared"]
         assert 0 <= low <= high <= 1
         assert all(math.isfinite(value) for value in result["bootstrap_r_squared"])
+
+
+@pytest.mark.parametrize("module_name", ["complexity_analysis", "enhanced_complexity_analysis"])
+def test_real_diagnostics_distinguish_unavailable_fields_from_computed_zero(module_name):
+    import importlib
+    import json
+    from dataclasses import asdict
+    from antstack_core.analysis.energy import EnergyBreakdown
+    module = importlib.import_module("antstack_core.analysis." + module_name)
+    network = module.NetworkComplexityAnalyzer().analyze_network_complexity([[0]])
+    serialized = json.loads(json.dumps(asdict(network), allow_nan=False))
+    assert serialized["network_density"] == 0
+    assert serialized["clustering_coefficient"] == 0
+    assert serialized["entropy"] == 0
+    assert serialized["thermodynamic_efficiency"] is None
+    assert serialized["scaling_exponent"] is None
+    assert serialized["variance"] is None
+    thermo = module.ThermodynamicComplexityAnalyzer(temperature_k=300).analyze_thermodynamic_efficiency(
+        EnergyBreakdown(compute_flops=1), computational_work=1, information_processed=0)
+    serialized = json.loads(json.dumps(asdict(thermo), allow_nan=False))
+    assert serialized["thermodynamic_efficiency"] == 0
+    assert serialized["entropy_change"] == pytest.approx(1 / 300)
+    assert serialized["network_density"] is None
+    assert serialized["entropy"] is None

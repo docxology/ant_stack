@@ -27,6 +27,9 @@ import sys
 import os
 from pathlib import Path
 
+import pytest
+import yaml
+
 # Add the new core package to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -322,6 +325,121 @@ class TestIntegrationWorkflow(unittest.TestCase):
             self.assertTrue(output_path.exists())
         except ImportError:
             pass
+
+
+def _write_configured_paper(root, name, output_filename=None):
+    paper = root / "papers" / name
+    paper.mkdir(parents=True)
+    (paper / "body.md").write_text(f"# {name}\n\nIndependent manuscript content.\n")
+    config = {
+        "paper": {"title": name},
+        "content": {"files": ["body.md"]},
+        "build": {"has_computational_analysis": False},
+        "latex": {},
+    }
+    if output_filename is not None:
+        config["paper"]["output_filename"] = output_filename
+    (paper / "paper_config.yaml").write_text(yaml.safe_dump(config))
+    return paper
+
+
+@pytest.mark.parametrize("validate_only", [False, True])
+@pytest.mark.parametrize("single", [False, True])
+def test_duplicate_manuscript_destinations_fail_before_production(tmp_path, monkeypatch, capsys, validate_only, single):
+    from antstack_core.publishing import paper_builder
+    _write_configured_paper(tmp_path, "alpha")
+    _write_configured_paper(tmp_path, "beta", "alpha.pdf")
+    previous = tmp_path / "alpha.pdf"
+    previous.write_bytes(b"previous published PDF")
+
+    def unexpected_production(*args, **kwargs):
+        pytest.fail("Duplicate destinations reached an analysis or rendering producer")
+
+    monkeypatch.setattr(paper_builder.ModularPaperBuilder, "run_analysis_pipeline", unexpected_production)
+    monkeypatch.setattr(paper_builder, "PDFGenerator", unexpected_production)
+    builder = paper_builder.ModularPaperBuilder(tmp_path)
+    if single:
+        success, result = builder.build_paper("alpha", validate_only)
+        assert not success
+    else:
+        result = builder.build_all_papers(validate_only)
+        assert not result["success"]
+        assert result["papers_built"] == 0
+        assert result["papers_failed"] == 2
+        assert all(not value["success"] for value in result["build_results"].values())
+    assert "alpha" in result["error"] and "beta" in result["error"]
+    assert str(previous) in result["error"]
+    arguments = ["--project-root", str(tmp_path)]
+    if single:
+        arguments += ["--paper", "alpha"]
+    if validate_only:
+        arguments.append("--validate-only")
+    assert paper_builder.main(arguments) == 1
+    assert not json.loads(capsys.readouterr().out)["success"]
+    assert previous.read_bytes() == b"previous published PDF"
+    assert not (tmp_path / "beta.pdf").exists()
+
+
+def test_distinct_manuscript_destinations_validate_independently(tmp_path):
+    from antstack_core.publishing.paper_builder import ModularPaperBuilder
+    _write_configured_paper(tmp_path, "alpha")
+    _write_configured_paper(tmp_path, "beta", "other.pdf")
+    results = ModularPaperBuilder(tmp_path).build_all_papers(validate_only=True)
+    assert results["success"]
+    assert results["papers_built"] == 2
+    assert results["papers_failed"] == 0
+    assert all(value["validation"]["valid"] for value in results["build_results"].values())
+    assert not list(tmp_path.glob("*.pdf"))
+
+
+def _build_orchestrator(root):
+    from antstack_core.publishing.build_orchestrator import BuildOrchestrator, BuildOrchestratorConfig
+    return BuildOrchestrator(BuildOrchestratorConfig(
+        build_dir=root / "build", temp_dir=root / "temp", cache_dir=root / "cache",
+        generate_reports=False))
+
+
+@pytest.mark.parametrize("alias", ["dotdot", "symlink"])
+def test_orchestrator_rejects_normalized_duplicate_destinations(tmp_path, alias):
+    from antstack_core.publishing.build_orchestrator import BuildTarget
+    orchestrator = _build_orchestrator(tmp_path)
+    destination = tmp_path / "published/paper.pdf"
+    destination.parent.mkdir()
+    destination.write_bytes(b"previous published PDF")
+    first = BuildTarget("first", [tmp_path / "first.md"], destination)
+    orchestrator.add_build_target(first)
+    if alias == "dotdot":
+        (tmp_path / "unused").mkdir()
+        duplicate = tmp_path / "unused/../published/paper.pdf"
+    else:
+        (tmp_path / "alias").symlink_to(destination.parent, target_is_directory=True)
+        duplicate = tmp_path / "alias/paper.pdf"
+    with pytest.raises(ValueError) as error:
+        orchestrator.add_build_target(BuildTarget("second", [tmp_path / "second.md"], duplicate))
+    assert "first" in str(error.value) and "second" in str(error.value)
+    assert str(destination) in str(error.value)
+    assert orchestrator.targets == {"first": first}
+    assert not orchestrator.build_results
+    assert destination.read_bytes() == b"previous published PDF"
+
+
+def test_distinct_orchestrator_destinations_preserve_dependency_failures(tmp_path):
+    from antstack_core.publishing.build_orchestrator import BuildTarget
+    orchestrator = _build_orchestrator(tmp_path)
+    prerequisite = tmp_path / "prerequisite.pdf"
+    dependent = tmp_path / "dependent.pdf"
+    prerequisite.write_bytes(b"previous prerequisite")
+    dependent.write_bytes(b"previous dependent")
+    source = tmp_path / "dependent.md"
+    source.write_text("# Dependent\n\nSource content.\n")
+    orchestrator.add_build_target(BuildTarget("prerequisite", [tmp_path / "missing.md"], prerequisite))
+    orchestrator.add_build_target(BuildTarget("dependent", [source], dependent, dependencies=["prerequisite"]))
+    results = orchestrator.build_all(parallel=False)
+    assert not results["prerequisite"].success
+    assert not results["dependent"].success
+    assert orchestrator.targets["dependent"].build_status == "blocked"
+    assert prerequisite.read_bytes() == b"previous prerequisite"
+    assert dependent.read_bytes() == b"previous dependent"
 
 
 if __name__ == '__main__':

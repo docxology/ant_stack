@@ -19,8 +19,8 @@ from antstack_core.analysis import (
 from antstack_core.analysis import EnergyCoefficients
 from antstack_core.figures import bar_plot, interval_plot, line_plot, scatter_plot
 from antstack_core.publishing.provenance import (
-    atomic_json, build_run_provenance, capture_source_state, file_identity,
-    ordinary_path, publication_path, write_provenance,
+    _fresh_family_path, atomic_json, build_run_provenance, capture_source_state,
+    file_identity, ordinary_path, write_provenance,
 )
 
 
@@ -85,15 +85,6 @@ def _family_models(suite, coeffs):
         models["energy_component_breakdown"] = {"modules": modules,
                                                "idle_accounting": "sum of three independent module baselines, not one shared system baseline"}
     return models
-
-
-def _fresh_family_path(output):
-    if output is None:
-        raise ValueError("An explicit fresh family output directory is required")
-    destination = publication_path(output, tree=True)
-    if destination.exists() and (not destination.is_dir() or any(destination.iterdir())):
-        raise ValueError(f"Figure family output must be absent or empty: {destination}")
-    return destination
 
 
 def _publish_family(output, suite, manifest_name, image_format, coeffs, produce, *, supplementary=()):

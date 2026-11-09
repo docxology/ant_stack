@@ -6,7 +6,7 @@
 This file applies to `papers/ant_stack/assets/mermaid`.
 
 ## Directory contract
-Rendered Mermaid diagram assets for the Ant Stack manuscript.
+Retained Mermaid exports, not freshness proof. Configured builds render current fenced diagram sources in private workspaces.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

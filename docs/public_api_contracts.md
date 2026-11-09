@@ -6,9 +6,9 @@
 
 | Entry point | Contract |
 |---|---|
-| `antstack-build [--project-root DIR] [--paper NAME] [--validate-only]` | Read the configured ordered sources. Empty/missing/invalid paper sets and failed analysis/render return nonzero. Validation writes `build_report.md` but no PDF. No implicit pytest invocation or `--no-tests` switch. |
+| `antstack-build [--project-root DIR] [--paper NAME] [--validate-only]` | Read configured ordered sources. Empty/missing/invalid paper sets, colliding effective PDF destinations and failed analysis/render return nonzero before ambiguous publication. Validation writes `build_report.md` but no PDF. No implicit pytest invocation or `--no-tests` switch. |
 | `antstack-ce MANIFEST [--validate-only] [--out DIR]` | Validation does not need an output. Generation requires an explicit new/empty artifact root and puts all outputs inside it. A populated root is immutable. |
-| `run-all-antstack --config FILE [--out DIR] [--run-id ID] [--tasks LIST] [--validate-only] [--log-level LEVEL]` | Strict config/domain preflight, fresh staged outputs, current-byte verification, owned archived replacements and coherent projection publication. Validation does not create a run layout. |
+| `run-all-antstack --config FILE [--out DIR] [--run-id ID] [--tasks LIST] [--validate-only] [--log-level LEVEL]` | Explicit overrides apply before validating the effective configuration and prerequisites. Fresh staged outputs, current-byte verification, owned archived replacements and coherent projections. Validation creates no run layout. |
 
 ## Scientific contracts changed in 3.0.0
 
@@ -22,10 +22,12 @@
 | Power measurement | Null means not measured. Requested but unavailable RAPL/NVML observations raise an explicit error (`PowerMeasurementUnavailable` in `antstack_core.analysis.power_meters`), not zero joules. |
 | Plots | Paired finite filtering preserves observation alignment. Invalid categorical data/intervals fail before replacing an output. Supplied intervals retain their actual bounds even when they exclude the displayed mean; no significance is inferred. |
 | `interval_plot` | Categorical estimates and actual supplied bounds use an explicit log axis only when every displayed value/bound is positive and the range warrants it. Zero/negative values remain visible on a linear axis; small positive labels are not rounded into zero. Failed image writes preserve the prior image and its mode. |
-| Enhanced figure/table CLIs | All five supplemental generators require explicit fresh absent/empty output roots. Complete families stage before atomic publication, with relative checksummed inventories and source/runtime provenance. Populated, linked, package and runtime roots are refused without replacing prior data. Attached publication captions use real figure IDs; multipanel references use explicit log/symlog scales rather than invisible tiny linear bars. These are separate analytical inputs, not canonical run replacements. |
+| Supplemental analysis/figure/table CLIs | All ten generators require explicit fresh absent/empty output roots. Complete families stage before atomic publication, with relative checksummed inventories and source/runtime provenance; manifest-driven analyses retain input snapshots. Populated, linked, package and runtime roots are refused without replacing prior data. Captions attach to real figure IDs; log/symlog comparisons expose small values. These are separate analytical inputs, not canonical run replacements. |
 | `MeterConfig` | Only `meter_type`/YAML `type`, NVML `device_index` and RAPL `energy_path` are consumed. Removed calibration/baseline/sampler/channel/logging controls and buffer helpers have no shim; unsupported fields fail before generation. Input `provenance` is notes, not switches disabling mandatory source/version identities. |
 | Toy agent model | `complexity_analysis.AgentBasedModel.simulate()` is deterministic with no seed argument and does not reset caller RNGs. `state_pair_similarity` replaces the incorrectly named clustering coefficient; costs are arbitrary units, not joules. The duplicate enhanced-module toy class was removed. |
 | Conditional empirical comparison | `TheoreticalLimitsAnalyzer.compare_with_empirical_data` exposes supplied efficiency and an explicitly not-assessed validation status; a supplied efficiency cannot become `validation_score`. Its energy/erasure ratio is conditional on the declared erased-bit assumption, not biological or device validation. |
+| Enhanced comprehensive estimate | Optional fits/R² preserve `None` rather than numeric zero. Aggregation requires matched decision windows and describes isolated module sweep means with per-module idle, not a single configuration or whole-device observation. Physical cost of transport is unavailable without locomotion evidence; no hardcoded mass/distance supplies it. |
+| Key-number updater CLI | Missing/invalid/unavailable placeholders, missing sections and failed updates report failure and exit nonzero. Exact valid formats retain their actual values; failed substitutions preserve prior source bytes. |
 
 ## Publication is failure-honest, not a scientific certification
 
@@ -33,7 +35,7 @@
 
 Figure, table, equation and section IDs must name actual counters. A label inside an unnumbered display is not a numbered equation. Do not fix an unresolved reference by guessing a similar label or citation author/year. Citation-key validation does not verify bibliographic identity; claims/references need independent primary-source review.
 
-`BuildOrchestrator` honors dependency order and blocks dependants after a failed prerequisite. Cache reuse requires current configuration/source/resource/output identities; a missing/tampered output is not a hit. Caller-owned temporary directories and unowned output files are not disposable cleanup targets. A source receipt is not permission to remove unrelated files.
+`BuildOrchestrator` rejects distinct targets with colliding resolved outputs, honors dependency order and blocks dependants after failed prerequisites. Cache reuse requires current configuration/source/resource/output identities; a missing/tampered output is not a hit. Caller-owned temporary directories and unowned files are not disposable cleanup targets. A source receipt is not deletion permission. Generating-package identity refuses linked package members rather than silently omitting potentially executed source.
 
 Mermaid renders locally through pinned `mmdc`/Puppeteer by default. A remote Kroki endpoint is opt-in, credential-free and caller-trusted; there is no implicit public upload or Docker fallback. Failed rendering never reuses an old diagram as fresh evidence. Do not disable a browser sandbox merely to make a gate pass.
 

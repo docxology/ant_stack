@@ -120,40 +120,38 @@ class PaperKeyNumbersUpdater:
         return results
 
 
-def run(args):
-    """Execute the updater with parsed arguments."""
-    updater = PaperKeyNumbersUpdater()
+def run(args) -> int:
+    """Execute against caller-owned paths, returning a failure-honest exit status."""
+    try:
+        updater = PaperKeyNumbersUpdater()
+        if args.validate and not args.section:
+            print("Specify --section for validation mode")
+            return 1
 
-    if args.validate:
-        # Validation mode
         if args.section:
-            paper_dir = Path("papers") / args.paper
+            paper_dir = updater.project_root / "papers" / args.paper
             section_file = paper_dir / f"{args.section.capitalize()}.md"
-            if section_file.exists():
+            if not section_file.is_file():
+                print(f"Section file not found: {section_file}")
+                return 1
+            if args.validate:
                 results = updater.validate_key_numbers_placeholders(section_file)
                 print(f"Validation results for {args.section}:")
-                print(f"  Valid: {len(results['valid'])}")
-                print(f"  Invalid: {len(results['invalid'])}")
-                if results['invalid']:
-                    print("  Invalid placeholders:")
-                    for invalid in results['invalid']:
-                        print(f"    - {invalid}")
-            else:
-                print(f"Section file not found: {section_file}")
-        else:
-            print("Specify --section for validation mode")
-    else:
-        # Update mode
-        if args.section:
-            paper_dir = Path("papers") / args.paper
-            section_file = paper_dir / f"{args.section.capitalize()}.md"
-            if section_file.exists():
-                success = updater.update_paper_section(args.section, section_file)
-                print(f"Updated {args.section}: {'✓' if success else '✗'}")
-            else:
-                print(f"Section file not found: {section_file}")
-        else:
-            # Update all sections
-            results = updater.update_all_paper_sections(args.paper)
-            total_updated = sum(1 for success in results.values() if success)
-            print(f"\nUpdated {total_updated}/{len(results)} sections successfully")
+                for category in ("valid", "invalid", "missing"):
+                    print(f"  {category.capitalize()}: {len(results[category])}")
+                    if category != "valid" and results[category]:
+                        print(f"  {category.capitalize()} placeholders:")
+                        for placeholder in results[category]:
+                            print(f"    - {placeholder}")
+                return int(bool(results["invalid"] or results["missing"]))
+            success = updater.update_paper_section(args.section, section_file)
+            print(f"Updated {args.section}: {'✓' if success else '✗'}")
+            return 0 if success else 1
+
+        results = updater.update_all_paper_sections(args.paper)
+        total_updated = sum(1 for success in results.values() if success)
+        print(f"\nUpdated {total_updated}/{len(results)} sections successfully")
+        return 0 if results and all(results.values()) else 1
+    except (OSError, KeyError, ValueError, TypeError) as error:
+        print(f"Key-number operation failed: {error}")
+        return 1

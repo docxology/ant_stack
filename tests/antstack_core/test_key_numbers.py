@@ -212,6 +212,26 @@ def test_updater_uses_owned_project_and_never_rewrites_literals(tmp_path, source
     assert section.read_bytes() == original
 
 
+@pytest.mark.parametrize("failure", [
+    "{{key_numbers.scaling.brain.exponent}}",
+    "{{key_numbers.energy.body:not-a-format}}",
+    "{{key_numbers.scaling.body.exponent}}",
+])
+def test_updater_rendering_failure_keeps_entire_section_unchanged(tmp_path, source, supplied, failure):
+    if "scaling.body" in failure:
+        supplied["scaling_exponents"]["body_energy"] = None
+        supplied["scaling_exponents"]["body_r_squared"] = None
+        supplied["scaling_exponents"]["body_regime"] = "unavailable"
+        source.write_text(json.dumps(supplied))
+    updater = PaperKeyNumbersUpdater(tmp_path, json_path=source)
+    section = tmp_path / "Results.md"
+    original = "{{key_numbers.energy.body:.9f}}\n" + failure
+    section.write_text(original)
+    with pytest.raises((KeyError, ValueError)):
+        updater.update_results(section)
+    assert section.read_text() == original
+
+
 @pytest.mark.parametrize("section,key", [
     ("per_decision_energy", "mind_mj"),
     ("per_decision_energy", "total_mj"),

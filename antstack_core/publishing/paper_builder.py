@@ -72,6 +72,16 @@ class ModularPaperBuilder:
         config = self.load_paper_config(paper_name)
         return self.project_root / config["paper"].get("output_filename", self._default_pdf_name(paper_name))
 
+    def _validate_output_destinations(self, paper_names: Sequence[str]) -> None:
+        destinations: dict[Path, str] = {}
+        for paper_name in sorted(set(paper_names)):
+            destination = self._get_expected_pdf_path(paper_name).resolve()
+            if destination in destinations:
+                raise ValueError(
+                    f"Duplicate PDF output destination for papers '{destinations[destination]}' "
+                    f"and '{paper_name}': {destination}")
+            destinations[destination] = paper_name
+
     def validate_paper_environment(self, paper_name: str) -> dict[str, Any]:
         result = {"paper_name": paper_name, "valid": True, "issues": [], "warnings": []}
         try:
@@ -123,6 +133,15 @@ class ModularPaperBuilder:
 
     def build_paper(self, paper_name: str, validate_only: bool = False) -> tuple[bool, dict[str, Any]]:
         try:
+            self._validate_output_destinations([*self.discover_papers(), paper_name])
+        except (OSError, ValueError, TypeError, RuntimeError, yaml.YAMLError) as error:
+            result = {"success": False, "error": str(error)}
+            self.build_results[paper_name] = result
+            return False, result
+        return self._build_paper(paper_name, validate_only)
+
+    def _build_paper(self, paper_name: str, validate_only: bool) -> tuple[bool, dict[str, Any]]:
+        try:
             config = self.load_paper_config(paper_name)
             if not validate_only:
                 self.run_analysis_pipeline(paper_name, config)
@@ -166,10 +185,18 @@ class ModularPaperBuilder:
                    "mode": "validation-only" if validate_only else "render"}
         if not papers:
             results["error"] = "No papers found"
-        for paper in papers:
-            success, result = self.build_paper(paper, validate_only)
-            results["build_results"][paper] = result
-            results["papers_built" if success else "papers_failed"] += 1
+        try:
+            self._validate_output_destinations(papers)
+        except (OSError, ValueError, TypeError, RuntimeError, yaml.YAMLError) as error:
+            results["error"] = str(error)
+            results["papers_failed"] = len(papers)
+            results["build_results"] = {paper: {"success": False, "error": str(error)} for paper in papers}
+            self.build_results.update(results["build_results"])
+        else:
+            for paper in papers:
+                success, result = self._build_paper(paper, validate_only)
+                results["build_results"][paper] = result
+                results["papers_built" if success else "papers_failed"] += 1
         results["success"] = bool(papers) and results["papers_failed"] == 0
         self._generate_build_report(results)
         return results

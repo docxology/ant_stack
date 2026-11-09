@@ -6,7 +6,7 @@
 This file applies to `papers/ant_stack/assets/figures`.
 
 ## Directory contract
-Figure assets for the Ant Stack manuscript.
+Static and retained Ant Stack figure assets; active manuscript source/resource bindings identify what a fresh PDF actually used.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

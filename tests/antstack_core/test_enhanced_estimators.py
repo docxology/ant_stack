@@ -16,6 +16,7 @@ Following .cursorrules principles:
 """
 
 import unittest
+import json
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
@@ -29,6 +30,7 @@ from antstack_core.analysis.enhanced_estimators import (
     EnhancedEnergyEstimator
 )
 from antstack_core.analysis.energy import EnergyCoefficients
+from antstack_core.analysis.statistics import analyze_scaling_relationship
 import math
 
 try:
@@ -86,6 +88,58 @@ class TestScientificEstimatorAccounting(unittest.TestCase):
         for bad in (-1, float('nan'), float('inf')):
             with self.assertRaises(ValueError):
                 ModuleScalingData('body', 'J', [1], [bad], [1], [0])
+
+    def test_default_and_insufficient_fits_export_unavailable_not_zero(self):
+        estimator = EnhancedEnergyEstimator(EnergyCoefficients())
+        default = estimator.perform_comprehensive_analysis({}, {}, {})
+        exported = json.loads(json.dumps(default.key_numbers))
+        self.assertIsNone(default.mind_analysis.r_squared)
+        self.assertIsNone(exported["scaling_exponents"]["mind_r_squared"])
+        self.assertEqual(exported["scaling_exponents"]["mind_energy"], default.mind_analysis.scaling_exponent)
+        sparse = estimator.perform_comprehensive_analysis(
+            {}, {}, {}, j_values=[1], k_values=[1], h_p_values=[1]
+        )
+        for module in ("body", "brain", "mind"):
+            self.assertIsNone(sparse.key_numbers["scaling_exponents"][f"{module}_energy"])
+            self.assertIsNone(sparse.key_numbers["scaling_exponents"][f"{module}_r_squared"])
+
+    def test_zero_fit_statistics_remain_available_in_export(self):
+        estimator = EnhancedEnergyEstimator(EnergyCoefficients())
+        fit = analyze_scaling_relationship([1, 10, 100], [1, 10, 1])
+        module = ModuleScalingData(
+            "body", "p", [1, 10, 100], [1, 10, 1], [1, 1, 1], [0, 0, 0],
+            scaling_exponent=fit["scaling_exponent"], r_squared=fit["r_squared"], duration_s=1,
+        )
+        exported = estimator._generate_key_numbers_dict(module, module, module, 12, 0.0, 1, 1)
+        restored = json.loads(json.dumps(exported))
+        for name in ("body", "brain", "mind"):
+            self.assertEqual(restored["scaling_exponents"][f"{name}_energy"], 0.0)
+            self.assertEqual(restored["scaling_exponents"][f"{name}_r_squared"], 0.0)
+        self.assertEqual(restored["system_parameters"]["system_efficiency"], 0.0)
+
+    def test_comprehensive_sums_isolated_idle_once_per_module_without_transport_claim(self):
+        coeffs = EnergyCoefficients(
+            flops_pj=0, sram_pj_per_byte=0, dram_pj_per_byte=0,
+            spike_aj=0, baseline_w=2,
+        )
+        estimator = EnhancedEnergyEstimator(coeffs)
+        params = {"dt": .02, "hz": 50}
+        result = estimator.perform_comprehensive_analysis(
+            {**params, "m": 0}, params, params,
+        )
+        self.assertAlmostEqual(result.total_energy_per_decision_j, 3 * 2 * .02)
+        self.assertAlmostEqual(result.key_numbers["per_decision_energy"]["total_mj"], 120)
+        self.assertAlmostEqual(result.key_numbers["system_parameters"]["total_power_w"], 6)
+        self.assertIsNone(result.cost_of_transport)
+        self.assertIsNone(result.key_numbers["system_parameters"]["cost_of_transport"])
+
+    def test_comprehensive_rejects_incompatible_supplied_decision_windows(self):
+        estimator = EnhancedEnergyEstimator(EnergyCoefficients())
+        for module in range(3):
+            params = [{"dt": .01, "hz": 100} for _ in range(3)]
+            params[module] = {"dt": .02, "hz": 50}
+            with self.subTest(module=module), self.assertRaises(ValueError):
+                estimator.perform_comprehensive_analysis(*params)
 
 
 
@@ -218,7 +272,7 @@ class TestComprehensiveEnergyAnalysis(unittest.TestCase):
 
         self.assertIsNone(analysis.system_efficiency)
         self.assertEqual(analysis.total_energy_per_decision_j, 0.0)
-        self.assertEqual(analysis.cost_of_transport, 0.0)
+        self.assertIsNone(analysis.cost_of_transport)
         self.assertEqual(analysis.key_numbers, {})
 
     def test_comprehensive_energy_analysis_with_key_numbers(self):
@@ -332,25 +386,6 @@ class TestEnhancedEnergyEstimator(unittest.TestCase):
         self.assertEqual(len(result.flops_values), 5)
         self.assertEqual(len(result.memory_values), 5)
 
-    def test_perform_comprehensive_analysis(self):
-        """Test comprehensive analysis across all modules."""
-        result = self.estimator.perform_comprehensive_analysis(
-            body_params=self.body_base_params,
-            brain_params=self.brain_base_params,
-            mind_params=self.mind_base_params
-        )
-
-        self.assertIsInstance(result, ComprehensiveEnergyAnalysis)
-
-        # Check that all module analyses are present
-        self.assertIsInstance(result.body_analysis, ModuleScalingData)
-        self.assertIsInstance(result.brain_analysis, ModuleScalingData)
-        self.assertIsInstance(result.mind_analysis, ModuleScalingData)
-
-        # Check that system-level metrics are calculated
-        self.assertIsInstance(result.system_efficiency, float)
-        self.assertIsInstance(result.total_energy_per_decision_j, float)
-        self.assertIsInstance(result.cost_of_transport, float)
 
     def test_calculate_efficiency_metrics(self):
         """Test efficiency metrics calculation."""

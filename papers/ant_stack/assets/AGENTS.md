@@ -6,7 +6,7 @@
 This file applies to `papers/ant_stack/assets`.
 
 ## Directory contract
-Local assets and render intermediates for the Ant Stack manuscript.
+Local/static and retained manuscript assets; directory membership alone is not fresh render evidence. Configured builds use private render workspaces.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

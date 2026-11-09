@@ -6,7 +6,7 @@
 This file applies to `papers/complexity_energetics`.
 
 ## Directory contract
-Complexity energetics manuscript, manifest, runner sources, generated content, outputs, and references.
+Complexity energetics manuscript, explicit manifest, separate enhanced supplements, inventory-owned canonical compatibility projection and references.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

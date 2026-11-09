@@ -6,7 +6,7 @@
 This file applies to `papers/complexity_energetics/assets`.
 
 ## Directory contract
-Paper-local complexity energetics assets and render intermediates.
+Inventory-owned current projection images plus preserved historical/unrelated assets; consult the paper-root projection receipt rather than treating every file as current evidence.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

@@ -150,9 +150,8 @@ def generate_key_numbers() -> Dict[str, Any]:
 
 
 def main(argv=None):
-    from antstack_core.analysis.ce_manuscript_figures import _fresh_family_path
     from antstack_core.publishing.provenance import (
-        atomic_json, atomic_text, build_run_provenance, capture_source_state,
+        _fresh_family_path, atomic_json, atomic_text, build_run_provenance, capture_source_state,
         file_identity, write_provenance,
     )
     parser = argparse.ArgumentParser(description=__doc__)

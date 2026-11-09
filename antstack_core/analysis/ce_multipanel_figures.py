@@ -405,7 +405,7 @@ def generate_latex_figure_code(figures: Dict[str, str], output_dir: Path) -> Non
 \\begin{figure}[ht]
   \\centering
   \\includegraphics[width=\\linewidth]{""" + figures["theoretical_limits"].replace(str(output_dir.parent) + "/", "") + """}
-  \caption{\textbf{Enhanced Model and Conditional Erasure References.} (A) Compute-plus-idle model estimates and conditional Landauer references assuming one erased bit per FLOP at 300 K. FLOPs do not inherently establish bit erasures. (B) Ratios to that conditional reference, not physical efficiency or achievable improvement. (C) All modeled compute and idle components. (D) Descriptive fits computed from current enhanced sweeps, not confidence estimates. Default energy coefficients are assumptions, not device calibration; mechanical work is not modeled. Mind uses at most 1000 policies.}
+  \caption{\textbf{Enhanced Model and Conditional Erasure References.} (A) Compute-plus-idle model estimates and conditional Landauer references assuming one erased bit per FLOP at 300 K on a log axis. FLOPs do not inherently establish bit erasures. (B) Log-scale ratios to that conditional reference, not physical efficiency or achievable improvement. (C) Compute and idle components on a zero-including symlog axis. (D) Descriptive fits computed from current enhanced sweeps, not confidence estimates. Default coefficients are assumptions, not device calibration; mechanics are not modeled. Mind uses at most 1000 policies.}
   \\label{fig:theoretical_limits_multipanel}
 \\end{figure}
 """)
