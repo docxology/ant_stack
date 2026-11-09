@@ -384,37 +384,25 @@ def create_theoretical_limits_multipanel(output_dir: Path) -> Dict[str, str]:
 
 
 def generate_latex_figure_code(figures: Dict[str, str], output_dir: Path) -> None:
-    """Generate LaTeX code for multipanel figures."""
-    
-    latex_code = []
-    
-    # Comprehensive scaling figure
-    if "comprehensive_scaling" in figures:
-        latex_code.append("""
-\\begin{figure}[ht]
-  \\centering
-  \\includegraphics[width=\\linewidth]{""" + figures["comprehensive_scaling"].replace(str(output_dir.parent) + "/", "") + """}
-  \caption{\textbf{Enhanced Analytical Scaling Sweeps.} Energy and operation counts for the enhanced workload model using assumed default energy coefficients, not device calibration. Energy includes compute and idle baseline; mechanics are not supplied. Mind uses at most 1000 policies. Power-law fits describe displayed arrays only, not empirical uncertainty, asymptotic complexity or phase transitions.}
-  \\label{fig:comprehensive_scaling_multipanel}
-\\end{figure}
-""")
-    
-    # Theoretical limits figure
-    if "theoretical_limits" in figures:
-        latex_code.append("""
-\\begin{figure}[ht]
-  \\centering
-  \\includegraphics[width=\\linewidth]{""" + figures["theoretical_limits"].replace(str(output_dir.parent) + "/", "") + """}
-  \caption{\textbf{Enhanced Model and Conditional Erasure References.} (A) Compute-plus-idle model estimates and conditional Landauer references assuming one erased bit per FLOP at 300 K on a log axis. FLOPs do not inherently establish bit erasures. (B) Log-scale ratios to that conditional reference, not physical efficiency or achievable improvement. (C) Compute and idle components on a zero-including symlog axis. (D) Descriptive fits computed from current enhanced sweeps, not confidence estimates. Default coefficients are assumptions, not device calibration; mechanics are not modeled. Mind uses at most 1000 policies.}
-  \\label{fig:theoretical_limits_multipanel}
-\\end{figure}
-""")
-    
-    # Write LaTeX code to file
-    latex_file = output_dir / "multipanel_figures.tex"
+    """Serialize literal TeX commands without Python control-character escapes."""
     from antstack_core.publishing.provenance import atomic_text
-    atomic_text(latex_file, "% Generated enhanced analytical multipanels; compile from this family root.\n\n" + "\n".join(latex_code))
-    
+    captions = {
+        "comprehensive_scaling": r"\textbf{Enhanced Analytical Scaling Sweeps.} Energy and operation counts for the enhanced workload model using assumed default coefficients, not device calibration. Energy includes compute and idle; mechanics are not supplied. Mind uses at most 1000 policies. Fits describe displayed arrays, not empirical uncertainty, asymptotic complexity or phase transitions.",
+        "theoretical_limits": r"\textbf{Enhanced Model and Conditional Erasure References.} (A) Compute-plus-idle estimates and conditional Landauer references assuming one erased bit per FLOP at 300 K on a log axis. FLOPs do not inherently establish bit erasures. (B) Log-scale ratios, not physical efficiency or achievable improvement. (C) Compute and idle on a zero-including symlog axis. (D) Descriptive fits, not confidence estimates. Coefficients are assumptions; mechanics are not modeled. Mind uses at most 1000 policies.",
+    }
+    sections = []
+    for key, caption in captions.items():
+        if key not in figures:
+            continue
+        image = figures[key].replace(str(output_dir.parent) + "/", "")
+        sections.append("\n".join([
+            r"\begin{figure}[ht]", r"  \centering",
+            r"  \includegraphics[width=\linewidth]{" + image + "}",
+            r"  \caption{" + caption + "}",
+            r"  \label{fig:" + key + "_multipanel}", r"\end{figure}",
+        ]))
+    latex_file = output_dir / "multipanel_figures.tex"
+    atomic_text(latex_file, "% Generated enhanced analytical multipanels; compile from this family root.\n\n" + "\n\n".join(sections) + "\n")
     print(f"Generated LaTeX code: {latex_file}")
 
 

@@ -292,3 +292,14 @@ def test_enhanced_supplements_refuse_occupied_family_and_nonfinite_payload(tmp_p
         tables.main(["--output", str(fresh)])
     assert not fresh.exists()
     assert not list(tmp_path.glob(".*.stage-*"))
+
+
+def test_tex_artifact_keeps_commands_literal_and_counters_attached(tmp_path):
+    from antstack_core.analysis.ce_multipanel_figures import generate_latex_figure_code
+    generate_latex_figure_code({"comprehensive_scaling": "scaling.png", "theoretical_limits": "references.png"}, tmp_path)
+    document = (tmp_path / "multipanel_figures.tex").read_text()
+    assert "\t" not in document and "\b" not in document
+    assert document.count(r"\caption{\textbf{") == 2
+    for key, image in (("comprehensive_scaling", "scaling.png"), ("theoretical_limits", "references.png")):
+        assert r"\includegraphics[width=\linewidth]{" + image + "}" in document
+        assert r"\label{fig:" + key + "_multipanel}" in document
