@@ -1,0 +1,8 @@
+# ant_stack — canonical backlog
+
+Open, owner-local work only. Completed work belongs in `CHANGELOG.md` and Git history.
+
+## Workflowz review - 2026-11-10
+
+- [ ] **AST-001 — P1: Do not report an empty test component as passing.** `run_component_tests` returns status 0 when no `test_*.py` files exist, so a moved, renamed, or accidentally empty component is indistinguishable from a successful test run. Return a distinct nonzero status (or require an explicit `allow_empty` option), aggregate it into the process exit code, and confirm collection counts for every requested component. **Evidence:** `tests/run_all_tests.py:64-83`. **Acceptance:** from the repository root, a temporary empty component makes `python tests/run_all_tests.py --component <component>` fail with an explicit no-tests diagnostic; `npm test` still runs the real pytest suite and fails when pytest collects zero tests.
+- [ ] **AST-002 — P2: Represent unavailable robustness as unavailable, not zero.** `calculate_quality_metrics` emits `statistical_robustness = 0.0` when no checks were performed and then includes that value in `overall_quality`; no evidence is not a measured zero. Preserve an explicit `not_assessed`/null state and exclude unavailable components from the weighted score with documented renormalization. **Evidence:** `antstack_core/analysis/statistical_analysis.py:289-320`. **Acceptance:** `uv run pytest tests/antstack_core -q` covers empty, all-`None`, mixed-`None`, and ordinary check mappings; empty/no-check input never becomes a numeric robustness measurement, and partial input uses only assessed checks.
