@@ -2,6 +2,8 @@
 
 Analytical workload/energy models and scientific-publication tooling, packaged as `antstack_core` (3.0.1). The Body–Brain–Mind architecture is a proposal: the package does **not** implement an ant dynamics solver, validated neural circuit, active-inference decision engine, or calibrated hardware-energy model.
 
+![Ant Stack graphical abstract: proposed AntBody, AntBrain and AntMind design versus the implemented analytical counter models](papers/graphical_abstracts/ant_stack_graphical_abstract.png)
+
 ## Start with the native toolchain
 
 Use `uv` for Python and Bun for Node tooling. `.python-version` selects Python 3.15; the package requires Python 3.11 or newer. `.node-version` pins Node. Keep development environments and caches local to the checkout:
