@@ -72,3 +72,8 @@ def test_doc_coverage_map_references_existing_directories() -> None:
     assert stale == []
 
 
+def test_github_directory_uses_github_md_not_readme() -> None:
+    """The .github folder note must be GITHUB.md so root README.md renders on GitHub."""
+    assert ensure_folder_docs.guide_filename_for(".github") == "GITHUB.md"
+    assert not (ROOT / ".github" / "README.md").exists()
+    assert (ROOT / ".github" / "GITHUB.md").is_file()
