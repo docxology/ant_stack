@@ -245,6 +245,10 @@ def title_for(path: str) -> str:
     return "Ant Stack" if path == "." else path
 
 
+def guide_filename_for(path: str) -> str:
+    return "GITHUB.md" if path == ".github" else "README.md"
+
+
 def render_readme(path: str, meta: dict[str, str]) -> str:
     return README_TEMPLATE.format(title=title_for(path), role=meta["role"], commands=meta["commands"])
 
@@ -288,12 +292,15 @@ def missing_docs() -> list[Path]:
         if not directory.is_dir() or any(node.is_symlink() for node in (directory, *directory.parents)):
             missing.append(directory)
             continue
-        for filename in ("README.md", "AGENTS.md"):
+        guide_name = guide_filename_for(rel)
+        if rel == ".github" and (directory / "README.md").exists():
+            missing.append(directory / "README.md")
+        for filename in (guide_name, "AGENTS.md"):
             candidate = directory / filename
             if not candidate.is_file() or candidate.is_symlink():
                 missing.append(candidate)
             elif _managed(candidate):
-                renderer = render_readme if filename == "README.md" else render_agents
+                renderer = render_readme if filename == guide_name else render_agents
                 if candidate.read_text(encoding="utf-8") != renderer(rel, DIRECTORIES[rel]):
                     missing.append(candidate)
     return missing
@@ -334,7 +341,8 @@ def write_missing(*, refresh: bool = False) -> list[Path]:
         if any(node.is_symlink() for node in (directory, *directory.parents)):
             raise ValueError(f"Guide directory must not traverse links: {directory}")
         directory.mkdir(parents=True, exist_ok=True)
-        for filename, renderer in (("README.md", render_readme), ("AGENTS.md", render_agents)):
+        guide_name = guide_filename_for(rel)
+        for filename, renderer in ((guide_name, render_readme), ("AGENTS.md", render_agents)):
             path = directory / filename
             if not path.exists() or (refresh and not path.is_symlink() and _managed(path)):
                 content = renderer(rel, meta)
