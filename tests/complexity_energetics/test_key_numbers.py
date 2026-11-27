@@ -15,7 +15,7 @@ from antstack_core.analysis.key_numbers_updater import PaperKeyNumbersUpdater
 
 def test_fresh_producer_reaches_checkout_default_with_exact_context(tmp_path, monkeypatch):
     supplied = generate_key_numbers()
-    root = tmp_path / "papers/complexity_energetics/generated_content"
+    root = tmp_path / "docs/manuscript/complexity_energetics/generated_content"
     root.mkdir(parents=True)
     path = root / "key_numbers.json"
     path.write_text(json.dumps(supplied), encoding="utf-8")
@@ -70,7 +70,7 @@ def test_canonical_projection_is_not_an_enhanced_input(tmp_path):
 
 
 def test_stale_preferred_file_is_not_replaced_by_a_loose_fallback(tmp_path, monkeypatch):
-    root = tmp_path / "papers/complexity_energetics/generated_content"
+    root = tmp_path / "docs/manuscript/complexity_energetics/generated_content"
     root.mkdir(parents=True)
     (root / "key_numbers.json").write_text(json.dumps({"per_decision_energy": {"body_mj": 0.5}}))
     (tmp_path / "key_numbers.json").write_text(json.dumps(generate_key_numbers()))
@@ -95,7 +95,7 @@ def test_actual_updater_cli_reports_failed_placeholders_without_changing_section
         supplied["scaling_exponents"].update(
             body_energy=None, body_r_squared=None, body_regime="unavailable",
         )
-    paper = tmp_path / "papers/complexity_energetics"
+    paper = tmp_path / "docs/manuscript/complexity_energetics"
     generated = paper / "generated_content"
     generated.mkdir(parents=True)
     (generated / "key_numbers.json").write_text(json.dumps(supplied))
@@ -118,7 +118,7 @@ def test_actual_updater_cli_reports_failed_placeholders_without_changing_section
 
 def test_actual_updater_cli_accepts_coherent_caller_input_and_exact_formats(tmp_path):
     supplied = generate_key_numbers()
-    paper = tmp_path / "papers/complexity_energetics"
+    paper = tmp_path / "docs/manuscript/complexity_energetics"
     generated = paper / "generated_content"
     generated.mkdir(parents=True)
     (generated / "key_numbers.json").write_text(json.dumps(supplied))
@@ -153,7 +153,7 @@ def test_actual_updater_cli_missing_section_inputs_fail(tmp_path, arguments):
 
 @pytest.mark.parametrize("payload", [None, "not JSON"])
 def test_actual_updater_cli_missing_or_invalid_metric_input_fails(tmp_path, payload):
-    paper = tmp_path / "papers/complexity_energetics"
+    paper = tmp_path / "docs/manuscript/complexity_energetics"
     generated = paper / "generated_content"
     generated.mkdir(parents=True)
     if payload is not None:

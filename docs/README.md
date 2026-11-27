@@ -6,6 +6,8 @@ These guides describe the Ant Stack 3.0.1 package and its research repository. A
 
 | Task | Guide |
 | --- | --- |
+| Read and build the configured papers | [Manuscript sources](manuscript/README.md), [PDF rendering](PDF_RENDERING_GUIDE.md) and [pinned architecture replay](manuscript_verification.md) |
+| Plan a combined workflow or configure an invocation | [Unified workflow](UNIFIED_WORKFLOW_GUIDE.md) and [configuration reference](UNIFIED_CONFIGURATION_SUMMARY.md) |
 | Install dependencies and run an explicit first workflow | [Getting started](getting_started.md) |
 | Understand package layers, project inputs, and artifact ownership | [Architecture](architecture.md) |
 | Find Python modules and distinguish model families | [API reference](api_reference.md) |

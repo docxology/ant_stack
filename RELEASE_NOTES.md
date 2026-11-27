@@ -109,6 +109,6 @@ Verified suite result:
 ### Compatibility Notes
 
 - New canonical generated artifacts should go under `outputs/<run_id>/`.
-- Complexity energetics compatibility artifacts still project to `papers/complexity_energetics/out`, `papers/complexity_energetics/assets`, and `papers/complexity_energetics/Generated.md` unless disabled in config.
+- Complexity energetics compatibility artifacts still project to `docs/manuscript/complexity_energetics/out`, `docs/manuscript/complexity_energetics/assets`, and `docs/manuscript/complexity_energetics/Generated.md` unless disabled in config.
 - Scripts and CLIs should remain thin wrappers over package APIs.
 - Public package contracts are enforced through `__all__` exports and pytest contract tests.

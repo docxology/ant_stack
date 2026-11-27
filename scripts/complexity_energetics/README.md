@@ -14,13 +14,13 @@ Thin wrappers delegate to `antstack_core.analysis`; they do not implement a phys
 ## Use Native Commands from the Checkout Root
 
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --validate-only
 # Choose a genuinely new path; a repeated populated destination is an error.
 bash scripts/complexity_energetics/run_ce.sh cache/ce-manual-001
 uv run python -m antstack_core.analysis.ce_tables_and_numbers --output cache/enhanced-manual-001
 ```
 
-The shell launcher requires the output path and forwards additional CE options. Never point standalone CE at the retained `papers/complexity_energetics/out` directory. Publication commands may intentionally project a completed owned generation there under the [custody contract](../../docs/reproducibility.md).
+The shell launcher requires the output path and forwards additional CE options. Never point standalone CE at the retained `docs/manuscript/complexity_energetics/out` directory. Publication commands may intentionally project a completed owned generation there under the [custody contract](../../docs/reproducibility.md).
 
 ## Interpret Generated Values Conservatively
 

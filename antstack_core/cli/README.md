@@ -5,7 +5,7 @@ Thin console-script entrypoints that delegate to installed package-owned build a
 
 ## Local commands
 ```bash
-uv run antstack-build --validate-only; uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only; uv run run-all-antstack --config configs/run_all_antstack.example.yaml --validate-only
+uv run antstack-build --validate-only; uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --validate-only; uv run run-all-antstack --config configs/run_all_antstack.example.yaml --validate-only
 ```
 
 ## Notes

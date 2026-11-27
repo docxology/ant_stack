@@ -14,7 +14,7 @@ class PaperKeyNumbersUpdater:
         """Bind inputs to the caller's project or explicit enhanced JSON path."""
         self.project_root = Path.cwd() if project_root is None else Path(project_root)
         source = json_path if json_path is not None else (
-            self.project_root / "papers/complexity_energetics/generated_content/key_numbers.json"
+            self.project_root / "docs/manuscript/complexity_energetics/generated_content/key_numbers.json"
         )
         self.key_manager = KeyNumbersManager(KeyNumbersLoader(source))
 
@@ -74,7 +74,7 @@ class PaperKeyNumbersUpdater:
 
     def update_all_paper_sections(self, paper_name: str = "complexity_energetics") -> Dict[str, bool]:
         """Update all paper sections for a given paper."""
-        paper_dir = self.project_root / "papers" / paper_name
+        paper_dir = self.project_root / "docs/manuscript" / paper_name
         results = {}
 
         section_files = {
@@ -129,7 +129,7 @@ def run(args) -> int:
             return 1
 
         if args.section:
-            paper_dir = updater.project_root / "papers" / args.paper
+            paper_dir = updater.project_root / "docs/manuscript" / args.paper
             section_file = paper_dir / f"{args.section.capitalize()}.md"
             if not section_file.is_file():
                 print(f"Section file not found: {section_file}")

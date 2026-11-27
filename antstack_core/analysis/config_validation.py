@@ -16,7 +16,7 @@ class ConfigValidator:
 
     def __init__(self, project_root=None):
         self.project_root = project_root if project_root is not None else Path(__file__).resolve().parents[2]
-        self.paper_dir = self.project_root / "papers" / "complexity_energetics"
+        self.paper_dir = self.project_root / "docs/manuscript" / "complexity_energetics"
         self.errors = []
         self.warnings = []
 

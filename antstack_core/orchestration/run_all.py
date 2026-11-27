@@ -135,9 +135,9 @@ class RunSection:
 
 @dataclass(frozen=True)
 class ComplexityEnergeticsSection:
-    manifest: str = "papers/complexity_energetics/manifest.example.yaml"
+    manifest: str = "docs/manuscript/complexity_energetics/manifest.example.yaml"
     paper_projection: bool = True
-    paper_root: str = "papers/complexity_energetics"
+    paper_root: str = "docs/manuscript/complexity_energetics"
     build_pdf: bool = False
     pdf_sources: tuple[str, ...] = ("2_complexity_energetics.pdf",)
 

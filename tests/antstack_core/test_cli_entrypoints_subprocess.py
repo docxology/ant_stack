@@ -15,7 +15,7 @@ def _run(script, *args):
 
 def test_ce_validation_has_no_output_side_effects(tmp_path):
     output = tmp_path / "unused"
-    result = _run("ce", PROJECT_ROOT / "papers/complexity_energetics/manifest.example.yaml", "--validate-only", "--out", output)
+    result = _run("ce", PROJECT_ROOT / "docs/manuscript/complexity_energetics/manifest.example.yaml", "--validate-only", "--out", output)
     assert result.returncode == 0, result.stderr
     assert not output.exists()
 

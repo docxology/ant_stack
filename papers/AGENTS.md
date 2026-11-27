@@ -6,7 +6,7 @@
 This file applies to `papers`.
 
 ## Directory contract
-Paper source roots, paper configs, manuscript sections, references, assets, and generated outputs.
+Historical manuscript render provenance. Current paper sources live under docs/manuscript.
 
 ## Working rules
 - Use `uv` for Python commands and dependency-managed execution.

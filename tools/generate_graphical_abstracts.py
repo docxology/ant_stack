@@ -70,49 +70,49 @@ CAPTIONS = {
 # Section/symbol references remain meaningful if manuscript line numbers move.
 SEMANTIC_SOURCES = (
     {
-        "path": "papers/ant_stack/Abstract.md",
+        "path": "docs/manuscript/ant_stack/Abstract.md",
         "references": ["Abstract"],
         "supports": "Three proposed layers; architecture and analytical estimates are not empirical validation.",
         "evidence_class": "qualified design proposal",
     },
     {
-        "path": "papers/ant_stack/AntBody.md",
+        "path": "docs/manuscript/ant_stack/AntBody.md",
         "references": ["Proposed Interfaces (I/O Contract)", "Morphology and Biomechanics", "Sensory Apparatus"],
         "supports": "Proposed morphology, actuation, sensing, observation and action interfaces.",
         "evidence_class": "design targets, not an implemented dynamics solver",
     },
     {
-        "path": "papers/ant_stack/AntBrain.md",
+        "path": "docs/manuscript/ant_stack/AntBrain.md",
         "references": ["Scope and Assumptions", "Integration", "Proposed Implementation Choices and Timing Targets"],
         "supports": "Proposed insect-inspired sensory, memory and navigation abstractions; no ant connectome validation.",
         "evidence_class": "functional design assumptions",
     },
     {
-        "path": "papers/ant_stack/AntMind.md",
+        "path": "docs/manuscript/ant_stack/AntMind.md",
         "references": ["Scope and Assumptions", "Proposed Single-Agent Generative Model", "Proposed Diffusion\u2013Decay Pheromone Field", "Technical Pointers and References"],
         "supports": "Proposed beliefs, policy selection and stigmergy; decision-step horizon; base/enhanced distinction.",
         "evidence_class": "conceptual cognitive design",
     },
     {
-        "path": "papers/complexity_energetics/Abstract.md",
+        "path": "docs/manuscript/complexity_energetics/Abstract.md",
         "references": ["Abstract"],
         "supports": "Analytical framework, assumed coefficients, separate base/enhanced families, absent empirical calibration.",
         "evidence_class": "analytical scope statement",
     },
     {
-        "path": "papers/complexity_energetics/Methods.md",
+        "path": "docs/manuscript/complexity_energetics/Methods.md",
         "references": ["Methodological Framework and Evidence Classes", "Selected Base Workloads", "Separate Enhanced Models", "Energy Estimation and Time Accounting", "Descriptive Scaling Fits and Resampling Limits"],
         "supports": "Floor(f*t) updates, traffic units, exact tree nodes versus bounded leaf policies, nonadditive module rows.",
         "evidence_class": "analytical definitions and declared assumptions",
     },
     {
-        "path": "papers/complexity_energetics/Energetics.md",
+        "path": "docs/manuscript/complexity_energetics/Energetics.md",
         "references": ["Compute, Memory, and Idle Energy", "AntBody: Mechanics and Sensing", "AntMind: Conceptual Layer and Physical Compute", "Integrated Per-Decision Accounting", "Units and Conversions"],
         "supports": "Joule conversions, matched time windows, physical terms, shared idle once, Mind physical compute retained.",
         "evidence_class": "accounting definitions, not observed energy flows",
     },
     {
-        "path": "papers/complexity_energetics/manifest.example.yaml",
+        "path": "docs/manuscript/complexity_energetics/manifest.example.yaml",
         "references": ["coefficients", "workloads", "meter"],
         "supports": "Illustrative input authority selects base closed_form workloads and a null meter; no numeric constants copied into diagrams.",
         "evidence_class": "illustrative configuration, not measurements",

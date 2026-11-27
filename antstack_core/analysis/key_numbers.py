@@ -20,7 +20,7 @@ from antstack_core.publishing.provenance import (
 from .energy import EnergyCoefficients
 
 
-_ENHANCED_PATH = Path("papers/complexity_energetics/generated_content/key_numbers.json")
+_ENHANCED_PATH = Path("docs/manuscript/complexity_energetics/generated_content/key_numbers.json")
 _MODULES = ("body", "brain", "mind")
 
 

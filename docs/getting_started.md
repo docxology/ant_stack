@@ -23,7 +23,7 @@ An installed wheel supplies `antstack-ce`, `run-all-antstack`, and `antstack-bui
 From the checkout, validate the CE manifest and run-all configuration:
 
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --validate-only
 uv run run-all-antstack --config configs/run_all_antstack.example.yaml --validate-only
 ```
 
@@ -35,17 +35,17 @@ For a caller-owned paper project, replace the example absolute path with your pr
 uv run antstack-build --project-root /absolute/path/to/caller-project --validate-only
 ```
 
-In this checkout, `--project-root .` selects the repository papers. The builder discovers `papers/<name>/paper_config.yaml` and validates the currently configured ordered sources, references, and bibliography. It does not regenerate missing `Generated.md` or render diagrams/PDFs in validation-only mode. Validating all papers writes the selected project's timestamped `build_report.md`; selecting one with `--paper NAME` prints its result without that aggregate report. Read [validation](validation.md) for the full side-effect and gate contract.
+In this checkout, `--project-root .` selects the repository papers. The builder discovers `docs/manuscript/<name>/paper_config.yaml` and validates the currently configured ordered sources, references, and bibliography. It does not regenerate missing `Generated.md` or render diagrams/PDFs in validation-only mode. Validating all papers writes the selected project's timestamped `build_report.md`; selecting one with `--paper NAME` prints its result without that aggregate report. Read [validation](validation.md) for the full side-effect and gate contract.
 
 ## Generate Standalone CE Results into a Fresh Destination
 
 Choose a new, exclusively owned root; the following path must not contain an earlier generation:
 
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/ce-first-run
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --out outputs/ce-first-run
 ```
 
-`--out` is required for generation. All outputs, including `results.csv`, `Generated.md`, `assets/`, input snapshot, summary, and provenance, live inside that root. A new or empty directory is accepted; a nonempty directory is refused. Do not target the retained `papers/complexity_energetics/out` tree or bypass refusal by deleting ownership records. Use another fresh destination for another invocation.
+`--out` is required for generation. All outputs, including `results.csv`, `Generated.md`, `assets/`, input snapshot, summary, and provenance, live inside that root. A new or empty directory is accepted; a nonempty directory is refused. Do not target the retained `docs/manuscript/complexity_energetics/out` tree or bypass refusal by deleting ownership records. Use another fresh destination for another invocation.
 
 The canonical runner uses the **base** workload family. Closed-form values are analytical estimates; timed loops are synthetic workloads, not robot or neural-controller simulations. Enhanced legacy APIs use different formulas and must be identified separately; see [API reference](api_reference.md).
 

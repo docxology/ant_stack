@@ -19,4 +19,4 @@ uv run pytest -q tests/antstack_core/test_docs_contract.py; uv run python tools/
 ```
 
 `ensure_folder_docs.py --check` passes: gitignored staging directories such as
-`papers/*/assets/tmp_images/` are excluded via `.gitignore` patterns; see `docs/README.md`.
+`docs/manuscript/*/assets/tmp_images/` are excluded via `.gitignore` patterns; see `docs/README.md`.

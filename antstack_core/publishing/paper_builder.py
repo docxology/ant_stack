@@ -25,7 +25,8 @@ class ModularPaperBuilder:
 
     def __init__(self, project_root: Path | None = None):
         self.project_root = Path(project_root or Path.cwd()).absolute()
-        self.papers_dir = self.project_root / "papers"
+        canonical = self.project_root / "docs/manuscript"
+        self.papers_dir = canonical if any(canonical.glob("*/paper_config.yaml")) else self.project_root / "papers"
         self.build_results = {}
         self.validation_results = {}
 

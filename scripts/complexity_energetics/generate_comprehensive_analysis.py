@@ -29,7 +29,7 @@ from antstack_core.analysis.ce_module_scaling_analysis import run
 def main():
     """Main analysis orchestration function."""
     parser = argparse.ArgumentParser(description="Generate comprehensive complexity and energetics analysis")
-    parser.add_argument("--manifest", default="papers/complexity_energetics/manifest.example.yaml",
+    parser.add_argument("--manifest", default="docs/manuscript/complexity_energetics/manifest.example.yaml",
                        help="Path to experiment manifest (coefficient source, not sweep grid)")
     parser.add_argument("--output", required=True,
                        help="Explicit absent or empty output family directory")

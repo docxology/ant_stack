@@ -19,9 +19,9 @@ tasks:
   validation: true
 
 complexity_energetics:
-  manifest: papers/complexity_energetics/manifest.example.yaml
+  manifest: docs/manuscript/complexity_energetics/manifest.example.yaml
   paper_projection: true
-  paper_root: papers/complexity_energetics
+  paper_root: docs/manuscript/complexity_energetics
   build_pdf: false
   pdf_sources:
     - 2_complexity_energetics.pdf
