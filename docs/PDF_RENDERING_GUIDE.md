@@ -34,4 +34,4 @@ uv run run-all-antstack --config configs/run_all_antstack.example.yaml
 
 Read the actual PDF, including equation numbering, figure/table caption association, units, glyphs, citations, links and source-relative images. Inspect rasterized pages at final publication scale. Check figure/table data against the same completed run and distinguish assumptions/synthetic values from observations. Byte hashes and successful TeX compilation do not establish visual or scientific acceptance.
 
-The detailed [configured-source and syntax guide](PDF_RENDERING_GUIDE.md) is also the documentation manuscript. [Validation receipts](validation.md) record exercised commands and explicit gaps; [reproducibility](reproducibility.md) defines model/provenance boundaries.
+The detailed [configured-source and syntax guide](manuscript/documentation/PDF_RENDERING_GUIDE.md) is also the documentation manuscript. [Validation receipts](validation.md) record exercised commands and explicit gaps; [reproducibility](reproducibility.md) defines model/provenance boundaries.
