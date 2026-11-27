@@ -44,7 +44,7 @@ The wheel comes from the new sdist, not an old `build/lib`. The work directory m
 
 Actually run `uv run antstack-build --project-root CALLER_PROJECT` against fresh staging inputs for all three configured papers. A successful compilation is necessary, not sufficient. Inspect real pages for mathematics, preserved Unicode code glyphs, legible figures, figure/table caption attachment, counter references, citation resolution, informative headings/TOC and complete content. Verify figure/table provenance against the selected result family. Source parser checks do not establish those properties.
 
-Native Mermaid uses a real local browser with its sandbox enabled. The local nested-sandbox failure is a failure, not an absent figure to replace silently. No `--no-sandbox`, implicit public renderer, cached-image fallback or suppressed missing-glyph diagnostic is acceptable. The default code font is the bundled DejaVu mono font with an explicit NFSS family; custom font/template inputs remain caller-owned and trusted. See [PDF rendering](../PDF_RENDERING_GUIDE.md) for syntax and tool requirements.
+Native Mermaid uses a real local browser with its sandbox enabled. The local nested-sandbox failure is a failure, not an absent figure to replace silently. No `--no-sandbox`, implicit public renderer, cached-image fallback or suppressed missing-glyph diagnostic is acceptable. The default code font is the bundled DejaVu mono font with an explicit NFSS family; custom font/template inputs remain caller-owned and trusted. See [PDF rendering](PDF_RENDERING_GUIDE.md) for syntax and tool requirements.
 
 ## CI and Versioned Publication Are Separate Observations
 

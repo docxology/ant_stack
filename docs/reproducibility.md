@@ -42,7 +42,7 @@ uv run run-all-antstack --config configs/run_all_antstack.example.yaml
 The example's null run ID selects a fresh ID. Standalone generation requires an explicit fresh root:
 
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/standalone-ce-example
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --out outputs/standalone-ce-example
 ```
 
 Keep the original config, manifest, `uv.lock`, `bun.lock`, source/package identity, actual runtime/tool versions and exact invocation with an intentional result family. Native PDF/animation generation also depends on external fonts, TeX, browser and codec versions; Python dependency versions alone do not make those outputs byte-reproducible. Graphical abstracts have their own producer/source/output receipt and contain no numerical data.
@@ -55,4 +55,4 @@ uv run python scripts/complexity_energetics/generate_publication_figures.py --ou
 uv run python scripts/complexity_energetics/generate_multipanel_figures.py --output cache/multipanel-001
 ```
 
-[Validation](validation.md) separates exercised proof from unavailable or unrun surfaces. [Rendering guidance](../PDF_RENDERING_GUIDE.md) explains full-paper versus generated-results PDFs.
+[Validation](validation.md) separates exercised proof from unavailable or unrun surfaces. [Rendering guidance](PDF_RENDERING_GUIDE.md) explains full-paper versus generated-results PDFs.

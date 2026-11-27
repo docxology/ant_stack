@@ -28,7 +28,7 @@ flowchart TD
     Renderer --> PDF["Newly rendered project PDF"]
 ```
 
-`antstack-build --project-root CALLER_PROJECT` discovers `papers/<name>/paper_config.yaml` in that project. Without `--project-root`, it uses the current directory, not the installed package's source repository. Sources are taken in configured `content.files` order. Validation-only inspects existing sources; an actual build can first run the configured CE analysis and then render. This is not a unified source-tree script runner.
+`antstack-build --project-root CALLER_PROJECT` discovers `docs/manuscript/<name>/paper_config.yaml` in that project, with fallback to the legacy `papers/` layout. Without `--project-root`, it uses the current directory, not the installed package's source repository. Sources are taken in configured `content.files` order. Validation-only inspects existing sources; an actual build can first run the configured CE analysis and then render. This is not a unified source-tree script runner.
 
 ## Base Canonical and Enhanced Legacy Models Remain Separate
 

@@ -20,7 +20,7 @@ The reference manager checks declared keys/counters; it cannot infer a missing c
 
 ## Use One Source of Truth for Commands and Evidence
 
-- [PDF rendering](../../PDF_RENDERING_GUIDE.md): supported syntax, toolchain, ordered-source/resource context and actual render proof.
+- [PDF rendering](../../docs/PDF_RENDERING_GUIDE.md): supported syntax, toolchain, ordered-source/resource context and actual render proof.
 - [Validation](../../docs/validation.md): native gates, installed-wheel smoke and separate remote main/tag/release observations.
 - [Reproducibility](../../docs/reproducibility.md): fresh canonical families, current byte identities and owned projections.
 

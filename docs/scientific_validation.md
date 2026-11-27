@@ -14,7 +14,7 @@ flowchart TD
 
 ## Native Results Are Analytical, Not Device or Animal Observations
 
-The [native CE manifest](../papers/complexity_energetics/manifest.example.yaml) selects deterministic base closed-form workloads and a null meter. Workload dimensions, activity fraction, rates, energy prices and physical powers are illustrative assumptions. No independent raw ant dataset, device-calibration campaign or external replication record has been identified for that example.
+The [native CE manifest](manuscript/complexity_energetics/manifest.example.yaml) selects deterministic base closed-form workloads and a null meter. Workload dimensions, activity fraction, rates, energy prices and physical powers are illustrative assumptions. No independent raw ant dataset, device-calibration campaign or external replication record has been identified for that example.
 
 The producer distinguishes `record_kind` (`analytical` or `synthetic_workload`), `compute_energy_j`, `isolated_idle_energy_j`, `energy_est_j`, `measured_energy_j` and `measurement_status`. Native rows are `analytical` and `not_measured`, with no measured energy value. A Python object named `EmpiricalEvidence`, a populated `raw_measurements` dictionary or a `source_kind="empirical"` label does not authenticate data acquisition.
 
@@ -51,7 +51,7 @@ The implementation basis is [`statistics.py`](../antstack_core/analysis/statisti
 
 ## Reconcile Units, Windows and Models Before Comparing Energy
 
-Use the [theory guide](theory.md) and [manuscript methods](../papers/complexity_energetics/Methods.md) for formulas and model roles. At minimum, distinguish module-isolated compute-plus-idle rows, compute-only scaling windows, common-window system estimates and actual device observations. Count shared idle once in a system sum; retain Mind physical compute. Base exact tree nodes and enhanced bounded leaf policies are not interchangeable.
+Use the [theory guide](theory.md) and [manuscript methods](manuscript/complexity_energetics/Methods.md) for formulas and model roles. At minimum, distinguish module-isolated compute-plus-idle rows, compute-only scaling windows, common-window system estimates and actual device observations. Count shared idle once in a system sum; retain Mind physical compute. Base exact tree nodes and enhanced bounded leaf policies are not interchangeable.
 
 The generated common window is inverse maximum configured frequency, not universally one decision for every module; flooring updates can omit slower modules in that short window. The native example has equal rates, but comparisons across configurations must expose this convention rather than infer scheduling behavior.
 

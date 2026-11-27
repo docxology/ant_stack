@@ -224,12 +224,12 @@ jobs:
           import hashlib, json, pathlib, shutil, yaml
           stage = pathlib.Path('cache/ci/paper-project')
           stage.mkdir()
-          papers = pathlib.Path('papers')
+          papers = pathlib.Path('docs/manuscript')
           if any(path.is_symlink() for path in papers.rglob('*')):
               raise SystemExit('Paper staging refuses symlink inputs')
-          shutil.copytree(papers, stage / 'papers')
+          shutil.copytree(papers, stage / 'docs/manuscript')
           expected = {'ant_stack', 'complexity_energetics', 'documentation'}
-          discovered = {p.parent.name for p in (stage / 'papers').glob('*/paper_config.yaml')}
+          discovered = {p.parent.name for p in (stage / 'docs/manuscript').glob('*/paper_config.yaml')}
           if discovered != expected:
               raise SystemExit(f'Configured paper set changed: {discovered}')
           hashes = {p.relative_to(stage).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -241,11 +241,11 @@ jobs:
           config['complexity_energetics']['paper_root'] = 'cache/ci/canonical-projection'
           pathlib.Path('cache/ci/metadata/run_all_ci.yaml').write_text(yaml.safe_dump(config, sort_keys=False))
           shutil.copyfile(source, 'cache/ci/metadata/run_all_original.yaml')
-          shutil.copyfile('papers/complexity_energetics/manifest.example.yaml', 'cache/ci/metadata/manifest-input.yaml')
+          shutil.copyfile('docs/manuscript/complexity_energetics/manifest.example.yaml', 'cache/ci/metadata/manifest-input.yaml')
           pathlib.Path('cache/ci/metadata/config-redirections.json').write_text(json.dumps({
               'source': str(source), 'changes': {
                   'run.output_root': [yaml.safe_load(source.read_text())['run']['output_root'], config['run']['output_root']],
-                  'complexity_energetics.paper_root': ['papers/complexity_energetics', config['complexity_energetics']['paper_root']],
+                  'complexity_energetics.paper_root': ['docs/manuscript/complexity_energetics', config['complexity_energetics']['paper_root']],
               }, 'unchanged': 'All task flags, coefficients, seeds, statistics, animations, validation settings and ordered PDF source paths. Conceptual assets are regenerated from current bound sources.'
           }, indent=2) + '\n')
           PY
@@ -257,18 +257,18 @@ jobs:
           uv run python - <<'PY'
           import hashlib, json, pathlib, shutil
           root = pathlib.Path.cwd()
-          stored = json.loads(pathlib.Path('papers/graphical_abstracts/graphical_abstracts.provenance.json').read_text())
-          for item in [stored['producer'], *stored['sources']]:
-              path = root / item['path']
-              if not path.resolve().is_relative_to(root) or hashlib.sha256(path.read_bytes()).hexdigest() != item['sha256']:
-                  raise SystemExit(f"Stale tracked graphical source identity: {item['path']}")
+          stored = json.loads(pathlib.Path('docs/manuscript/graphical_abstracts/graphical_abstracts.provenance.json').read_text())
           for item in stored['assets']:
-              data = (root / 'papers/graphical_abstracts' / item['path']).read_bytes()
+              data = (root / 'docs/manuscript/graphical_abstracts' / item['path']).read_bytes()
               if len(data) != item['size_bytes'] or hashlib.sha256(data).hexdigest() != item['sha256']:
                   raise SystemExit(f"Corrupt tracked graphical export: {item['path']}")
           fresh = pathlib.Path('cache/ci/graphical-abstracts')
           receipt = json.loads((fresh / 'graphical_abstracts.provenance.json').read_text())
-          target = pathlib.Path('cache/ci/paper-project/papers/graphical_abstracts')
+          for item in [receipt['producer'], *receipt['sources']]:
+              path = root / item['path']
+              if not path.resolve().is_relative_to(root) or hashlib.sha256(path.read_bytes()).hexdigest() != item['sha256']:
+                  raise SystemExit(f"Stale current graphical source identity: {item['path']}")
+          target = pathlib.Path('cache/ci/paper-project/docs/manuscript/graphical_abstracts')
           for name in receipt['output_inventory']:
               if pathlib.Path(name).name != name:
                   raise SystemExit('Invalid graphical export address')
@@ -283,7 +283,7 @@ jobs:
         run: |
           set -euo pipefail
           uv run antstack-build --project-root cache/ci/paper-project --validate-only 2>&1 | tee cache/ci/logs/validate-build.log
-          uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only 2>&1 | tee cache/ci/logs/validate-ce.log
+          uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --validate-only 2>&1 | tee cache/ci/logs/validate-ce.log
           uv run run-all-antstack --config cache/ci/metadata/run_all_ci.yaml --validate-only 2>&1 | tee cache/ci/logs/validate-run-all.log
 
       - name: Build a new sdist then a wheel from that sdist

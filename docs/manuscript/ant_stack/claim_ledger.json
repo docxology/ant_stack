@@ -1,0 +1,53 @@
+{
+  "claims": [
+    {
+      "claim_id": "schultheiss-2022-quadrillion-ants",
+      "kind": "number",
+      "value": 20,
+      "source": "Schultheiss et al. (2022), https://doi.org/10.1073/pnas.2201550119. Estimated abundance in quadrillions.",
+      "artifact_path": "docs/manuscript/ant_stack/Resources.md"
+    },
+    {
+      "claim_id": "schultheiss-2022-carbon-megatons",
+      "kind": "number",
+      "value": 12,
+      "source": "Schultheiss et al. (2022), https://doi.org/10.1073/pnas.2201550119. Estimated dry carbon mass in megatons.",
+      "artifact_path": "docs/manuscript/ant_stack/Resources.md"
+    },
+    {
+      "claim_id": "schultheiss-2022-taxonomic-context",
+      "kind": "number",
+      "value": 15700,
+      "source": "Schultheiss et al. (2022), https://doi.org/10.1073/pnas.2201550119. Contemporary count of described species and subspecies, stated as a lower bound.",
+      "artifact_path": "docs/manuscript/ant_stack/Resources.md"
+    },
+    {
+      "claim_id": "tercel-2023-local-abundance",
+      "kind": "number",
+      "value": "42.79%",
+      "source": "Tercel et al. (2023), https://doi.org/10.1111/icad.12672. Reported local abundance decrease within the study comparison.",
+      "artifact_path": "docs/manuscript/ant_stack/Resources.md"
+    },
+    {
+      "claim_id": "tercel-2023-local-richness",
+      "kind": "number",
+      "value": "53.56%",
+      "source": "Tercel et al. (2023), https://doi.org/10.1111/icad.12672. Reported local species richness decrease within the study comparison.",
+      "artifact_path": "docs/manuscript/ant_stack/Resources.md"
+    },
+    {
+      "claim_id": "aviles-2024-bird-species",
+      "kind": "number",
+      "value": 1122,
+      "source": "Avilés (2024), https://doi.org/10.1098/rspb.2023.2023. Number of bird species with recorded interactions in the review.",
+      "artifact_path": "docs/manuscript/ant_stack/Resources.md"
+    },
+    {
+      "claim_id": "aviles-2024-ant-genera",
+      "kind": "number",
+      "value": 47,
+      "source": "Avilés (2024), https://doi.org/10.1098/rspb.2023.2023. Number of ant genera in those records.",
+      "artifact_path": "docs/manuscript/ant_stack/Resources.md"
+    }
+  ]
+}

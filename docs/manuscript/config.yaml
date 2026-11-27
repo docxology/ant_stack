@@ -1,0 +1,36 @@
+paper:
+  title: The Ant Stack
+  subtitle: Conceptual Architecture for Embodied Cognitive Systems
+  version: "3.0.1"
+authors:
+  - name: Daniel Ari Friedman
+    orcid: 0000-0001-6232-9096
+    affiliation: Active Inference Institute
+publication:
+  release_status: unreleased
+  repository_url: https://github.com/docxology/ant_stack
+  transmission_bookends:
+    enabled: false
+metadata:
+  license: MIT
+  language: en
+render:
+  formats:
+    pdf: true
+    html: true
+    slides: false
+    docx: false
+    epub: false
+front_matter:
+  files:
+    - ant_stack/Abstract.md
+    - ant_stack/README.md
+    - ant_stack/Background.md
+    - ant_stack/AntBody.md
+    - ant_stack/AntBrain.md
+    - ant_stack/AntMind.md
+    - ant_stack/Applications.md
+    - ant_stack/Discussion.md
+    - ant_stack/Resources.md
+    - ant_stack/Appendices.md
+    - ant_stack/Glossary.md

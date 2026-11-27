@@ -1,20 +1,9 @@
-# AGENTS.md — `ant_stack/docs/manuscript`
+# Manuscript guidance
 
-> Manuscript status and navigation guidance, not configured inputs of a fourth paper. The documentation paper's ordered sources live under `papers/documentation/` and are selected by its `paper_config.yaml`.
+Edit the ordered sources selected by each paper's `paper_config.yaml` under
+this directory. Keep source claims bounded to the evidence in the
+[status record](MANUSCRIPT_STATUS.md). Native generated results and retained
+release exports have separate provenance.
 
-## Scope
-- Tracked repository documentation under `docs/manuscript/`; the root `.gitignore`
-  contains no rule covering this path.
-- Parent project docs: `docs/AGENTS.md`; repository rules: root `AGENTS.md`.
-
-## Layout
-Files: `AGENTS.md`, `MANUSCRIPT_STATUS.md`, `README.md`
-
-## Kind
-- Category: documentation/status guidance. Do not substitute these pages for configured manuscript sources.
-
-## Agent notes
-- Edit status guidance here; edit authoritative paper sources under `papers/`. Record render/release observations only when actually exercised.
-
-## Gotchas
-- None.
+Follow the [repository guidance](../../AGENTS.md) and the
+[documentation guidance](../AGENTS.md) when moving sources or changing links.

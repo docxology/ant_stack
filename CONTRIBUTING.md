@@ -17,7 +17,7 @@ uv sync --extra dev
 bun install
 ```
 
-Keep environments and caches project-local; do not change host configuration or dependency checkouts. Native rendering also needs the tools described in [PDF rendering](PDF_RENDERING_GUIDE.md). Repository-specific ancestor admission requirements still apply in a governed checkout.
+Keep environments and caches project-local; do not change host configuration or dependency checkouts. Native rendering also needs the tools described in [PDF rendering](docs/PDF_RENDERING_GUIDE.md). Repository-specific ancestor admission requirements still apply in a governed checkout.
 
 ## Verify Behavior, Not Merely Source Readiness
 
@@ -26,7 +26,7 @@ The authoritative checklist and its side effects are in [validation](docs/valida
 For analytical generation choose a fresh root, for example:
 
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/ce-review-run
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --out outputs/ce-review-run
 ```
 
 Do not direct standalone generation into the occupied retained paper `out/` directory. Use the explicit projection contract in [reproducibility](docs/reproducibility.md), or the configured canonical workflow when intentionally updating a paper projection. The example run-all configuration enables that publication; inspect it before running.

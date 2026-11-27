@@ -6,4 +6,4 @@ if [[ $# -lt 1 ]]; then
 fi
 output="$1"
 shift
-exec uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out "$output" "$@"
+exec uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --out "$output" "$@"

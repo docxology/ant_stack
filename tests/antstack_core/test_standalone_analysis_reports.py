@@ -27,7 +27,7 @@ ADAPTERS = [
     pytest.param(('ce_module_scaling_analysis', 'analysis_results.json',
                   'scaling_analyses', 'generate_comprehensive_report'), id='module-scaling'),
 ]
-SOURCE_MANIFEST = Path(__file__).resolve().parents[2] / 'papers/complexity_energetics/manifest.example.yaml'
+SOURCE_MANIFEST = Path(__file__).resolve().parents[2] / 'docs/manuscript/complexity_energetics/manifest.example.yaml'
 
 
 @pytest.fixture(params=ADAPTERS)

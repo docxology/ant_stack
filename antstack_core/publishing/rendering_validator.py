@@ -21,7 +21,8 @@ class RenderingSystemValidator:
     
     def __init__(self, project_root: Path = None):
         self.project_root = project_root or Path.cwd()
-        self.papers_dir = self.project_root / "papers"
+        canonical = self.project_root / "docs/manuscript"
+        self.papers_dir = canonical if any(canonical.glob("*/paper_config.yaml")) else self.project_root / "papers"
         self.validation_results = {}
         
     def discover_papers(self) -> List[str]:

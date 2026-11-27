@@ -14,7 +14,7 @@ from antstack_core.orchestration import complexity_energetics as runner
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_PATH = PROJECT_ROOT / "papers" / "complexity_energetics" / "manifest.example.yaml"
+MANIFEST_PATH = PROJECT_ROOT / "docs/manuscript" / "complexity_energetics" / "manifest.example.yaml"
 
 
 

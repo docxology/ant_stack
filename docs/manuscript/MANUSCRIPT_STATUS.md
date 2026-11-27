@@ -6,15 +6,15 @@ Software versioning, scientific validation, document rendering and repository pu
 
 | Paper | Authoritative source/configuration | Evidence role |
 |---|---|---|
-| Ant Stack architecture | [`papers/ant_stack/`](../../papers/ant_stack/) and its `paper_config.yaml` | Conceptual Body/Brain/Mind architecture and proposed evaluations |
-| Complexity and energetics | [`papers/complexity_energetics/`](../../papers/complexity_energetics/) and its `paper_config.yaml` | Analytical workload models and energy accounting with illustrative assumptions |
-| Documentation/rendering guide | [`papers/documentation/`](../../papers/documentation/) and its `paper_config.yaml` | Software/publication guidance, not an empirical scientific study |
+| Ant Stack architecture | [`docs/manuscript/ant_stack/`](ant_stack/) and its `paper_config.yaml` | Conceptual Body/Brain/Mind architecture and proposed evaluations |
+| Complexity and energetics | [`docs/manuscript/complexity_energetics/`](complexity_energetics/) and its `paper_config.yaml` | Analytical workload models and energy accounting with illustrative assumptions |
+| Documentation/rendering guide | [`docs/manuscript/documentation/`](documentation/) and its `paper_config.yaml` | Software/publication guidance, not an empirical scientific study |
 
-Each configuration's ordered `content.files` determines render inputs. `docs/manuscript/` contains status/navigation guidance, not a parallel manuscript tree and not the documentation paper's configured source. Do not edit generated concatenations or an old PDF as if they were source.
+Each configuration's ordered `content.files` determines render inputs. `docs/manuscript/` contains the separate source directories for all three papers. Do not edit generated concatenations or an old PDF as if they were source.
 
 ## Native Scientific Evidence Remains Analytical and Synthetic
 
-The [CE example manifest](../../papers/complexity_energetics/manifest.example.yaml) selects deterministic base closed-form counters and a null meter. No independent raw hardware calibration, ant/species validation dataset, measured real-time benchmark or external replication record has been identified for that example. No implemented MuJoCo/FlyBody robot, complete active-inference agent or closed colony loop is established by these counters or the conceptual architecture.
+The [CE example manifest](complexity_energetics/manifest.example.yaml) selects deterministic base closed-form counters and a null meter. No independent raw hardware calibration, ant/species validation dataset, measured real-time benchmark or external replication record has been identified for that example. No implemented MuJoCo/FlyBody robot, complete active-inference agent or closed colony loop is established by these counters or the conceptual architecture.
 
 | Claim family | Permitted interpretation |
 |---|---|
@@ -43,13 +43,13 @@ Direct CE generation confines products to fresh `--out`; governed `outputs/<run_
 
 `Generated.md` is numerical evidence only when bound to its selected completed generation and figures/CSV/summary. The three PDFs identified in [manuscript provenance](../../papers/manuscripts.provenance.json) are refreshed, source-bound renders. Other retained PDFs, figures and concatenations remain historical unless a current receipt identifies them. Run-all's copied `historical_paper` products are not new renders; its optional generated-results PDF is not a full manuscript build.
 
-## Reviewed Full Renders, Graphical Assets and Publication Custody
+## Historical Full Renders, Graphical Assets and Publication Custody
 
 [CI run 42548062547](https://github.com/docxology/ant_stack/actions/runs/42548062547) built all three configured papers from source `422c71e5a402d31e7b2a2676423a2651277509ce`. All 65 resulting pages were rasterized and reviewed for layout, legible graphics, informative headings, mathematics, citations, attached counters and literal code. The [per-manuscript receipt](../../papers/manuscripts.provenance.json) binds actual PDF bytes to authored/generated sources, graphical resources, runtime font and the completed CI run; compilation alone was not accepted as visual proof.
 
-Both conceptual abstracts have vector/raster exports and a source/output receipt in [the graphical family](../../papers/graphical_abstracts/graphical_abstracts.provenance.json). Repeated native exports matched bytes in the recorded environment, and the actual final manuscript schematics were inspected. These schematics contain no measured data. The canonical base-result projection and separately labelled enhanced-model supplements were refreshed from verified completed families, with prior trees preserved.
+Both conceptual abstracts have vector/raster exports and a source/output receipt in [the graphical family](graphical_abstracts/graphical_abstracts.provenance.json). Repeated native exports matched bytes in the recorded environment, and the actual final manuscript schematics were inspected. These schematics contain no measured data. The canonical base-result projection and separately labelled enhanced-model supplements were refreshed from verified completed families, with prior trees preserved.
 
-Local Chromium sandbox and requested-font failures remain recorded limitations of those local attempts, not successful full renders. The Linux proof used the authored configurations and an enabled native browser sandbox. Repository publication requires live refs/checks plus the enabled class, reviewed plan and exact operator phrase; no registry publisher is supplied. See [release notes](../../RELEASE_NOTES.md), [software validation](../validation.md) and [PDF rendering](../../PDF_RENDERING_GUIDE.md).
+Local Chromium sandbox and requested-font failures remain recorded limitations of those local attempts, not successful full renders. The Linux proof used the authored configurations and an enabled native browser sandbox. Repository publication requires live refs/checks plus the enabled class, reviewed plan and exact operator phrase; no registry publisher is supplied. See [release notes](../../RELEASE_NOTES.md), [software validation](../validation.md) and [PDF rendering](../PDF_RENDERING_GUIDE.md).
 
 ## Historical DOI Identifies the 2025 v1, Not This Revision
 

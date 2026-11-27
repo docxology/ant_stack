@@ -182,7 +182,7 @@ def test_default_does_not_silently_pick_loose_or_canonical_files(tmp_path, suppl
 
 def test_default_is_bound_to_caller_checkout_not_a_previous_project(tmp_path, supplied, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    enhanced = tmp_path / "papers/complexity_energetics/generated_content"
+    enhanced = tmp_path / "docs/manuscript/complexity_energetics/generated_content"
     enhanced.mkdir(parents=True)
     path = enhanced / "key_numbers.json"
     path.write_text(json.dumps(supplied))

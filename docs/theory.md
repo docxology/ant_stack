@@ -12,7 +12,7 @@ flowchart TD
 
 ## Base Counters and Enhanced Models Answer Different Questions
 
-The native [CE manifest](../papers/complexity_energetics/manifest.example.yaml) selects the **base** closed-form functions through [`CLOSED_FORM_WORKLOADS`](../antstack_core/orchestration/complexity_energetics.py). The implementations are in [`analysis/workloads.py`](../antstack_core/analysis/workloads.py); [the manuscript methods](../papers/complexity_energetics/Methods.md) document their detailed formulas.
+The native [CE manifest](manuscript/complexity_energetics/manifest.example.yaml) selects the **base** closed-form functions through [`CLOSED_FORM_WORKLOADS`](../antstack_core/orchestration/complexity_energetics.py). The implementations are in [`analysis/workloads.py`](../antstack_core/analysis/workloads.py); [the manuscript methods](manuscript/complexity_energetics/Methods.md) document their detailed formulas.
 
 | Layer | Selected base-model interpretation | What the counters do not establish |
 |---|---|---|

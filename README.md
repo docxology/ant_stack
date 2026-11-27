@@ -2,7 +2,7 @@
 
 Analytical workload/energy models and scientific-publication tooling, packaged as `antstack_core` (3.0.1). The Body–Brain–Mind architecture is a proposal: the package does **not** implement an ant dynamics solver, validated neural circuit, active-inference decision engine, or calibrated hardware-energy model.
 
-![Ant Stack graphical abstract: proposed AntBody, AntBrain and AntMind design versus the implemented analytical counter models](papers/graphical_abstracts/ant_stack_graphical_abstract.png)
+![Ant Stack graphical abstract: proposed AntBody, AntBrain and AntMind design versus the implemented analytical counter models](docs/manuscript/graphical_abstracts/ant_stack_graphical_abstract.png)
 
 ## Start with the native toolchain
 
@@ -25,8 +25,8 @@ Full paper rendering additionally needs Pandoc 3.13, XeLaTeX with `cleveref`, an
 
 | Command | Result and boundary |
 |---|---|
-| `uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only` | Validate the analytical manifest without creating a run. |
-| `uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/standalone-ce-example` | Generate one standalone CE artifact family. The selected root must be new or empty; choose a fresh name on subsequent runs. |
+| `uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --validate-only` | Validate the analytical manifest without creating a run. |
+| `uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --out outputs/standalone-ce-example` | Generate one standalone CE artifact family. The selected root must be new or empty; choose a fresh name on subsequent runs. |
 | `uv run run-all-antstack --config configs/run_all_antstack.example.yaml` | Generate a fresh canonical `outputs/<run_id>/` and, when enabled, its CE paper projection. |
 | `uv run antstack-build --validate-only` | Check configured sources/references; write `build_report.md`, but no PDFs. |
 | `uv run antstack-build` | Run configured analysis and actually render the three papers. A failed render returns nonzero and does not replace a previous PDF. |
@@ -37,7 +37,7 @@ Full paper rendering additionally needs Pandoc 3.13, XeLaTeX with `cleveref`, an
 
 A completed canonical run has `manifest.json`, relative artifact paths, SHA-256/byte identities, input snapshots, package-source identities, dependencies, and an explicit completion flag. These certify recorded bytes and requested producer coverage—not empirical accuracy, authenticity against a malicious editor, or biological validity. [Reproducibility](docs/reproducibility.md) defines the boundaries.
 
-The CE projection consists of `papers/complexity_energetics/Generated.md`, produced assets, and `out/`, with an ownership inventory. Use run-all or the configured paper builder to update it coherently. A failed replacement preserves the previous completed generation; owned replacements retain their prior tree in an archive. Do not edit generated numbers by hand.
+The CE projection consists of `docs/manuscript/complexity_energetics/Generated.md`, produced assets, and `out/`, with an ownership inventory. Use run-all or the configured paper builder to update it coherently. A failed replacement preserves the previous completed generation; owned replacements retain their prior tree in an archive. Do not edit generated numbers by hand.
 
 The default run-all config copies the existing PDF as `historical_paper`; `build_pdf: false` does **not** compile a fresh manuscript. `build_pdf: true` creates a generated analytical-results report, not the complete manuscript. Full configured papers are built by `antstack-build`. Retained v2 PDFs, `outputs/example-run/`, `outputs/test-run/`, and top-level `complexity_energetics/` are historical comparison material unless a fresh source-bound receipt explicitly identifies them.
 
@@ -51,16 +51,16 @@ The reviewed 3.0 publication set is identified by [manuscript provenance](papers
 | `antstack_core/figures`, `mathematics` | Data-aligned plots, local Mermaid preprocessing and context-preserving math handling. |
 | `antstack_core/orchestration` | Installed CE runner; staged canonical publication and current projection inventory. |
 | `antstack_core/publishing`, `cli` | Installed configured builds, document-wide counters, validation and provenance. |
-| `papers/ant_stack` | Conceptual architecture and proposed evaluation protocols. |
-| `papers/complexity_energetics` | Analytical models with assumed coefficients; current numbers come from a completed generated run. |
-| `papers/documentation` | Configured-source and rendering guide. |
+| `docs/manuscript/ant_stack` | Conceptual architecture and proposed evaluation protocols. |
+| `docs/manuscript/complexity_energetics` | Analytical models with assumed coefficients; current numbers come from a completed generated run. |
+| `docs/manuscript/documentation` | Configured-source and rendering guide. |
 | `tools`, `scripts` | Repository maintenance, reproducible graphical abstracts, release smoke and thin launchers. |
 
 Base workload models and the separate enhanced models are different model families. Repeated deterministic values and descriptive bootstrap intervals are not independent experiments or evidence of calibrated uncertainty. Hardware measurements, species validity, timing guarantees, and physical cost of transport require their own matched observations.
 
 ## Validate, inspect, then release
 
-[Validation and receipts](docs/validation.md) lists the native gates and records what was actually exercised. [Public API contracts](docs/public_api_contracts.md) describes breaking 3.0.0 behavior; [PDF rendering](PDF_RENDERING_GUIDE.md) distinguishes readiness from a readable render. [Contributing](CONTRIBUTING.md) covers source ownership and release discipline. The private Node package has no registry-publishing workflow.
+[Validation and receipts](docs/validation.md) lists the native gates and records what was actually exercised. [Public API contracts](docs/public_api_contracts.md) describes breaking 3.0.0 behavior; [PDF rendering](docs/PDF_RENDERING_GUIDE.md) distinguishes readiness from a readable render. [Contributing](CONTRIBUTING.md) covers source ownership and release discipline. The private Node package has no registry-publishing workflow.
 
 - [Documentation index](docs/README.md)
 - [Architecture contract](docs/architecture.md)

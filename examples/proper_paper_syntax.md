@@ -1,6 +1,6 @@
 # Scientific Paper Syntax: Real Counters, Attached Captions and Literal Contexts
 
-Syntax examples only. Paths must be replaced with caller-owned produced resources; no measurements, fitted exponents, confidence intervals or citations are invented here. Native rendering and inspection remain required: see [PDF rendering](../PDF_RENDERING_GUIDE.md).
+Syntax examples only. Paths must be replaced with caller-owned produced resources; no measurements, fitted exponents, confidence intervals or citations are invented here. Native rendering and inspection remain required: see [PDF rendering](../docs/PDF_RENDERING_GUIDE.md).
 
 ## Name the Scientific Section and Its Stable Target
 

@@ -1,15 +1,6 @@
-# papers
+# Historical paper render evidence
 
-## Purpose
-Paper source roots, paper configs, manuscript sections, references, assets, and generated outputs.
-
-## Local commands
-```bash
-uv run antstack-build --validate-only
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
-```
-
-## Notes
-- Keep generated files in this directory only when they are intentional, reproducible, and documented by a command above.
-- Prefer package-owned logic in `antstack_core`; scripts and CLIs should stay thin wrappers.
-- Update this README and the local `AGENTS.md` whenever the directory contract changes.
+The [manuscript sources](../docs/manuscript/README.md) and graphical assets now
+live under `docs/manuscript/`. The [render receipt](manuscripts.provenance.json)
+records the exact paths and PDF bytes used for the reviewed historical
+revision. Those identities refer to that revision.

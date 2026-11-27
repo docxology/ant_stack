@@ -18,5 +18,5 @@ Complexity energetics analysis and figure-generation wrappers.
 ## Validation
 Run:
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --validate-only
 ```

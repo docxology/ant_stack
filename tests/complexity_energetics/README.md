@@ -6,7 +6,7 @@ Tests for the complexity energetics runner, analysis workflows, generated key nu
 
 ```bash
 uv run pytest -q tests/complexity_energetics
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out papers/complexity_energetics/out
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --out docs/manuscript/complexity_energetics/out
 ```
 
 ## Coverage Areas
@@ -15,6 +15,6 @@ uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out pape
 - Statistical summaries and theoretical limits.
 - Contact dynamics, neural network, and active-inference orchestrators.
 - Generated key-number loading and placeholder replacement.
-- Compatibility with `papers/complexity_energetics/out`, `assets`, and `Generated.md`.
+- Compatibility with `docs/manuscript/complexity_energetics/out`, `assets`, and `Generated.md`.
 
 Canonical run-all behavior is tested under `tests/antstack_core/test_run_all_antstack.py`.

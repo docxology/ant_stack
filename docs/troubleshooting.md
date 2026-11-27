@@ -15,13 +15,13 @@ Relative run-all paths use the invoking working directory. Check the actual `com
 Validation requires no destination:
 
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --validate-only
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --validate-only
 ```
 
 Generation requires an explicit new or empty root:
 
 ```bash
-uv run antstack-ce papers/complexity_energetics/manifest.example.yaml --out outputs/ce-next-run
+uv run antstack-ce docs/manuscript/complexity_energetics/manifest.example.yaml --out outputs/ce-next-run
 ```
 
 The example destination must be fresh for this invocation. Do not retry generation into a nonempty old paper `out/` directory or infer success from old CSV/figures. A partial standalone CE destination is not reusable as a completed run; preserve it for diagnosis and choose a fresh root.
