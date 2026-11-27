@@ -15,8 +15,8 @@ export MPLBACKEND=Agg
 export XDG_CACHE_HOME="$PWD/cache/xdg"
 export PUPPETEER_CACHE_DIR="$PWD/cache/puppeteer"
 export BUN_INSTALL_CACHE_DIR="$PWD/cache/bun"
-uv sync --extra dev
-bun install
+uv sync --locked --extra dev
+bun install --frozen-lockfile
 ```
 
 Full paper rendering additionally needs Pandoc 3.13, XeLaTeX with `cleveref`, and a working local Chromium/Puppeteer installation. SVG inputs need `rsvg-convert`; MP4 output needs FFmpeg. Installing Python dependencies alone does not qualify these paths. Follow inherited admission rules when this checkout is managed by a collection; standalone CI uses only this project's commands.

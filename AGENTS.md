@@ -14,7 +14,9 @@ Repository root for the Ant Stack Python package, paper sources, canonical outpu
 - When editing manuscript prose, keep scientific claims source-backed and soften or cite claims that are not directly supported.
 
 ## Validation
-Run:
+Use the [validation guide](docs/validation.md) to select the check that matches
+the change. The [manuscript verification guide](docs/manuscript_verification.md)
+covers the separate offline paper check. For the full native gate, run:
 ```bash
-uv sync --extra dev; bun install; uv run pytest -q; uv run ruff check .; uv run python tools/ensure_folder_docs.py --check
+uv sync --locked --extra dev; bun install --frozen-lockfile; uv run pytest -q; uv run ruff check .; uv run python tools/ensure_folder_docs.py --check
 ```
